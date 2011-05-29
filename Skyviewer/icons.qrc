@@ -1,0 +1,10 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/icons/3dview.gif</file>
+        <file>images/icons/mollview.gif</file>
+        <file>images/icons/viewports.gif</file>
+        <file>images/icons/sync.gif</file>
+        <file>images/icons/colormap.gif</file>
+        <file>images/icons/extract.gif</file>
+    </qresource>
+</RCC>
