@@ -9,18 +9,22 @@ QT       += core gui opengl
 TARGET = Skyviewer
 TEMPLATE = app
 
-LIBS += -lchealpix -lm -lcfitsio
+LIBS += -lchealpix -lm -lcfitsio -lQtXml -lQGLViewer
 
 SOURCES += main.cpp\
         mainwindow.cpp \
     mapviewport.cpp \
     healpixmap.cpp \
-    workspace.cpp
+    workspace.cpp \
+    mapviewer.cpp \
+    face.cpp
 
 HEADERS  += mainwindow.h \
     mapviewport.h \
     healpixmap.h \
-    workspace.h
+    workspace.h \
+    mapviewer.h \
+    face.h
 
 FORMS    += mainwindow.ui
 

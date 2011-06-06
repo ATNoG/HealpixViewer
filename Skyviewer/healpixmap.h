@@ -2,6 +2,8 @@
 #define SKYMAP_H
 
 #include <QString>
+#include <chealpix.h>
+#include <fitsio.h>
 
 
 class HealpixMap

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Skyviewer</string>
+   <string>Healpix Viewer</string>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="sizePolicy">
@@ -63,7 +63,7 @@
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QToolBar" name="toolBar">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Fixed" vsizetype="Maximum">
+    <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
@@ -86,19 +86,132 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionOpen"/>
+   <addaction name="actionSave"/>
+   <addaction name="actionReset"/>
+   <addaction name="action3Dview"/>
+   <addaction name="actionMollview"/>
+   <addaction name="actionViewports"/>
+   <addaction name="actionSynchronize"/>
+   <addaction name="actionColors"/>
+   <addaction name="actionExtract"/>
   </widget>
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;About</string>
    </property>
   </action>
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
    </property>
+   <property name="toolTip">
+    <string>&amp;Exit</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>&amp;Open</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Open Map</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>&amp;Save</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Save</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="text">
+    <string>&amp;Reset</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Reset Views</string>
+   </property>
+  </action>
+  <action name="action3Dview">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/3dview.gif</normaloff>:/images/icons/3dview.gif</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;3D view</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Switch to 3D</string>
+   </property>
+  </action>
+  <action name="actionMollview">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/mollview.gif</normaloff>:/images/icons/mollview.gif</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Mollview</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Switch to Mollview</string>
+   </property>
+  </action>
+  <action name="actionViewports">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/viewports.gif</normaloff>:/images/icons/viewports.gif</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Viewports</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Choose Viewports</string>
+   </property>
+  </action>
+  <action name="actionSynchronize">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/sync.gif</normaloff>:/images/icons/sync.gif</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Synchronize views</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Synchronize views</string>
+   </property>
+  </action>
+  <action name="actionColors">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/colormap.gif</normaloff>:/images/icons/colormap.gif</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Colors</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Select colors</string>
+   </property>
+  </action>
+  <action name="actionExtract">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/extract.gif</normaloff>:/images/icons/extract.gif</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Extract</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Extract ROI</string>
+   </property>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

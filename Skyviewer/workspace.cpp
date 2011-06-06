@@ -16,41 +16,6 @@ WorkSpace::WorkSpace(QWidget *parent, int numberViewports) :
 }
 
 
-void WorkSpace::configureWorkspace(int viewportsWanted)
-{
-    qDebug() << "Change to " << viewportsWanted << " viewports";
-
-    /* save the current number of viewports */
-    int oldviewports = this->numberViewports;
-
-    // TODO: how many viewports allow ? 1, 2, 4, 9
-
-
-    /* if more viewports are needed create them */
-    int availableViewports = viewports.count();
-    if(viewportsWanted > availableViewports)
-    {
-        int i, needed = (viewportsWanted-availableViewports);
-        qDebug() << " need more " << needed << " viewports";
-        for(i=0; i<needed; i++)
-        {
-            QString qs1;
-            qs1.setNum(availableViewports + i);
-            QString qs = "HealpixMap " + qs1;
-
-            /* create the viewport without parent */
-            MapViewport* viewport = new MapViewport(NULL, qs);
-            viewports.append(viewport);
-        }
-    }
-
-    /* update current number of viewports */
-    this->numberViewports = viewportsWanted;
-
-    drawViewports(oldviewports, viewportsWanted);
-}
-
-
 void WorkSpace::drawViewports(int oldnviewports, int newnviewports)
 {
     int nhorizontal, nvertical;
@@ -90,4 +55,72 @@ void WorkSpace::drawViewports(int oldnviewports, int newnviewports)
             pos++;
         }
     }
+}
+
+
+
+void WorkSpace::openFiles(QStringList filenames)
+{
+    QString fitsfile;
+    int i = 0;
+    qDebug() << "Available viewports = " << viewports.count();
+    foreach(fitsfile, filenames)
+    {
+        // TODO: select in which viewport map will be opened
+        viewports[i]->openMap(fitsfile);
+        i++;
+    }
+}
+
+
+/* Slots */
+
+void WorkSpace::configureWorkspace(int viewportsWanted)
+{
+    qDebug() << "Change to " << viewportsWanted << " viewports";
+
+    /* save the current number of viewports */
+    int oldviewports = this->numberViewports;
+
+    // TODO: how many viewports allow ? 1, 2, 4, 9
+
+
+    /* if more viewports are needed create them */
+    int availableViewports = viewports.count();
+    if(viewportsWanted > availableViewports)
+    {
+        int i, needed = (viewportsWanted-availableViewports);
+        qDebug() << " need more " << needed << " viewports";
+        for(i=0; i<needed; i++)
+        {
+            QString qs1;
+            qs1.setNum(availableViewports + i);
+            QString qs = "HealpixMap " + qs1;
+
+            /* create the viewport without parent */
+            MapViewport* viewport = new MapViewport(NULL, qs);
+            viewports.append(viewport);
+        }
+    }
+
+    /* update current number of viewports */
+    this->numberViewports = viewportsWanted;
+
+    drawViewports(oldviewports, viewportsWanted);
+}
+
+void WorkSpace::changeToMollview()
+{
+    MapViewport* viewport;
+    foreach(viewport, viewports)
+        if(viewport->isSelected())
+            viewport->changeToMollview();
+}
+
+void WorkSpace::changeTo3D()
+{
+    MapViewport* viewport;
+    foreach(viewport, viewports)
+        if(viewport->isSelected())
+            viewport->changeTo3D();
 }

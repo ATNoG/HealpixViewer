@@ -6,13 +6,14 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QToolBar>
-#include <QGLWidget>
 #include <QLabel>
 #include <QCheckBox>
 #include <QDebug>
+#include "mapviewer.h"
 
 #define COLOR_SELECTED "#fa8252"
 #define COLOR_INACTIVE "#c3c3c3"
+#define DEFAULT_VIEW_3D true
 
 
 class MapViewport : public QWidget
@@ -22,7 +23,10 @@ public:
     explicit MapViewport(QWidget *parent, QString title);
 
     bool isSelected();
-
+    void changeToMollview();
+    void changeTo3D();
+    void openMap(QString fitsfile);
+    void closeMap();
 
 signals:
 
@@ -31,17 +35,20 @@ public slots:
 
 private:
     QString title;
-    QHBoxLayout *hboxtoplayout;
-    QHBoxLayout *hboxbottomlayout;
+    QHBoxLayout *titlebarlayout;
     QVBoxLayout *vboxlayout;
-    QLayout *verticallayout;
     QWidget *titlewidget, *areawidget;
     QToolBar *toolbar;
+    QCheckBox* checkbox;
+    MapViewer* mapviewer;
+
     bool selected;
+    bool mollview;
 
     void selectViewport();
     void deselectViewport();
     void loadHealpixMap(QString path);
+    void configureUI();
 };
 
 #endif // WORKSPACE_H

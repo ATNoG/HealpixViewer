@@ -1,52 +1,57 @@
 #include "mapviewport.h"
+#include <QIcon>
+#include <QAction>
 
 MapViewport::MapViewport(QWidget *parent, QString title) :
     QWidget(parent)
 {
     this->title = title;
     this->selected = false;  // by default viewport is not selected
+    this->mollview = !DEFAULT_VIEW_3D;
 
-    /* create toolbar */
-    toolbar = new QToolBar;
+    /* configure the user interface */
+    configureUI();
 
-    /* create the layout */
-    hboxtoplayout = new QHBoxLayout;
-    hboxtoplayout->setMargin(6);
-    hboxbottomlayout = new QHBoxLayout;
-    hboxbottomlayout->setMargin(0);
+    /* connect events */
+    connect(checkbox, SIGNAL(toggled(bool)), this, SLOT(selectionChanged(bool)));
+
+    /* force mapviewer update */
+    mapviewer->updateGL();
+}
+
+
+void MapViewport::configureUI()
+{
+    /* create the layouts */
+    titlebarlayout = new QHBoxLayout;
+    titlebarlayout->setMargin(6);
     vboxlayout = new QVBoxLayout;
     vboxlayout->setSpacing(0);
     vboxlayout->setMargin(5);   // set spacing between viewports
     setLayout(vboxlayout);
 
+    /* create titlebar widget */
     titlewidget = new QWidget;
     titlewidget->setStyleSheet(QString("background-color: #c3c3c3; border-top-right-radius: 9px; border-top-left-radius: 9px; "));
     titlewidget->setMinimumHeight(24);
     titlewidget->setMaximumHeight(30);
-    titlewidget->setLayout(hboxtoplayout);
+    titlewidget->setLayout(titlebarlayout);
 
-    areawidget = new QWidget;
-    areawidget->setLayout(hboxbottomlayout);
-
-    /* create the widgets: title, checkbox and opengl area */
+    /* create the widgets: title, checkbox and viewer area */
     QLabel* lbltitle = new QLabel;
     lbltitle->setText(title);
-    QCheckBox* checkbox = new QCheckBox;
-    QGLWidget* glwidget = new QGLWidget;
+    checkbox = new QCheckBox;
+    mapviewer = new MapViewer;
+    mapviewer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);   // allow viewer area to expand
 
     /* add widgets */
-    hboxtoplayout->addWidget(lbltitle);
-    hboxtoplayout->addWidget(checkbox, 0, Qt::AlignRight);
-    hboxbottomlayout->addWidget(glwidget);
-    //hboxbottomlayout->addWidget(toolbar);
+    titlebarlayout->addWidget(lbltitle);
+    titlebarlayout->addWidget(checkbox, 0, Qt::AlignRight);
     vboxlayout->addWidget(titlewidget);
-    vboxlayout->addWidget(areawidget);
+    vboxlayout->addWidget(mapviewer);
 
     /* configure the size policy */
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-    /* connect events */
-    connect(checkbox, SIGNAL(toggled(bool)), this, SLOT(selectionChanged(bool)));
 }
 
 
@@ -80,6 +85,47 @@ void MapViewport::deselectViewport()
     /* change titlebar color */
     // TODO: dont rewrite all properties again
     titlewidget->setStyleSheet(QString("background-color: %1; border-top-right-radius: 9px; border-top-left-radius: 9px; ").arg(COLOR_INACTIVE));
+}
+
+void MapViewport::changeToMollview()
+{
+    if(!mollview)
+    {
+        qDebug() << "Changing " << title << " to Mollview";
+        mapviewer->changeToMollview();
+        mollview = true;
+    }
+}
+
+void MapViewport::changeTo3D()
+{
+    if(mollview)
+    {
+        qDebug() << "Changing " << title << " to 3D";
+        mapviewer->changeTo3D();
+        mollview = false;
+    }
+}
+
+
+void MapViewport::openMap(QString fitsfile)
+{
+    qDebug() << "Opening " << fitsfile << " on " << title;
+
+    /* close the current map */
+    //closeMap();
+
+    /* create new map */
+    HealpixMap* map = new HealpixMap(fitsfile);
+}
+
+
+void MapViewport::closeMap()
+{
+    // TODO: ask if really wanna close, etc...
+    // TODO: mapviewer should be deleted, or just load the file into the current mapview ?
+    if(mapviewer!=NULL)
+        delete mapviewer;
 }
 
 

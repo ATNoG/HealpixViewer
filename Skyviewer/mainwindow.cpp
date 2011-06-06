@@ -1,12 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QMdiArea>
-#include <QMdiSubWindow>
-#include <QHBoxLayout>
-#include <QDockWidget>
 #include <QSignalMapper>
-#include "workspace.h"
 #include "healpixmap.h"
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -16,37 +11,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     /* configure toolbar icons */
-    QIcon openicon          = QIcon::fromTheme("document-open");
-    QIcon saveicon          = QIcon::fromTheme("document-save");
-    QIcon reseticon         = QIcon::fromTheme("edit-undo");
-    QIcon view3dicon        = QIcon(":/images/icons/3dview.gif");
-    QIcon mollviewicon      = QIcon(":/images/icons/mollview.gif");
-    QIcon viewportsicon     = QIcon(":/images/icons/viewports.gif");
-    QIcon synchronizeicon   = QIcon(":/images/icons/sync.gif");
-    QIcon colormapicon      = QIcon(":/images/icons/colormap.gif");
-    QIcon extracticon       = QIcon(":/images/icons/extract.gif");
-
-    /* create actions */
-    QAction* openAction         = new QAction(openicon, tr("&Open"), ui->toolBar);
-    QAction* saveAction         = new QAction(saveicon, tr("&Save"), ui->toolBar);
-    QAction* resetAction        = new QAction(reseticon, tr("&Reset"), ui->toolBar);
-    QAction* view3DAction       = new QAction(view3dicon, tr("3D View"), ui->toolBar);
-    QAction* mollviewAction     = new QAction(mollviewicon, tr("Mollview"), ui->toolBar);
-    QAction* viewportsAction    = new QAction(viewportsicon, tr("Viewports"), ui->toolBar);
-    QAction* synchronizeAction  = new QAction(synchronizeicon, tr("Synchronize Views"), ui->toolBar);
-    QAction* colormapAction     = new QAction(colormapicon, tr("Change Colors"), ui->toolBar);
-    QAction* extractAction      = new QAction(extracticon, tr("Extract"), ui->toolBar);
-
-    /* add actions to toolbar */
-    ui->toolBar->addAction(openAction);
-    ui->toolBar->addAction(saveAction);
-    ui->toolBar->addAction(resetAction);
-    ui->toolBar->addAction(view3DAction);
-    ui->toolBar->addAction(mollviewAction);
-    ui->toolBar->addAction(viewportsAction);
-    ui->toolBar->addAction(synchronizeAction);
-    ui->toolBar->addAction(colormapAction);
-    ui->toolBar->addAction(extractAction);
+    QIcon openicon  = QIcon::fromTheme("document-open");
+    QIcon saveicon  = QIcon::fromTheme("document-save");
+    QIcon reseticon = QIcon::fromTheme("edit-undo");
+    ui->actionOpen->setIcon(openicon);
+    ui->actionSave->setIcon(saveicon);
+    ui->actionReset->setIcon(reseticon);
 
     /* create viewport context menu */
     QMenu* menu = new QMenu;
@@ -84,76 +54,23 @@ MainWindow::MainWindow(QWidget *parent) :
     menu->addAction(setviewport1);
     menu->addAction(setviewport4);
     menu->addAction(setviewport9);
-    viewportsAction->setMenu(menu);
+    ui->actionViewports->setMenu(menu);
 
     /* Configure workspace */
-
-    /* with mdisubwindow */
-    /*
-    QMdiArea* workspace = new QMdiArea();
-    setCentralWidget(workspace);
-
-    QMdiSubWindow* test1 = new QMdiSubWindow(this, Qt::WindowCloseButtonHint);
-    QMdiSubWindow* test2 = new QMdiSubWindow;
-    QMdiSubWindow* test3 = new QMdiSubWindow;
-    QMdiSubWindow* test4 = new QMdiSubWindow;
-    QMdiSubWindow* test5 = new QMdiSubWindow;
-    QMdiSubWindow* test6 = new QMdiSubWindow;
-    QMdiSubWindow* test7 = new QMdiSubWindow;
-    QMdiSubWindow* test8 = new QMdiSubWindow;
-    QMdiSubWindow* test9 = new QMdiSubWindow;
-
-    int width = workspace->width()/3;
-    int height = workspace->height()/3;
-
-    test1->setGeometry(0,0,width,height);
-    test2->setGeometry(width,0,width,height);
-    test3->setGeometry(2*width,0,width,height);
-    test4->setGeometry(0,height,width,height);
-    test5->setGeometry(width,height,width,height);
-    test6->setGeometry(2*width,height,width,height);
-    test7->setGeometry(0,2*height,width,height);
-    test8->setGeometry(width,2*height,width,height);
-    test9->setGeometry(2*width,2*height,width,height);
-    workspace->addSubWindow(test1);
-    workspace->addSubWindow(test2);
-    workspace->addSubWindow(test3);
-    workspace->addSubWindow(test4);
-    workspace->addSubWindow(test5);
-    workspace->addSubWindow(test6);
-    workspace->addSubWindow(test7);
-    workspace->addSubWindow(test8);
-    workspace->addSubWindow(test9);
-
-    test1->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-    test2->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-    test3->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-    test4->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-    test5->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-    test6->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-    test7->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-    test8->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-    test9->setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowTitleHint);
-    */
-
-    /* with workspace class */
-    WorkSpace* workspace = new WorkSpace(this, DEFAULT_VIEWPORTS);
+    workspace = new WorkSpace(this, DEFAULT_VIEWPORTS);
     setCentralWidget(workspace);
 
 
-    //QHBoxLayout* layout = new QHBoxLayout;
-    //setLayout(layout);
+    HealpixMap* map1 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/temponly.fits");
+    HealpixMap* map2 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/iqu.fits");
+    HealpixMap* map3 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32_synfast.fits");
 
-    //QDockWidget* dock1 = new QDockWidget;
-    //layout->addWidget(dock1);
-
-    //setCentralWidget(dock1);
-
-
-    //HealpixMap map("map512.fits");
 
 
     /* configure events */
+    connect(ui->action3Dview, SIGNAL(triggered()), workspace, SLOT(changeTo3D()));
+    connect(ui->actionMollview, SIGNAL(triggered()), workspace, SLOT(changeToMollview()));
+    connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(openFiles()));
 
     /* set viewports */
     QSignalMapper* signalMapper = new QSignalMapper(this);
@@ -169,4 +86,16 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+
+void MainWindow::openFiles()
+{
+    QStringList fileNames;
+
+    /* create the file dialog */
+    fileNames = QFileDialog::getOpenFileNames(this, tr("Choose fits file to open"), QString::null, tr("Fits Files (*.fits)"));
+
+    /* ask workspace to open that files */
+    workspace->openFiles(fileNames);
 }
