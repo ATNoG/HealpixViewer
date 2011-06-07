@@ -5,6 +5,8 @@
 #include <chealpix.h>
 #include <fitsio.h>
 
+using namespace std;
+
 
 class HealpixMap
 {

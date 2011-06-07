@@ -4,12 +4,16 @@
 #
 #-------------------------------------------------
 
-QT       += core gui opengl
+QT       += core gui opengl xml
 
 TARGET = Skyviewer
 TEMPLATE = app
 
-LIBS += -lchealpix -lm -lcfitsio -lQtXml -lQGLViewer
+INCLUDE_PATH = /usr/include
+INCLUDE_DIR = /usr/include
+LIB_DIR = /usr/lib
+
+LIBS += -lchealpix -lm -lcfitsio -L$$LIB_DIR -lqglviewer-qt4
 
 SOURCES += main.cpp\
         mainwindow.cpp \
@@ -17,14 +21,20 @@ SOURCES += main.cpp\
     healpixmap.cpp \
     workspace.cpp \
     mapviewer.cpp \
-    face.cpp
+    face.cpp \
+    boundary.cpp \
+    vertice.cpp \
+    tesselation.cpp
 
 HEADERS  += mainwindow.h \
     mapviewport.h \
     healpixmap.h \
     workspace.h \
     mapviewer.h \
-    face.h
+    face.h \
+    boundary.h \
+    vertice.h \
+    tesselation.h
 
 FORMS    += mainwindow.ui
 

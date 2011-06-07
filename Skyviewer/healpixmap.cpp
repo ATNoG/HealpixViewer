@@ -4,6 +4,7 @@
 
 HealpixMap::HealpixMap(QString path)
 {
+    // TODO: resize faces vector to optimize performance
     // TODO: verify if file exists, etc..
 
     /* open fits file */
@@ -133,7 +134,7 @@ HealpixMap::HealpixMap(QString path)
     /*
     ordering = readOrdering(_ordering);
     coordsys = readCoordsys(_coordsys);
-    npixels  = nside2npix(nside);
+
 
     qDebug() << "Healpixmap readed";
     qDebug() << " Nside = " << nside;
@@ -141,6 +142,11 @@ HealpixMap::HealpixMap(QString path)
     qDebug() << " Ordering = " << _ordering << "(" << ordering << ")";
     qDebug() << " Coordsys = " << _coordsys << "(" << coordsys << ")";
     */
+
+
+
+    nside = 2;
+    npixels  = nside2npix(nside);
 }
 
 

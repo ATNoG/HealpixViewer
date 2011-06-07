@@ -16,17 +16,21 @@
 #define DEFAULT_VIEW_3D true
 
 
+/* forward declaration of WorkSpace class */
+class WorkSpace;
+
 class MapViewport : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MapViewport(QWidget *parent, QString title);
+    explicit MapViewport(QWidget *parent, QString title, WorkSpace* _workspace);
 
     bool isSelected();
     void changeToMollview();
     void changeTo3D();
     void openMap(QString fitsfile);
     void closeMap();
+    void synchronize(QMouseEvent* event, int type);
 
 signals:
 
@@ -41,6 +45,7 @@ private:
     QToolBar *toolbar;
     QCheckBox* checkbox;
     MapViewer* mapviewer;
+    WorkSpace* workspace;
 
     bool selected;
     bool mollview;

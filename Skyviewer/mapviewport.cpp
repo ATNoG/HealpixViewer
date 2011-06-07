@@ -1,22 +1,21 @@
 #include "mapviewport.h"
 #include <QIcon>
 #include <QAction>
+#include "workspace.h"
 
-MapViewport::MapViewport(QWidget *parent, QString title) :
+MapViewport::MapViewport(QWidget *parent, QString title, WorkSpace* _workspace) :
     QWidget(parent)
 {
     this->title = title;
     this->selected = false;  // by default viewport is not selected
     this->mollview = !DEFAULT_VIEW_3D;
+    this->workspace = _workspace;
 
     /* configure the user interface */
     configureUI();
 
     /* connect events */
     connect(checkbox, SIGNAL(toggled(bool)), this, SLOT(selectionChanged(bool)));
-
-    /* force mapviewer update */
-    mapviewer->updateGL();
 }
 
 
@@ -52,6 +51,15 @@ void MapViewport::configureUI()
 
     /* configure the size policy */
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    /* connect signals */
+    //connect(mapviewer, SIGNAL(mouseMoveEvent(QMouseEvent*)), workspace, SLOT(syncViewports(QMouseEvent*)));
+    //connect(mapviewer, SIGNAL(drawNeeded()), workspace, SLOT(changeTo3D()));
+    //connect(mapviewer, SIGNAL(drawFinished(bool)), workspace, SLOT(teste(bool)));
+
+    connect(mapviewer, SIGNAL(synchronizeMouseMove(QMouseEvent*)), workspace, SLOT(syncViewportsMouseMove(QMouseEvent*)));
+    connect(mapviewer, SIGNAL(synchronizeMousePress(QMouseEvent*)), workspace, SLOT(syncViewportsMousePress(QMouseEvent*)));
+
 }
 
 
@@ -136,4 +144,11 @@ void MapViewport::selectionChanged(bool selected)
         selectViewport();
     else
         deselectViewport();
+}
+
+
+
+void MapViewport::synchronize(QMouseEvent *event, int type)
+{
+    mapviewer->synchronize(event, type);
 }

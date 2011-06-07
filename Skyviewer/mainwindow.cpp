@@ -60,11 +60,12 @@ MainWindow::MainWindow(QWidget *parent) :
     workspace = new WorkSpace(this, DEFAULT_VIEWPORTS);
     setCentralWidget(workspace);
 
-
-    HealpixMap* map1 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/temponly.fits");
-    HealpixMap* map2 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/iqu.fits");
-    HealpixMap* map3 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32_synfast.fits");
-
+    QStringList files;
+    files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32_synfast.fits");
+    workspace->openFiles(files);
+    //HealpixMap* map1 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/temponly.fits");
+    //HealpixMap* map2 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/iqu.fits");
+    //HealpixMap* map3 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32_synfast.fits");
 
 
     /* configure events */

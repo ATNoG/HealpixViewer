@@ -98,7 +98,7 @@ void WorkSpace::configureWorkspace(int viewportsWanted)
             QString qs = "HealpixMap " + qs1;
 
             /* create the viewport without parent */
-            MapViewport* viewport = new MapViewport(NULL, qs);
+            MapViewport* viewport = new MapViewport(NULL, qs, this);
             viewports.append(viewport);
         }
     }
@@ -123,4 +123,26 @@ void WorkSpace::changeTo3D()
     foreach(viewport, viewports)
         if(viewport->isSelected())
             viewport->changeTo3D();
+}
+
+
+void WorkSpace::syncViewportsMouseMove(QMouseEvent* e)
+{
+    qDebug() << "MouseMove!";
+
+    MapViewport* viewport;
+    foreach(viewport, viewports)
+        if(viewport->isSelected())
+            viewport->synchronize(e, 1);
+}
+
+
+void WorkSpace::syncViewportsMousePress(QMouseEvent* e)
+{
+    qDebug() << "MousePress!";
+
+    MapViewport* viewport;
+    foreach(viewport, viewports)
+        if(viewport->isSelected())
+            viewport->synchronize(e, 0);
 }

@@ -17,11 +17,15 @@ public:
     void openFiles(QStringList filenames);
 
 signals:
+    void synchronizeMouseMove(QMouseEvent* e);
+    void synchronizeMousePress(QMouseEvent* e);
 
 public slots:
     void configureWorkspace(int numberViewports);
     void changeToMollview();
     void changeTo3D();
+    void syncViewportsMouseMove(QMouseEvent* e);
+    void syncViewportsMousePress(QMouseEvent* e);
 
 private:
     int numberViewports;
