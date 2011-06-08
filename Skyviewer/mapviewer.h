@@ -20,7 +20,7 @@ public:
     void synchronize(QEvent* e, int type);
 
 signals:
-    void cameraChanged(QEvent* e, int type);
+    void cameraChanged(QEvent* e, int type, MapViewer* viewer);
     //void objectMoved(QMouseEvent* e, int type);
     //void objectZoomed(QWheelEvent* e);
 
@@ -28,10 +28,10 @@ protected:
     virtual void init(void);
     virtual void draw(void);
     virtual void mousePressEvent(QMouseEvent* e);
+    virtual void mouseReleaseEvent(QMouseEvent *);
     virtual void mouseMoveEvent(QMouseEvent* e);
     virtual void wheelEvent(QWheelEvent* e);
-
-signals:
+    virtual void startSpinning(int interval);
 
 public slots:
 
@@ -39,7 +39,7 @@ private:
     HealpixMap* skymap;
     Tesselation* tesselation;
 
-    enum MouseEvent {MOUSEPRESS, MOUSEMOVE, MOUSEWHEEL};
+    enum MouseEvent {MOUSEPRESS, MOUSEMOVE, MOUSEWHEEL, MOUSERELEASE};
 };
 
 #endif // MAPVIEWER_H

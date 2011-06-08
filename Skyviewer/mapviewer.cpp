@@ -12,21 +12,21 @@ MapViewer::MapViewer(QWidget *parent) :
 void MapViewer::draw()
 {
     // Save the current model view matrix (not needed here in fact)
-      glPushMatrix();
+      //glPushMatrix();
 
       // Multiply matrix to get in the frame coordinate system.
-      glMultMatrixd(manipulatedFrame()->matrix());
+      //glMultMatrixd(manipulatedFrame()->matrix());
 
       // Scale down the drawings
-      glScalef(0.3f, 0.3f, 0.3f);
+      //glScalef(0.3f, 0.3f, 0.3f);
 
       // Draw an axis using the QGLViewer static function
-      drawAxis();
+      //drawAxis();
 
       tesselation->draw();
 
       // Restore the original (world) coordinate system
-      glPopMatrix();
+      // glPopMatrix();
 }
 
 
@@ -44,7 +44,6 @@ void MapViewer::init()
     setBackgroundColor(QColor(0,0,0));	// Black background.
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    setFPSIsDisplayed(true);
 
     /*
         Define the lighting.
@@ -68,17 +67,22 @@ void MapViewer::init()
     /*
         Configure the camera.
     */
-    qglviewer::CameraConstraint *constraint;
     camera()->setPosition( Vec(3.0,0,0) );
     camera()->lookAt( Vec(0,0,0) );
     camera()->setUpVector(Vec(0,0,1));
+
+
+    /*
+    qglviewer::CameraConstraint *constraint;
     constraint = new CameraConstraint(camera());
     constraint->setRotationConstraintType(AxisPlaneConstraint::FREE);
-    camera()->frame()->setConstraint(constraint);
+    camera()->frame()->setConstraint(constraint);*/
+
+    //ManipulatedFrame* mframe = new ManipulatedFrame();
+    //setManipulatedFrame(mframe);
+    //setAxisIsDrawn();
 
 
-    setManipulatedFrame(new ManipulatedFrame());
-    setAxisIsDrawn();
 
     /*
         Recover the state from a prior run.
@@ -86,9 +90,9 @@ void MapViewer::init()
     restoreStateFromFile();
 
 
+    /* create the sphere tesselation */
     tesselation = new Tesselation(64);
 }
-
 
 void MapViewer::changeToMollview()
 {
@@ -104,21 +108,28 @@ void MapViewer::changeTo3D()
 void MapViewer::mousePressEvent(QMouseEvent* e)
 {
     QGLViewer::mousePressEvent(e);
-    emit(cameraChanged(e, MOUSEPRESS));
+    emit(cameraChanged(e, MOUSEPRESS, this));
 }
 
+
+void MapViewer::mouseReleaseEvent(QMouseEvent *e)
+{
+    // TODO: just a hack to disable spinning... may have problems when selecting a pixel for example
+    //QGLViewer::mouseReleaseEvent(e);
+    emit(cameraChanged(e, MOUSERELEASE, this));
+}
 
 void MapViewer::mouseMoveEvent(QMouseEvent* e)
 {
     QGLViewer::mouseMoveEvent(e);
-    emit(cameraChanged(e, MOUSEMOVE));
+    emit(cameraChanged(e, MOUSEMOVE, this));
 }
 
 
 void MapViewer::wheelEvent(QWheelEvent *e)
 {
     QGLViewer::wheelEvent(e);
-    emit(cameraChanged(e, MOUSEWHEEL));
+    emit(cameraChanged(e, MOUSEWHEEL, this));
 }
 
 
@@ -128,11 +139,14 @@ void MapViewer::synchronize(QEvent *e, int type)
     {
         case MOUSEMOVE:
             QGLViewer::mouseMoveEvent((QMouseEvent*) e);
-            qDebug("mouse move");
             break;
 
         case MOUSEPRESS:
             QGLViewer::mousePressEvent((QMouseEvent*) e);
+            break;
+
+        case MOUSERELEASE:
+            QGLViewer::mouseReleaseEvent((QMouseEvent*) e);
             break;
 
         case MOUSEWHEEL:
@@ -141,3 +155,8 @@ void MapViewer::synchronize(QEvent *e, int type)
     }
 }
 
+
+void MapViewer::startSpinning(int interval)
+{
+    qDebug("start spinning");
+}

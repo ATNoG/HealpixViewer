@@ -17,14 +17,14 @@ public:
     void openFiles(QStringList filenames);
 
 signals:
-    void syncNeeded(QEvent* e, int type);
+    void syncNeeded(QEvent* e, int type, MapViewer* source);
 
 public slots:
     void configureWorkspace(int numberViewports);
     void changeToMollview();
     void changeTo3D();
     void changeSynchronization(bool on);
-    void syncViewports(QEvent* e, int type);
+    void syncViewports(QEvent* e, int type, MapViewer* viewer);
 
 private:
     int numberViewports;

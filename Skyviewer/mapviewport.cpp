@@ -78,9 +78,9 @@ void MapViewport::selectViewport()
 
     /* connect signals */
     /* listen for object moved in a viewport */
-    connect(mapviewer, SIGNAL(cameraChanged(QEvent*, int)), workspace, SLOT(syncViewports(QEvent*, int)));
+    connect(mapviewer, SIGNAL(cameraChanged(QEvent*, int, MapViewer*)), workspace, SLOT(syncViewports(QEvent*, int, MapViewer*)));
     /* listen for sync needed, to force viewports to update */
-    connect(workspace, SIGNAL(syncNeeded(QEvent*,int)), this, SLOT(synchronizeView(QEvent*, int)));
+    connect(workspace, SIGNAL(syncNeeded(QEvent*,int, MapViewer*)), this, SLOT(synchronizeView(QEvent*, int, MapViewer*)));
 }
 
 void MapViewport::deselectViewport()
@@ -92,8 +92,8 @@ void MapViewport::deselectViewport()
     titlewidget->setStyleSheet(QString("background-color: %1; border-top-right-radius: 9px; border-top-left-radius: 9px; ").arg(COLOR_INACTIVE));
 
     /* disconnect signals */
-    disconnect(mapviewer, SIGNAL(cameraChanged(QEvent*, int)), workspace, SLOT(syncViewports(QEvent*, int)));
-    disconnect(workspace, SIGNAL(syncNeeded(QEvent*,int)), this, SLOT(synchronizeView(QEvent*, int)));
+    disconnect(mapviewer, SIGNAL(cameraChanged(QEvent*, int, MapViewer*)), workspace, SLOT(syncViewports(QEvent*, int, MapViewer*)));
+    disconnect(workspace, SIGNAL(syncNeeded(QEvent*, int, MapViewer*)), this, SLOT(synchronizeView(QEvent*, int, MapViewer*)));
 }
 
 void MapViewport::changeToMollview()
@@ -149,8 +149,8 @@ void MapViewport::selectionChanged(bool selected)
 
 
 
-void MapViewport::synchronizeView(QEvent *event, int type)
+void MapViewport::synchronizeView(QEvent *event, int type, MapViewer* source)
 {
-    if(isSelected())
+    if(isSelected() && mapviewer!=source)
         mapviewer->synchronize(event, type);
 }

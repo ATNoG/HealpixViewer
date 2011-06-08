@@ -129,12 +129,12 @@ void WorkSpace::changeTo3D()
 }
 
 
-void WorkSpace::syncViewports(QEvent* e, int type)
+void WorkSpace::syncViewports(QEvent* e, int type, MapViewer* source)
 {
     if(synchronize)
     {
         /* synchronize is enable, so emit the signal to be catched by the viewports */
-        emit(syncNeeded(e, type));
+        emit(syncNeeded(e, type, source));
     }
 }
 

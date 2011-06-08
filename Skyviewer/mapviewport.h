@@ -35,7 +35,7 @@ signals:
 
 public slots:
     void selectionChanged(bool selected);
-    void synchronizeView(QEvent* event, int type);
+    void synchronizeView(QEvent* event, int type, MapViewer* source);
 
 private:
     QString title;
