@@ -116,7 +116,7 @@ void MapViewer::mouseReleaseEvent(QMouseEvent *e)
 {
     // TODO: just a hack to disable spinning... may have problems when selecting a pixel for example
     //QGLViewer::mouseReleaseEvent(e);
-    emit(cameraChanged(e, MOUSERELEASE, this));
+    //emit(cameraChanged(e, MOUSERELEASE, this));
 }
 
 void MapViewer::mouseMoveEvent(QMouseEvent* e)
@@ -145,18 +145,14 @@ void MapViewer::synchronize(QEvent *e, int type)
             QGLViewer::mousePressEvent((QMouseEvent*) e);
             break;
 
+            /*
         case MOUSERELEASE:
             QGLViewer::mouseReleaseEvent((QMouseEvent*) e);
             break;
+            */
 
         case MOUSEWHEEL:
             QGLViewer::wheelEvent((QWheelEvent*) e);
             break;
     }
-}
-
-
-void MapViewer::startSpinning(int interval)
-{
-    qDebug("start spinning");
 }
