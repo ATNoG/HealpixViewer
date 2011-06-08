@@ -104,21 +104,40 @@ void MapViewer::changeTo3D()
 void MapViewer::mousePressEvent(QMouseEvent* e)
 {
     QGLViewer::mousePressEvent(e);
-    emit(synchronizeMousePress(e));
+    emit(cameraChanged(e, MOUSEPRESS));
 }
 
 
 void MapViewer::mouseMoveEvent(QMouseEvent* e)
 {
     QGLViewer::mouseMoveEvent(e);
-    emit(synchronizeMouseMove(e));
+    emit(cameraChanged(e, MOUSEMOVE));
 }
 
 
-void MapViewer::synchronize(QMouseEvent *e, int type)
+void MapViewer::wheelEvent(QWheelEvent *e)
 {
-    if(type==0)
-        QGLViewer::mousePressEvent(e);
-    else
-        QGLViewer::mouseMoveEvent(e);
+    QGLViewer::wheelEvent(e);
+    emit(cameraChanged(e, MOUSEWHEEL));
 }
+
+
+void MapViewer::synchronize(QEvent *e, int type)
+{
+    switch(type)
+    {
+        case MOUSEMOVE:
+            QGLViewer::mouseMoveEvent((QMouseEvent*) e);
+            qDebug("mouse move");
+            break;
+
+        case MOUSEPRESS:
+            QGLViewer::mousePressEvent((QMouseEvent*) e);
+            break;
+
+        case MOUSEWHEEL:
+            QGLViewer::wheelEvent((QWheelEvent*) e);
+            break;
+    }
+}
+

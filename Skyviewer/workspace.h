@@ -17,15 +17,14 @@ public:
     void openFiles(QStringList filenames);
 
 signals:
-    void synchronizeMouseMove(QMouseEvent* e);
-    void synchronizeMousePress(QMouseEvent* e);
+    void syncNeeded(QEvent* e, int type);
 
 public slots:
     void configureWorkspace(int numberViewports);
     void changeToMollview();
     void changeTo3D();
-    void syncViewportsMouseMove(QMouseEvent* e);
-    void syncViewportsMousePress(QMouseEvent* e);
+    void changeSynchronization(bool on);
+    void syncViewports(QEvent* e, int type);
 
 private:
     int numberViewports;
@@ -33,6 +32,8 @@ private:
     QList<MapViewport*> viewports;
 
     void drawViewports(int oldnviewports, int newnviewports);
+
+    bool synchronize;
 };
 
 #endif // WORKSPACE_H

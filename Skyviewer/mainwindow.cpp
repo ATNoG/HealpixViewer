@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     /* set options as checkable */
     setviewport1->setCheckable(true);
     setviewport4->setCheckable(true);
-    setviewport9->setCheckable(true);
+    setviewport9->setCheckable(true);    
 
     /* select the default viewports */
     switch(DEFAULT_VIEWPORTS)
@@ -50,6 +50,9 @@ MainWindow::MainWindow(QWidget *parent) :
             break;
     }
 
+    /* button synchronize can be checkable */
+    ui->actionSynchronize->setCheckable(true);
+
     /* add actions to menu */
     menu->addAction(setviewport1);
     menu->addAction(setviewport4);
@@ -60,18 +63,11 @@ MainWindow::MainWindow(QWidget *parent) :
     workspace = new WorkSpace(this, DEFAULT_VIEWPORTS);
     setCentralWidget(workspace);
 
-    QStringList files;
-    files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32_synfast.fits");
-    workspace->openFiles(files);
-    //HealpixMap* map1 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/temponly.fits");
-    //HealpixMap* map2 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/iqu.fits");
-    //HealpixMap* map3 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32_synfast.fits");
-
-
     /* configure events */
     connect(ui->action3Dview, SIGNAL(triggered()), workspace, SLOT(changeTo3D()));
     connect(ui->actionMollview, SIGNAL(triggered()), workspace, SLOT(changeToMollview()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(openFiles()));
+    connect(ui->actionSynchronize, SIGNAL(triggered(bool)), workspace, SLOT(changeSynchronization(bool)));
 
     /* set viewports */
     QSignalMapper* signalMapper = new QSignalMapper(this);
@@ -82,6 +78,13 @@ MainWindow::MainWindow(QWidget *parent) :
     signalMapper->setMapping(setviewport4, 4);
     signalMapper->setMapping(setviewport9, 9);
     connect(signalMapper, SIGNAL(mapped(int)), workspace, SLOT(configureWorkspace(int)));
+
+    QStringList files;
+    files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32_synfast.fits");
+    workspace->openFiles(files);
+    //HealpixMap* map1 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/temponly.fits");
+    //HealpixMap* map2 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/iqu.fits");
+    //HealpixMap* map3 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32_synfast.fits");
 }
 
 MainWindow::~MainWindow()

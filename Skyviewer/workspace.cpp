@@ -13,6 +13,9 @@ WorkSpace::WorkSpace(QWidget *parent, int numberViewports) :
     configureWorkspace(numberViewports);
 
     this->setMinimumSize(350, 300);
+
+    /* do not sync at begin */
+    this->synchronize = false;
 }
 
 
@@ -126,23 +129,17 @@ void WorkSpace::changeTo3D()
 }
 
 
-void WorkSpace::syncViewportsMouseMove(QMouseEvent* e)
+void WorkSpace::syncViewports(QEvent* e, int type)
 {
-    qDebug() << "MouseMove!";
-
-    MapViewport* viewport;
-    foreach(viewport, viewports)
-        if(viewport->isSelected())
-            viewport->synchronize(e, 1);
+    if(synchronize)
+    {
+        /* synchronize is enable, so emit the signal to be catched by the viewports */
+        emit(syncNeeded(e, type));
+    }
 }
 
 
-void WorkSpace::syncViewportsMousePress(QMouseEvent* e)
+void WorkSpace::changeSynchronization(bool on)
 {
-    qDebug() << "MousePress!";
-
-    MapViewport* viewport;
-    foreach(viewport, viewports)
-        if(viewport->isSelected())
-            viewport->synchronize(e, 0);
+    synchronize = on;
 }

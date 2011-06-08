@@ -30,12 +30,12 @@ public:
     void changeTo3D();
     void openMap(QString fitsfile);
     void closeMap();
-    void synchronize(QMouseEvent* event, int type);
 
 signals:
 
 public slots:
     void selectionChanged(bool selected);
+    void synchronizeView(QEvent* event, int type);
 
 private:
     QString title;

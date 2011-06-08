@@ -7,6 +7,7 @@
 #include "healpixmap.h"
 #include "tesselation.h"
 
+
 class MapViewer : public QGLViewer
 {
     Q_OBJECT
@@ -16,19 +17,19 @@ public:
     void changeToMollview();
     void changeTo3D();
     void loadMap(HealpixMap* map);
-    void synchronize(QMouseEvent* e, int type);
+    void synchronize(QEvent* e, int type);
 
 signals:
-    void synchronizeMouseMove(QMouseEvent* e);
-    void synchronizeMousePress(QMouseEvent* e);
+    void cameraChanged(QEvent* e, int type);
+    //void objectMoved(QMouseEvent* e, int type);
+    //void objectZoomed(QWheelEvent* e);
 
 protected:
     virtual void init(void);
     virtual void draw(void);
     virtual void mousePressEvent(QMouseEvent* e);
     virtual void mouseMoveEvent(QMouseEvent* e);
-    //virtual void animate (void);
-    //virtual void postSelection (const QPoint &pt);
+    virtual void wheelEvent(QWheelEvent* e);
 
 signals:
 
@@ -37,6 +38,8 @@ public slots:
 private:
     HealpixMap* skymap;
     Tesselation* tesselation;
+
+    enum MouseEvent {MOUSEPRESS, MOUSEMOVE, MOUSEWHEEL};
 };
 
 #endif // MAPVIEWER_H

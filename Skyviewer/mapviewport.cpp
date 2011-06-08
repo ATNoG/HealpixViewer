@@ -40,7 +40,7 @@ void MapViewport::configureUI()
     QLabel* lbltitle = new QLabel;
     lbltitle->setText(title);
     checkbox = new QCheckBox;
-    mapviewer = new MapViewer;
+    mapviewer = new MapViewer(this);
     mapviewer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);   // allow viewer area to expand
 
     /* add widgets */
@@ -51,15 +51,6 @@ void MapViewport::configureUI()
 
     /* configure the size policy */
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-    /* connect signals */
-    //connect(mapviewer, SIGNAL(mouseMoveEvent(QMouseEvent*)), workspace, SLOT(syncViewports(QMouseEvent*)));
-    //connect(mapviewer, SIGNAL(drawNeeded()), workspace, SLOT(changeTo3D()));
-    //connect(mapviewer, SIGNAL(drawFinished(bool)), workspace, SLOT(teste(bool)));
-
-    connect(mapviewer, SIGNAL(synchronizeMouseMove(QMouseEvent*)), workspace, SLOT(syncViewportsMouseMove(QMouseEvent*)));
-    connect(mapviewer, SIGNAL(synchronizeMousePress(QMouseEvent*)), workspace, SLOT(syncViewportsMousePress(QMouseEvent*)));
-
 }
 
 
@@ -84,6 +75,12 @@ void MapViewport::selectViewport()
     /* change titlebar color */
     // TODO: dont rewrite all properties again
     titlewidget->setStyleSheet(QString("background-color: %1; border-top-right-radius: 9px; border-top-left-radius: 9px; ").arg(COLOR_SELECTED));
+
+    /* connect signals */
+    /* listen for object moved in a viewport */
+    connect(mapviewer, SIGNAL(cameraChanged(QEvent*, int)), workspace, SLOT(syncViewports(QEvent*, int)));
+    /* listen for sync needed, to force viewports to update */
+    connect(workspace, SIGNAL(syncNeeded(QEvent*,int)), this, SLOT(synchronizeView(QEvent*, int)));
 }
 
 void MapViewport::deselectViewport()
@@ -93,6 +90,10 @@ void MapViewport::deselectViewport()
     /* change titlebar color */
     // TODO: dont rewrite all properties again
     titlewidget->setStyleSheet(QString("background-color: %1; border-top-right-radius: 9px; border-top-left-radius: 9px; ").arg(COLOR_INACTIVE));
+
+    /* disconnect signals */
+    disconnect(mapviewer, SIGNAL(cameraChanged(QEvent*, int)), workspace, SLOT(syncViewports(QEvent*, int)));
+    disconnect(workspace, SIGNAL(syncNeeded(QEvent*,int)), this, SLOT(synchronizeView(QEvent*, int)));
 }
 
 void MapViewport::changeToMollview()
@@ -148,7 +149,8 @@ void MapViewport::selectionChanged(bool selected)
 
 
 
-void MapViewport::synchronize(QMouseEvent *event, int type)
+void MapViewport::synchronizeView(QEvent *event, int type)
 {
-    mapviewer->synchronize(event, type);
+    if(isSelected())
+        mapviewer->synchronize(event, type);
 }
