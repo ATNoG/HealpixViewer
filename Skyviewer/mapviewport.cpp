@@ -68,9 +68,13 @@ bool MapViewport::isSelected()
     return selected;
 }
 
-void MapViewport::selectViewport()
+void MapViewport::selectViewport(bool changeCheckbox)
 {
     selected = true;
+
+    /* if function called by workspace, change the checkbox status */
+    if(changeCheckbox)
+        checkbox->setChecked(true);
 
     /* change titlebar color */
     // TODO: dont rewrite all properties again
@@ -83,9 +87,13 @@ void MapViewport::selectViewport()
     connect(workspace, SIGNAL(syncNeeded(QEvent*,int, MapViewer*)), this, SLOT(synchronizeView(QEvent*, int, MapViewer*)));
 }
 
-void MapViewport::deselectViewport()
+void MapViewport::deselectViewport(bool changeCheckbox)
 {
     selected = false;
+
+    /* if function called by workspace, change the checkbox status */
+    if(changeCheckbox)
+        checkbox->setChecked(false);
 
     /* change titlebar color */
     // TODO: dont rewrite all properties again
@@ -142,9 +150,9 @@ void MapViewport::closeMap()
 void MapViewport::selectionChanged(bool selected)
 {
     if(selected)
-        selectViewport();
+        selectViewport(false);
     else
-        deselectViewport();
+        deselectViewport(false);
 }
 
 

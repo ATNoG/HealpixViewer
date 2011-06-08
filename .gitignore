@@ -1,3 +1,4 @@
+*.o
 /Skyviewer-build-desktop/boundary.o
 /Skyviewer-build-desktop/face.o
 /Skyviewer-build-desktop/healpixmap.o

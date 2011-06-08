@@ -30,8 +30,11 @@ public:
     void changeTo3D();
     void openMap(QString fitsfile);
     void closeMap();
+    void selectViewport(bool changeCheckbox);
+    void deselectViewport(bool changeCheckbox);
 
 signals:
+
 
 public slots:
     void selectionChanged(bool selected);
@@ -50,8 +53,6 @@ private:
     bool selected;
     bool mollview;
 
-    void selectViewport();
-    void deselectViewport();
     void loadHealpixMap(QString path);
     void configureUI();
 };
