@@ -25,6 +25,8 @@ public slots:
     void changeTo3D();
     void changeSynchronization(bool on);
     void syncViewports(QEvent* e, int type, MapViewer* viewer);
+    void selectAllViewports();
+    void deselectAllViewports();
 
 private:
     int numberViewports;

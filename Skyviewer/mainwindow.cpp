@@ -50,9 +50,6 @@ MainWindow::MainWindow(QWidget *parent) :
             break;
     }
 
-    /* button synchronize can be checkable */
-    ui->actionSynchronize->setCheckable(true);
-
     /* add actions to menu */
     menu->addAction(setviewport1);
     menu->addAction(setviewport4);
@@ -68,6 +65,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionMollview, SIGNAL(triggered()), workspace, SLOT(changeToMollview()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(openFiles()));
     connect(ui->actionSynchronize, SIGNAL(triggered(bool)), workspace, SLOT(changeSynchronization(bool)));
+    connect(ui->actionSelectAll, SIGNAL(triggered()), workspace, SLOT(selectAllViewports()));
+    connect(ui->actionDeselectAll, SIGNAL(triggered()), workspace, SLOT(deselectAllViewports()));
+
 
     /* set viewports */
     QSignalMapper* signalMapper = new QSignalMapper(this);

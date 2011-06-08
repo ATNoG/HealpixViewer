@@ -7,8 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>679</width>
-    <height>384</height>
+    <height>1000</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>1000</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Healpix Viewer</string>
@@ -71,7 +77,7 @@
    <property name="minimumSize">
     <size>
      <width>40</width>
-     <height>300</height>
+     <height>500</height>
     </size>
    </property>
    <property name="windowTitle">
@@ -95,6 +101,8 @@
    <addaction name="actionSynchronize"/>
    <addaction name="actionColors"/>
    <addaction name="actionExtract"/>
+   <addaction name="actionSelectAll"/>
+   <addaction name="actionDeselectAll"/>
   </widget>
   <action name="actionAbout">
    <property name="text">
@@ -114,7 +122,7 @@
   </action>
   <action name="actionOpen">
    <property name="text">
-    <string>&amp;Open</string>
+    <string>Open</string>
    </property>
    <property name="toolTip">
     <string>&amp;Open Map</string>
@@ -122,7 +130,7 @@
   </action>
   <action name="actionSave">
    <property name="text">
-    <string>&amp;Save</string>
+    <string>Save</string>
    </property>
    <property name="toolTip">
     <string>&amp;Save</string>
@@ -130,7 +138,7 @@
   </action>
   <action name="actionReset">
    <property name="text">
-    <string>&amp;Reset</string>
+    <string>Reset</string>
    </property>
    <property name="toolTip">
     <string>&amp;Reset Views</string>
@@ -142,7 +150,7 @@
      <normaloff>:/images/icons/3dview.gif</normaloff>:/images/icons/3dview.gif</iconset>
    </property>
    <property name="text">
-    <string>&amp;3D view</string>
+    <string>3D view</string>
    </property>
    <property name="toolTip">
     <string>&amp;Switch to 3D</string>
@@ -154,7 +162,7 @@
      <normaloff>:/images/icons/mollview.gif</normaloff>:/images/icons/mollview.gif</iconset>
    </property>
    <property name="text">
-    <string>&amp;Mollview</string>
+    <string>Mollview</string>
    </property>
    <property name="toolTip">
     <string>&amp;Switch to Mollview</string>
@@ -166,19 +174,22 @@
      <normaloff>:/images/icons/viewports.gif</normaloff>:/images/icons/viewports.gif</iconset>
    </property>
    <property name="text">
-    <string>&amp;Viewports</string>
+    <string>Viewports</string>
    </property>
    <property name="toolTip">
     <string>&amp;Choose Viewports</string>
    </property>
   </action>
   <action name="actionSynchronize">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="icons.qrc">
      <normaloff>:/images/icons/sync.gif</normaloff>:/images/icons/sync.gif</iconset>
    </property>
    <property name="text">
-    <string>&amp;Synchronize views</string>
+    <string>Synchronize views</string>
    </property>
    <property name="toolTip">
     <string>&amp;Synchronize views</string>
@@ -190,7 +201,7 @@
      <normaloff>:/images/icons/colormap.gif</normaloff>:/images/icons/colormap.gif</iconset>
    </property>
    <property name="text">
-    <string>&amp;Colors</string>
+    <string>Colors</string>
    </property>
    <property name="toolTip">
     <string>&amp;Select colors</string>
@@ -202,10 +213,34 @@
      <normaloff>:/images/icons/extract.gif</normaloff>:/images/icons/extract.gif</iconset>
    </property>
    <property name="text">
-    <string>&amp;Extract</string>
+    <string>Extract</string>
    </property>
    <property name="toolTip">
     <string>&amp;Extract ROI</string>
+   </property>
+  </action>
+  <action name="actionSelectAll">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/selectall.gif</normaloff>:/images/icons/selectall.gif</iconset>
+   </property>
+   <property name="text">
+    <string>Select All</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Select All Viewports</string>
+   </property>
+  </action>
+  <action name="actionDeselectAll">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/deselectall.gif</normaloff>:/images/icons/deselectall.gif</iconset>
+   </property>
+   <property name="text">
+    <string>Deselect All</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Deselect All</string>
    </property>
   </action>
  </widget>

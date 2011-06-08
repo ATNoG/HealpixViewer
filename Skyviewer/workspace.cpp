@@ -143,3 +143,19 @@ void WorkSpace::changeSynchronization(bool on)
 {
     synchronize = on;
 }
+
+
+void WorkSpace::selectAllViewports()
+{
+    MapViewport* viewport;
+    foreach(viewport, viewports)
+        viewport->selectViewport(true);
+}
+
+
+void WorkSpace::deselectAllViewports()
+{
+    MapViewport* viewport;
+    foreach(viewport, viewports)
+        viewport->deselectViewport(true);
+}
