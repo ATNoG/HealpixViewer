@@ -6,5 +6,7 @@
         <file>images/icons/sync.gif</file>
         <file>images/icons/colormap.gif</file>
         <file>images/icons/extract.gif</file>
+        <file>images/icons/selectall.gif</file>
+        <file>images/icons/deselectall.gif</file>
     </qresource>
 </RCC>
