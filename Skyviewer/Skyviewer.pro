@@ -24,7 +24,8 @@ SOURCES += main.cpp\
     face.cpp \
     boundary.cpp \
     vertice.cpp \
-    tesselation.cpp
+    tesselation.cpp \
+    colortable.cpp
 
 HEADERS  += mainwindow.h \
     mapviewport.h \
@@ -34,7 +35,9 @@ HEADERS  += mainwindow.h \
     face.h \
     boundary.h \
     vertice.h \
-    tesselation.h
+    tesselation.h \
+    colortable.h \
+    define_colortable.h
 
 FORMS    += mainwindow.ui
 

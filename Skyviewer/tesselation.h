@@ -10,7 +10,7 @@ class Tesselation
 {
 
 public:
-    Tesselation(int nside);
+    Tesselation(int nside, bool mollview);
     void draw();
 
 private:
@@ -23,6 +23,8 @@ private:
 
     void init();
     void getRingLatitudes();
+
+    bool mollview;
 };
 
 #endif // TESSELATION_H

@@ -12,10 +12,11 @@ public:
     Vertice();
 
     void setVertS(double theta, double phi, double rad = 1.);
+    void setTex(double s, double t);
     void draw();
 
-private:
     float x,y,z;
+    float s, t;
 
 };
 

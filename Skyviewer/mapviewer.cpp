@@ -1,11 +1,12 @@
 #include "mapviewer.h"
+#include <math.h>
 
 using namespace qglviewer;
 
 MapViewer::MapViewer(QWidget *parent) :
     QGLViewer(parent)
 {
-
+    skymap = NULL;
 }
 
 /* create the gl model for the map */
@@ -23,7 +24,17 @@ void MapViewer::draw()
       // Draw an axis using the QGLViewer static function
       //drawAxis();
 
-      tesselation->draw();
+    if(skymap!=NULL)
+    {
+        //qDebug("map exists, draw it!");
+        /* show texture */
+        skymap->drawMap();
+    }
+    //else
+      //  qDebug("no map yet");
+
+    glColor3f(1.0, 1.0, 1.0);
+    tesselation->draw();
 
       // Restore the original (world) coordinate system
       // glPopMatrix();
@@ -91,7 +102,22 @@ void MapViewer::init()
 
 
     /* create the sphere tesselation */
-    tesselation = new Tesselation(64);
+
+    int nside = 64;
+    /*
+    QTime time1;
+    int total = 0;
+    for(int j=0; j<1; j++)
+    {
+        time1.restart();
+        */
+        tesselation = new Tesselation(nside, false);
+        /*int ms = time1.elapsed();
+        total += ms;
+        qDebug() << "Tesselation init for nside " << nside << " = " << ms << " ms";
+    }
+    qDebug() << "Tesselation init for nside " << nside << " mean time = " << total << " ms";
+    */
 }
 
 void MapViewer::changeToMollview()

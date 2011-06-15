@@ -1,8 +1,9 @@
 #include "tesselation.h"
 
-Tesselation::Tesselation(int _nside)
+Tesselation::Tesselation(int _nside, bool _mollview)
 {
     nside = _nside;
+    mollview = _mollview;
     init();
 }
 
@@ -92,16 +93,16 @@ void Tesselation::init()
         faces.append(f);
     }
 
-    qDebug("Set rigging");
+    /* TODO: input of setRigging ok */
 
     /* set face rigging */
     unsigned int i;
     for(i=0; i<4; i++)
-        faces[i].setRigging(nside, costhetas_np);
+        faces[i].setRigging(nside, costhetas_np, mollview);
     for(; i<8; i++)
-        faces[i].setRigging(nside, costhetas_eq);
+        faces[i].setRigging(nside, costhetas_eq, mollview);
     for(; i<12; i++)
-        faces[i].setRigging(nside, costhetas_sp);
+        faces[i].setRigging(nside, costhetas_sp, mollview);
 }
 
 
@@ -109,38 +110,42 @@ void Tesselation::init()
 void Tesselation::draw()
 {
     /* draw each face */
-    /*for(int i=0; i<12; i++)
+    for(int i=0; i<12; i++)
     {
         faces[i].draw();
-    }*/
+    }
 
-    glColor3f(1.0, 0.0, 0.0);
+   // faces[0].draw();
+
 /*
     for(int i=3; i<8; i++)
         faces[i].draw();*/
 
+
+
+/*
     glColor3f(1.0, 0.0, 0.0);
-            faces[0].draw();
-            glColor3f(0.0, 1.0, 0.0);
-            faces[1].draw();
-            glColor3f(0.0, 0.0, 1.0);
-            faces[2].draw();
-            glColor3f(1.0, 1.0, 0.0);
-            faces[3].draw();
-            glColor3f(0.0, 1.0, 1.0);
-            faces[4].draw();
-            glColor3f(1.0, 0.0, 1.0);
-            faces[5].draw();
-            glColor3f(0.5, 1.0, 0.0);
-            faces[6].draw();
-            glColor3f(0.0, 1.0, 0.5);
-            faces[7].draw();
-            glColor3f(0.5, 1.0, 0.5);
-            faces[8].draw();
-            glColor3f(0.5, 0.0, 1.0);
-            faces[9].draw();
-            glColor3f(1.0, 0.0, 0.5);
-            faces[10].draw();
-            glColor3f(0.5, 0.5, 1.0);
-            faces[11].draw();
+    faces[0].draw();
+    glColor3f(0.0, 1.0, 0.0);
+    faces[1].draw();
+    glColor3f(0.0, 0.0, 1.0);
+    faces[2].draw();
+    glColor3f(1.0, 1.0, 0.0);
+    faces[3].draw();
+    glColor3f(0.0, 1.0, 1.0);
+    faces[4].draw();
+    glColor3f(1.0, 0.0, 1.0);
+    faces[5].draw();
+    glColor3f(0.5, 1.0, 0.0);
+    faces[6].draw();
+    glColor3f(0.0, 1.0, 0.5);
+    faces[7].draw();
+    glColor3f(0.5, 1.0, 0.5);
+    faces[8].draw();
+    glColor3f(0.5, 0.0, 1.0);
+    faces[9].draw();
+    glColor3f(1.0, 0.0, 0.5);
+    faces[10].draw();
+    glColor3f(0.5, 0.5, 1.0);
+    faces[11].draw();*/
 }

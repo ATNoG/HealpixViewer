@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'mapviewer.h'
 **
-** Created: Mon Jun 6 10:59:35 2011
+** Created: Thu Jun 9 13:55:12 2011
 **      by: The Qt Meta Object Compiler version 62 (Qt 4.7.2)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,18 +23,22 @@ static const uint qt_meta_data_MapViewer[] = {
        5,       // revision
        0,       // classname
        0,    0, // classinfo
-       0,    0, // methods
+       1,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
        0,       // flags
-       0,       // signalCount
+       1,       // signalCount
+
+ // signals: signature, parameters, type, tag, flags
+      25,   11,   10,   10, 0x05,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_MapViewer[] = {
-    "MapViewer\0"
+    "MapViewer\0\0e,type,viewer\0"
+    "cameraChanged(QEvent*,int,MapViewer*)\0"
 };
 
 const QMetaObject MapViewer::staticMetaObject = {
@@ -64,6 +68,20 @@ int MapViewer::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     _id = QGLViewer::qt_metacall(_c, _id, _a);
     if (_id < 0)
         return _id;
+    if (_c == QMetaObject::InvokeMetaMethod) {
+        switch (_id) {
+        case 0: cameraChanged((*reinterpret_cast< QEvent*(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2])),(*reinterpret_cast< MapViewer*(*)>(_a[3]))); break;
+        default: ;
+        }
+        _id -= 1;
+    }
     return _id;
+}
+
+// SIGNAL 0
+void MapViewer::cameraChanged(QEvent * _t1, int _t2, MapViewer * _t3)
+{
+    void *_a[] = { 0, const_cast<void*>(reinterpret_cast<const void*>(&_t1)), const_cast<void*>(reinterpret_cast<const void*>(&_t2)), const_cast<void*>(reinterpret_cast<const void*>(&_t3)) };
+    QMetaObject::activate(this, &staticMetaObject, 0, _a);
 }
 QT_END_MOC_NAMESPACE

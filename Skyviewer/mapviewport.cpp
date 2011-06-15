@@ -134,6 +134,8 @@ void MapViewport::openMap(QString fitsfile)
 
     /* create new map */
     HealpixMap* map = new HealpixMap(fitsfile);
+    qDebug("map created");
+    mapviewer->loadMap(map);
 }
 
 
@@ -160,5 +162,6 @@ void MapViewport::selectionChanged(bool selected)
 void MapViewport::synchronizeView(QEvent *event, int type, MapViewer* source)
 {
     if(isSelected() && mapviewer!=source)
+        // && mapviewer!=source
         mapviewer->synchronize(event, type);
 }

@@ -80,7 +80,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(signalMapper, SIGNAL(mapped(int)), workspace, SLOT(configureWorkspace(int)));
 
     QStringList files;
-    files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32_synfast.fits");
+    //files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/raw_2300MHz_h512.fits");
+    //files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside2048.fits");
+    files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside64_synfast.fits");
+    files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside64_synfast.fits");
+    files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside64_synfast.fits");
+    files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside64_synfast.fits");
     workspace->openFiles(files);
     //HealpixMap* map1 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/temponly.fits");
     //HealpixMap* map2 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/iqu.fits");
