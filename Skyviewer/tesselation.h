@@ -4,7 +4,9 @@
 #include <QVector>
 #include <chealpix.h>
 #include <math.h>
+#include <set>
 #include "face.h"
+#include "facecache.h"
 
 class Tesselation
 {
@@ -12,19 +14,28 @@ class Tesselation
 public:
     Tesselation(int nside, bool mollview);
     void draw();
+    void draw(set<int> facesv);
+
+    /* update to new nside */
+    void updateNside(int nside);
+
+    /* update viewport info */
+    void updateVisibleFaces(QVector<int> facesv);
 
 private:
     int nside;
-    QVector<Face> faces;
+    //QVector<Face> facesv;
+    QMap<int, Face*> availableFaces;
 
-    QVector<double> costhetas_np;
-    QVector<double> costhetas_eq;
-    QVector<double> costhetas_sp;
 
-    void init();
-    void getRingLatitudes();
-
+    void createTesselation();
     bool mollview;
+
+    FaceCache* faceCache;
+    QVector<Face*> visibleFaces;
+
+    // TODO: delete
+    QVector<int> facesv;
 };
 
 #endif // TESSELATION_H

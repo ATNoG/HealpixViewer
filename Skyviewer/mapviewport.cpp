@@ -85,6 +85,8 @@ void MapViewport::selectViewport(bool changeCheckbox)
     connect(mapviewer, SIGNAL(cameraChanged(QEvent*, int, MapViewer*)), workspace, SLOT(syncViewports(QEvent*, int, MapViewer*)));
     /* listen for sync needed, to force viewports to update */
     connect(workspace, SIGNAL(syncNeeded(QEvent*,int, MapViewer*)), this, SLOT(synchronizeView(QEvent*, int, MapViewer*)));
+
+    mapviewer->resetView();
 }
 
 void MapViewport::deselectViewport(bool changeCheckbox)

@@ -4,126 +4,167 @@ Tesselation::Tesselation(int _nside, bool _mollview)
 {
     nside = _nside;
     mollview = _mollview;
-    init();
+
+    faceCache = FaceCache::instance();
+
+    /* initial faces */
+    QVector<int> initialFaces;
+    initialFaces.append(0);
+    initialFaces.append(3);
+    initialFaces.append(4);
+    initialFaces.append(5);
+    initialFaces.append(7);
+    initialFaces.append(8);
+    initialFaces.append(11);
+    updateVisibleFaces(initialFaces);
+
+    //createTesselation();
 }
 
 
-/* Get the latitude of all pixel rings */
-void Tesselation::getRingLatitudes()
+void Tesselation::createTesselation()
 {
-    double theta, phi, cosTheta;
-    int pix=0, dpix=4;
-    int npixels = nside2npix(nside);
-    const double eps = 0.128/double(nside);
-
-    QVector<double> thetas_np;
-    QVector<double> thetas_eq;
-    QVector<double> thetas_sp;
-
-    /* add north pole point */
-    thetas_np.append(0);
-
-    /* iterate over the first pixel of each ring to get its theta, and calculate the latitude (costheta) */
-    while(pix<npixels)
-    {
-        /* get pixel coordinates */
-        pix2ang_ring(nside, pix, &theta, &phi);
-        cosTheta = cos(theta);
-
-        /* save ring latitude */
-        if( cosTheta > -eps )
-        {
-            thetas_np.push_back(theta);
-            //qDebug() << "cos=" << costheta << " sin=" << sintheta << " - NP";
-        }
-        if( fabs(cosTheta) <= (2./3.+eps) )
-        {
-            thetas_eq.push_back(theta);
-            //qDebug() << "cos=" << costheta << " sin=" << sintheta << " - EQ";
-        }
-        if( cosTheta < eps )
-        {
-            thetas_sp.push_back(theta);
-            //qDebug() << "cos=" << costheta << " sin=" << sintheta << " - SP";
-        }
+    QVector<double> costhetas_np;
+    QVector<double> costhetas_eq;
+    QVector<double> costhetas_sp;
 
 
-        /* jump to the first pixel of next ring */
-        pix += dpix;
-
-        /* calculate the next increment */
-        /* in the polar regions, the number of pixels in ring decreases by 1 pixel
-            per ring per face, as we move from north to south from equatorial zone. North to south from north polar cap, it increases
-        */
-        if(cosTheta > 2./3.)
-            dpix += 4;
-        else if(cosTheta < -2./3.)
-            dpix -= 4;
-    }
-    /* add south pole point */
-    thetas_sp.push_back(M_PI);
 
 
-    unsigned int n = thetas_np.size();
-    costhetas_np.resize(n);
-    costhetas_eq.resize(n);
-    costhetas_sp.resize(n);
 
-    /* save cosThetas in reverse order */
-    // TODO: maybe a better way is to reverse the above algorithm...
-    for(unsigned int i = 0; i < n; i++)
-    {
-        costhetas_np[i] = cos(thetas_np[n-i-1]);
-        costhetas_eq[i] = cos(thetas_eq[n-i-1]);
-        costhetas_sp[i] = cos(thetas_sp[n-i-1]);
-    }
-}
+    /* teste */
+    /*
+    Face* face;
+    qDebug() << "Asking for face 0";
+    face = faceCache->getFace(0, 64);
+    qDebug() << "Asking for face 1";
+    face = faceCache->getFace(1, 64);
+    qDebug() << "Asking for face 2";
+    face = faceCache->getFace(2, 64);
+    qDebug() << "Asking for face 3";
+    face = faceCache->getFace(3, 64);
+    qDebug() << "Asking for face 4";
+    face = faceCache->getFace(4, 64);
+    qDebug() << "Asking for face 5";
+    face = faceCache->getFace(5, 64);
+    */
 
-
-void Tesselation::init()
-{
     /* get ring latitudes */
-    getRingLatitudes();
+    //getRingLatitudes(nside, &costhetas_np, &costhetas_eq, &costhetas_sp);
 
     /* create faces */
+    /*
     for(unsigned int i=0; i<12; i++)
     {
+        //TODO: delete this cicle
         Face f(i);
-        f.setNumber(i);
+        f.setRigging(nside, false);
         faces.append(f);
     }
+    */
 
     /* TODO: input of setRigging ok */
 
     /* set face rigging */
+    /*
     unsigned int i;
     for(i=0; i<4; i++)
-        faces[i].setRigging(nside, costhetas_np, mollview);
+        faces[i].setRigging(nside, mollview);
     for(; i<8; i++)
-        faces[i].setRigging(nside, costhetas_eq, mollview);
+        faces[i].setRigging(nside, mollview);
     for(; i<12; i++)
-        faces[i].setRigging(nside, costhetas_sp, mollview);
+        faces[i].setRigging(nside, mollview);
+        */
 }
 
+
+/* Update nside used in tesselation */
+void Tesselation::updateNside(int newNside)
+{
+    if(nside!=newNside)
+    {
+        this->nside = newNside;
+        createTesselation();
+    }
+    qDebug("nside updated");
+}
+
+/* get visible faces */
+void Tesselation::updateVisibleFaces(QVector<int> faces)
+{
+    QVector<int>::iterator it;
+
+    // TODO: dont delete faces that already exists
+
+    visibleFaces.clear();
+
+    //qDebug("========================");
+
+    facesv = faces;
+
+    /*
+
+    for(it=faces.begin(); it!=faces.end(); it++)
+    {
+        int faceNumber = *it;
+        Face* face = faceCache->getFace(faceNumber, nside);
+
+        //if(faceNumber==0 || faceNumber==4 || faceNumber==3)
+            visibleFaces.append(face);
+
+        //qDebug() << "Face " << faceNumber << " visible";
+    }
+
+    */
+}
 
 /* Draw opengl primitives */
 void Tesselation::draw()
 {
     /* draw each face */
-    for(int i=0; i<12; i++)
+
+
+    //qDebug("===============");
+    //for(int i=0; i<12; i++)
+    //{
+        //faces[i].draw();
+/*
+        if(facesv.contains(i))
+            glColor4f(0.0, 1.0, 1.0, 0.3);
+        else
+            glColor3f(1.0, 0.0, 0.0);
+*/
+
+     //   faces[i].draw();
+    //}
+
+
+    /*
+    QVector<Face*>::iterator it;
+    for(it=visibleFaces.begin(); it!=visibleFaces.end(); it++)
     {
-        faces[i].draw();
+        (*it)->draw();
+    }
+    */
+
+    QVector<int>::iterator it;
+
+    for(it=facesv.begin(); it!=facesv.end(); it++)
+    {
+        int faceNumber = *it;
+        Face* face = faceCache->getFace(faceNumber, nside);
+
+        //if(faceNumber==0 || faceNumber==4 || faceNumber==3)
+            //visibleFaces.append(face);
+
+        //qDebug() << "Face " << faceNumber << " visible";
+
+        face->draw();
     }
 
-   // faces[0].draw();
 
-/*
-    for(int i=3; i<8; i++)
-        faces[i].draw();*/
-
-
-
-/*
+    // TODO: draw just visible faces
+    /*
     glColor3f(1.0, 0.0, 0.0);
     faces[0].draw();
     glColor3f(0.0, 1.0, 0.0);
@@ -147,5 +188,21 @@ void Tesselation::draw()
     glColor3f(1.0, 0.0, 0.5);
     faces[10].draw();
     glColor3f(0.5, 0.5, 1.0);
-    faces[11].draw();*/
+    faces[11].draw();
+    */
+}
+
+
+
+/* Draw opengl primitives */
+void Tesselation::draw(set<int> faceNumbers)
+{
+    /*
+    set<int>::iterator it;
+    for(it=faceNumbers.begin(); it!=faceNumbers.end(); it++)
+    {
+        int faceNumber = *it;
+        facesv[faceNumber].draw();
+    }
+    */
 }

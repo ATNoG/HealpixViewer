@@ -6,7 +6,7 @@
 #include "workspace.h"
 
 // TODO: default number of viewports
-#define DEFAULT_VIEWPORTS 4
+#define DEFAULT_VIEWPORTS 1
 
 namespace Ui {
     class MainWindow;

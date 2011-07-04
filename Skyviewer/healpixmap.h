@@ -10,11 +10,15 @@
 #include <chealpix.h>
 #include <fitsio.h>
 
+#define MINZOOM 32
+#define MAXZOOM 2048
+
 using namespace std;
 
 
-typedef std::vector<long> PixLUT;
-typedef std::map<int, PixLUT > PixLUTCache;
+/* forward declaration of PixelMap */
+class FieldMap;
+
 
 class HealpixMap
 {
@@ -24,6 +28,7 @@ public:
 
     enum Ordering {NESTED, RING};
     enum Coordsys {CELESTIAL, ECLIPTIC, GALACTIC};
+    enum MapType  {I, Q, U, NObs};
 
     bool isOrderRing();
     bool isOrderNested();
@@ -31,33 +36,50 @@ public:
     bool isCoordsysEcliptic();
     bool isCoordsysGalactic();
 
-    float* getTemperature();
+    bool hasTemperature();
+    bool hasPolarization();
+    bool hasNObs();
+
+    void changeCurrentMap(MapType mapType);
+    FieldMap* getMap(MapType mapType);
+    QList<MapType> getAvailableMaps();
     long getNumberPixels();
-    unsigned char* getTexture();
+
+    bool zoomIn();
+    bool zoomOut();
+
     void drawMap();
 
+    static unsigned int NSide2Res  (unsigned int ns);
+
 private:
-    long nside;
+    QString path;
+    long maxNside, currentNside;
     long npixels;
     Ordering ordering;
     Coordsys coordsys;
 
-    Ordering readOrdering(char *value);
-    Coordsys readCoordsys(char* value);
+    QList<MapType> availableMaps;
+    MapType currentMap;
 
+    Ordering parseOrdering(char *value);
+    Coordsys parseCoordsys(char* value);
 
+    void processFile(QString path);
+    void readFITSPrimaryHeader(fitsfile *fptr);
+    void readFITSExtensionHeader(fitsfile *fptr);
+    void writeFITS(char* filename, char* tabname, float* temperature, int newnside);
+    void writeFITSPrimaryHeader(fitsfile *fptr);
+    void writeFITSExtensionHeader(fitsfile *fptr, int newnside);
 
     float *temperature;
-    unsigned char *texture;
-    int texture_res;
-    PixLUT *lut;
-    PixLUTCache lut_cache_ring, lut_cache_nest;
-
-    void buildTexture();
-    bool buildLut();
-    long xy2pix(long ix, long iy);
 };
 
+
+inline unsigned int HealpixMap::NSide2Res (unsigned int ns)
+{
+        return (unsigned int) (0.4 + (log(double(ns)) / log(2.0)));
+}
 
 
 #endif // SKYMAP_H

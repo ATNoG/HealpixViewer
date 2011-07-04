@@ -1,37 +1,55 @@
 #include "healpixmap.h"
 
 #include <QDebug>
+#include "fieldmap.h"
 
-HealpixMap::HealpixMap(QString path)
+
+/* keywords used to specify the columns */
+char  ICOLNAME[]  = "TEMPERATURE";
+char  QCOLNAME1[]  = "Q_POLARISATION";
+char  QCOLNAME2[] = "QPOLARISATION";
+char  QCOLNAME3[] = "Q_POLARIZATION";
+char  QCOLNAME4[] = "QPOLARIZATION";
+char  UCOLNAME1[]  = "U_POLARISATION";
+char  UCOLNAME2[] = "UPOLARISATION";
+char  UCOLNAME3[] = "U_POLARIZATION";
+char  UCOLNAME4[] = "UPOLARIZATION";
+char  NCOLNAME[]  = "N_OBS";
+
+char  DEFTABLE[]  = "Sky Maps";
+char  DEFTUNIT[]  = "unknown";
+char  DEFNUNIT[]  = "counts";
+char  DEFFORM[]   = "1024E";
+
+
+HealpixMap::HealpixMap(QString _path)
 {
-    int t, icol=0;;
-    // TODO: resize faces vector to optimize performance
+    path = _path;
+    processFile(_path);
+
+    /* current map is temperature map */
+    currentMap = I;
     // TODO: verify if file exists, etc..
+}
 
 
-    QTime timer1;
-    timer1.restart();
-
-    /* open fits file */
+void HealpixMap::processFile(QString path)
+{
+    fitsfile *fptr;
+    int status=0, hducount, exttype, result, t, icol=0, ncol, qcol, ucol;
+    bool correctHDU;
     QByteArray pathByteArray = path.toLocal8Bit();
 
-    /* read healpix map */
-//    /map = read_healpix_map(ba.data(), &nside, _coordsys, _ordering);
-
-
-    fitsfile *fptr;
-    int status=0, hducount, exttype, result, recordscount, more;
-
-    //qDebug() << "opening fits " << path;
-
     /* open fits file */
-    //qDebug() << pathByteArray.data();
     if(fits_open_file(&fptr, pathByteArray.data(), READONLY, &status)!=0)
     {
         qDebug("error opening fits file");
         qDebug() << " status " << status;
         return;
     }
+
+    /* read primary header */
+    readFITSPrimaryHeader(fptr);
 
     /* get the number of hdus in fits file */
     result = fits_get_num_hdus(fptr, &hducount, &status);
@@ -42,133 +60,184 @@ HealpixMap::HealpixMap(QString path)
         qDebug() << " return " << result;
         qDebug() << " status " << status;
         fits_close_file(fptr, &status);
+        // TODO: throw exception
         return;
     }
 
-
-    for(int i=1; i<=hducount; i++)
+    correctHDU = false;
+    for(int i=1; i<=hducount && !correctHDU; i++)
     {
-
         if(fits_movabs_hdu(fptr, i, &exttype, &status)!=0)
         {
             qDebug("error on fits_movabs_hdu");
             fits_close_file(fptr, &status);
+            // TODO: throw exception
             return;
         }
 
-        //qDebug() << "Hdu " << i << " with type:";
-
-        switch(exttype)
+        if(exttype==BINARY_TBL)
         {
-            case BINARY_TBL:
-                qDebug() << " binary table";
-                fits_get_colnum(fptr, CASEINSEN, "TEMPERATURE", &t, &status);
-                icol = t;
-                break;
-            case IMAGE_HDU:
-                qDebug() << " image hdu"; break;
-            case ASCII_TBL:
-                qDebug() << " ascii table"; break;
-        }
-
-        /*
-        if(fits_get_hdrspace(fptr, &recordscount, &more, &status)!=0)
-        {
-            qDebug("error on fits_get_hdrspace");
-            fits_close_file(fptr, &status);
-            return;
-        }
-        qDebug() << " total records = " << recordscount;
-
-        if(true)
-        {
-            char record[FLEN_CARD];
-            for(int j=1; j<=recordscount; j++)
+            fits_get_colnum(fptr, CASEINSEN, ICOLNAME, &t, &status);
+            if(status==0)
             {
-                if(fits_read_record(fptr, j, record, &status)!=0)
-                {
-                    qDebug("error on fits_read_record");
-                    fits_close_file(fptr, &status);
-                    return;
-                }
-                qDebug() << record;
+                correctHDU = true;
+                icol = t;
             }
         }
-        */
     }
 
-
-    char value[24];
-    char comment[80];
-
-    /* Read Ordering */
-    if(fits_read_keyword(fptr, "ORDERING", value, comment, &status)!=0)
+    if(!correctHDU)
     {
-        qDebug("error on reading keyword");
+        /* something wrong happened... invalid file ? */
+        qDebug("Correct extension not found");
         fits_close_file(fptr, &status);
         return;
+        /* TODO: throw exception */
     }
-    /* trim string */
-    this->ordering = readOrdering(value);
-    qDebug() << "Ordering is " << value;
 
-    /* Read Coordsys */
-    if(fits_read_keyword(fptr, "COORDSYS", value, comment, &status)!=0)
+    /* temperature map is always available */
+    availableMaps.append(I);
+
+
+    /* read the extension header */
+    readFITSExtensionHeader(fptr);
+
+
+    /* get fields positions */
+
+    /* verify existing maps. Both Q and U must be supplied for polarization */
+    if (fits_get_colnum(fptr, CASEINSEN, NCOLNAME, &t, &status) == 0)
     {
-        qDebug("error on reading keyword");
-        fits_close_file(fptr, &status);
-        return;
+        ncol = t;
+        availableMaps.append(NObs);
     }
-    /* trim string */
-    this->coordsys = readCoordsys(value);
-    qDebug() << "Coordsys is " << value;
 
-    /* Read Nside */
-    if(fits_read_keyword(fptr, "NSIDE", value, comment, &status)!=0)
-    {
-        qDebug("error on reading keyword");
-        fits_close_file(fptr, &status);
-        return;
-    }
-    QString nside_qs(value);
-    this->nside = nside_qs.toInt();
-    this->npixels = nside2npix(this->nside);
-    qDebug() << "Nside is " << nside << " with " << npixels << " pixels";
+    // TODO: need to set status to 0 everytime ?
+
+    status = 0;
+    if (fits_get_colnum(fptr, CASEINSEN, QCOLNAME1, &t, &status) == 0) qcol = t;
+    /* try the different names for Q column */
+    status = 0;
+    if ((qcol == 0) && (fits_get_colnum(fptr, CASEINSEN, QCOLNAME2, &t, &status) == 0)) qcol = t;
+    status = 0;
+    if ((qcol == 0) && (fits_get_colnum(fptr, CASEINSEN, QCOLNAME3, &t, &status) == 0)) qcol = t;
+    status = 0;
+    if ((qcol == 0) && (fits_get_colnum(fptr, CASEINSEN, QCOLNAME4, &t, &status) == 0)) qcol = t;
+    /* add Q to available maps */
+    if(qcol!=0)
+        availableMaps.append(Q);
+
+    status = 0;
+    if (fits_get_colnum(fptr, CASEINSEN, UCOLNAME1, &t, &status) == 0) ucol = t;
+    /* try the different names for U column */
+    status = 0;
+    if ((ucol == 0) && (fits_get_colnum(fptr, CASEINSEN, UCOLNAME2, &t, &status) == 0)) ucol = t;
+    status = 0;
+    if ((ucol == 0) && (fits_get_colnum(fptr, CASEINSEN, UCOLNAME3, &t, &status) == 0)) ucol = t;
+    status = 0;
+    if ((ucol == 0) && (fits_get_colnum(fptr, CASEINSEN, UCOLNAME4, &t, &status) == 0)) ucol = t;
+    /* add U to available maps */
+    if(ucol!=0)
+        availableMaps.append(U);
 
 
-    /* GET Temperature */
+
+    /* create map fields */
+
     float nul = -999.;
     temperature = new float[npixels];
 
+    status = 0;
     if (fits_read_col(fptr, TFLOAT, icol, 1, 1, npixels, &nul, temperature, &t, &status) != 0)
+    {
         qDebug("error reading temperature");
+    }
 
+
+    int newNside = 64;
+    QTime time;
+    int total = 0;
+
+    qDebug() << "starting tests";
+    //for(int i=0; i<10; i++)
+    //{
+        time.restart();
+
+        /* just for test */
+        FieldMap temperatureField;
+        float* degraded_map = temperatureField.downgradeMap(temperature, maxNside, newNside);
+        int elapsed = time.elapsed();
+        qDebug() << "Total time from " << maxNside << " to " << newNside << " = " << elapsed << " ms";
+        total += elapsed;
+    //}
+    //qDebug() << "Mean time from " << maxNside << " to " << newNside << " = " << total/10 << " ms";
+
+    qDebug("Write to FITS");
+    writeFITS("2048to64.fits", "Sky Maps", degraded_map, newNside);
+    qDebug("Write done");
 
     /* close fits file */
     fits_close_file(fptr, &status);
-
-    /* initialize variables */
-    /*
-    ordering = readOrdering(_ordering);
-    coordsys = readCoordsys(_coordsys);
-
-
-    qDebug() << "Healpixmap readed";
-    qDebug() << " Nside = " << nside;
-    qDebug() << " Npixels = " << npixels;
-    qDebug() << " Ordering = " << _ordering << "(" << ordering << ")";
-    qDebug() << " Coordsys = " << _coordsys << "(" << coordsys << ")";
-    */
-
-
-    buildTexture();
-
-    int ms = timer1.elapsed();
-    qDebug() << "Load map total = " << ms << " ms";
 }
 
 
-HealpixMap::Ordering HealpixMap::readOrdering(char *value)
+void HealpixMap::readFITSPrimaryHeader(fitsfile *fptr)
+{
+    /* TODO: just check if file conforms to FITS format */
+    /* some FITS file declare Ordering here ?! */
+}
+
+
+void HealpixMap::readFITSExtensionHeader(fitsfile *fptr)
+{
+    char value[24];
+    char comment[80];
+    int status;
+
+    /* Read Ordering */
+    status = 0;
+    if(fits_read_keyword(fptr, "ORDERING", value, comment, &status)!=0)
+    {
+        qDebug("error on reading keyword ordering");
+        fits_close_file(fptr, &status);
+        // TODO: throw exception
+        return;
+    }
+    /* trim string */
+    this->ordering = parseOrdering(value);
+    qDebug() << "Ordering is " << value;
+
+    /* Read Coordsys */
+    status = 0;
+    if(fits_read_keyword(fptr, "COORDSYS", value, comment, &status)!=0)
+    {
+        qDebug("error on reading keyword coordsys");
+    }
+    else
+    {
+        /* trim string */
+        this->coordsys = parseCoordsys(value);
+        qDebug() << "Coordsys is " << value;
+    }
+
+    /* Read Nside */
+    status = 0;
+    if(fits_read_keyword(fptr, "NSIDE", value, comment, &status)!=0)
+    {
+        qDebug("error on reading keyword nside");
+        fits_close_file(fptr, &status);
+        // TODO: throw exception
+        return;
+    }
+    /* save nside and npixels value */
+    QString nside_qs(value);
+    this->maxNside = nside_qs.toInt();
+    this->npixels = nside2npix(this->maxNside);
+    qDebug() << "Nside is " << maxNside << " with " << npixels << " pixels";
+}
+
+
+HealpixMap::Ordering HealpixMap::parseOrdering(char *value)
 {
     if(!strcmp(value, "RING"))
         return RING;
@@ -181,7 +250,7 @@ HealpixMap::Ordering HealpixMap::readOrdering(char *value)
 }
 
 
-HealpixMap::Coordsys HealpixMap::readCoordsys(char* value)
+HealpixMap::Coordsys HealpixMap::parseCoordsys(char* value)
 {
     if(!strcmp(value, "C"))
         return CELESTIAL;
@@ -221,13 +290,60 @@ bool HealpixMap::isCoordsysGalactic()
     return coordsys==GALACTIC;
 }
 
-
-
-
-
-float* HealpixMap::getTemperature()
+bool HealpixMap::hasTemperature()
 {
-    return temperature;
+    return availableMaps.contains(I);
+}
+
+bool HealpixMap::hasPolarization()
+{
+    // TODO: we need to have both ?
+    return availableMaps.contains(Q) && availableMaps.contains(U);
+}
+
+bool HealpixMap::hasNObs()
+{
+    return availableMaps.contains(NObs);
+}
+
+void HealpixMap::drawMap()
+{
+    /* TODO: draw current map */
+}
+
+
+void HealpixMap::changeCurrentMap(MapType mapType)
+{
+    /* check if map exists */
+    if(availableMaps.contains(mapType))
+    {
+        currentMap = mapType;
+    }
+    else
+    {
+        /* TODO: throw exception: maptype doesnt exist */
+    }
+}
+
+
+FieldMap* HealpixMap::getMap(MapType mapType)
+{
+    /* check if map exists and returns it */
+    if(availableMaps.contains(mapType))
+    {
+        /* TODO: return map type */
+        return NULL;
+    }
+    else
+    {
+        /* TODO: throw exception */
+    }
+}
+
+/* Return list of available maps in FITS file */
+QList<HealpixMap::MapType> HealpixMap::getAvailableMaps()
+{
+    return availableMaps;
 }
 
 long HealpixMap::getNumberPixels()
@@ -235,166 +351,146 @@ long HealpixMap::getNumberPixels()
     return npixels;
 }
 
-unsigned char* HealpixMap::getTexture()
+
+/* get higher resolution for the current map field */
+bool HealpixMap::zoomIn()
 {
-    return texture;
+    long nextNside = currentNside * 2;
+
+    /* check if can zoom in */
+    if(nextNside <= min(maxNside, long(MAXZOOM)))
+    {
+        /* get higher map texture resolution */
+        //loadMap(nextNside);
+        currentNside = nextNside;
+        return true;
+    }
+    else
+        return false;
 }
 
-void HealpixMap::buildTexture()
+
+/* get lower resolution for the current map field */
+bool HealpixMap::zoomOut()
 {
-    double minv=-0.000145, maxv=0.000145;
-    float v = 0.0;
-    long texk = 0;
-    QColor color, blank(255, 255, 255, 255);
-    texk = 0;
+    long nextNside = currentNside / 2;
 
-    ColorTable *ct = new ColorTable(2);
-
-    texture_res = 4*nside;
-    texture = new unsigned char[texture_res*texture_res*4];
-
-    buildLut();
-    if(ordering==RING)
-        lut = &lut_cache_ring[nside];
-    else
-        lut = &lut_cache_nest[nside];
-
-
-    for(uint pix = 0; pix < npixels; pix++)
+    /* check if can zoom out */
+    if(nextNside >= MINZOOM)
     {
-        v = temperature[pix];
-
-        if (v < minv) v = minv;
-        if (v > maxv) v = maxv;
-        v = (v-minv)/(maxv-minv);
-        color = (*ct)(v);
-
-        texk = (*lut)[pix];
-        texture[texk++] = color.red();
-        texture[texk++] = color.green();
-        texture[texk++] = color.blue();
-        texture[texk++] = 255;
-
-        //if(pix<10)
-        //    qDebug() << "color " << pix << ": " << color.red() << ", " << color.green() << ", " << color.blue() << ", 255";
+        /* get lower map texture resolution */
+        //loadMap(nextNside);
+        currentNside = nextNside;
+        return true;
     }
+    else
+        return false;
+}
 
+
+
+
+
+
+
+void HealpixMap::writeFITS(char* filename, char* tabname, float* temperature, int newnside)
+{
+    int maxcols = 5;
+
+    char        *ttype[maxcols], *tform[maxcols], *tunit[maxcols];
+    fitsfile    *fptr;
+    int          status = 0;
+    int          ncol, col;
+    unsigned int i;
+    float       *tmp = NULL;
+
+    /* Initialize */
+    //if (strlen(tabname) <= 0) tabname = NULL;
+    //if (tabname == NULL) tabname = DEFTABLE;
+    ncol = 0;
+    ttype[ncol] = ICOLNAME; tform[ncol] = DEFFORM; tunit[ncol++] = DEFTUNIT;
+
+
+    /* Try to open and prepare the FITS file for writing. */
+    if (fits_create_file(&fptr, filename, &status) == 0)
+    {
+        fits_create_img(fptr, LONG_IMG, 0, NULL, &status); // Create an empty primary HDU.
+    }
+    else
+    {
+        status = 0;
+        fits_open_file(&fptr, filename, READWRITE, &status);
+    }
+    if (status != 0) qDebug("error opening fits file for write");
+    writeFITSPrimaryHeader(fptr);
 
     /*
-    int nside_ = 2;
-    texture_res = 4*nside_;
-    texture = new unsigned char[texture_res*texture_res*4];
-
-    float inc = 0;
-    for(int i=0; i<nside2npix(nside_); i++)
-    {
-        color = (*ct)(inc);
-
-        texture[i*4] = color.red();
-        texture[i*4+1] = color.green();
-        texture[i*4+2] = color.blue();
-        texture[i*4+3] = 255;
-
-
-        inc+=0.02;
-    }
-
-    int i;
+        Search the file for named table.  If found, remove it.
+        Create a new binary table HDU and extend its header.
     */
+    /*
+    fits_movnam_hdu(fptr, BINARY_TBL, tabname, 0, &status);
+    if ((status != 0) && (status != BAD_HDU_NUM)) qDebug("Error....");
+    if (status == 0)
+    {
+            fits_delete_hdu(fptr, NULL, &status);
+            if (status != 0) qDebug("error deleting hdu");
+    }
+    */
+    status = 0;
+    if (fits_create_tbl(fptr, BINARY_TBL, 0, ncol, ttype, tform, tunit, tabname, &status) != 0)
+            qDebug("error creating table");
+    writeFITSExtensionHeader(fptr, newnside);
+
+    col = 0;
+
 /*
-    i = 0;
-    texture[i*4] = 125;
-    texture[i*4+1] = 128;
-    texture[i*4+2] = 50;
+                                Stokes I/temperature.
+*/
+    col++;
+    if (fits_write_col(fptr, TFLOAT, col, 1, 1, 12*newnside*newnside, temperature, &status) != 0)
+            qDebug("error writing columns");
 
-    i = 1;
-    texture[i*4] = 0;
-    texture[i*4+1] = 255;
-    texture[i*4+2] = 0;
-
-    i = 2;
-    texture[i*4] = 255;
-    texture[i*4+1] = 255;
-    texture[i*4+2] = 0;
-
-    i = 3;
-    texture[i*4] = 0;
-    texture[i*4+1] = 0;
-    texture[i*4+2] = 255;
-
-    i = 4;
-    texture[i*4] = 255;
-    texture[i*4+1] = 0;
-    texture[i*4+2] = 255;
-    */
-
-
+    /* Done! */
+    fits_close_file(fptr, &status);
+    if (tmp != NULL) delete [] tmp;
 }
 
 
-void HealpixMap::drawMap()
-{
-    glEnable( GL_TEXTURE_2D );
-
-    glTexImage2D(
-            GL_TEXTURE_2D, 0, 4,
-            texture_res, texture_res, 0,
-            GL_RGBA, GL_UNSIGNED_BYTE,
-            texture
-    );
-}
-
-void readFitsHeader()
+void HealpixMap::writeFITSPrimaryHeader(fitsfile *fptr)
 {
 
 }
 
 
-bool HealpixMap::buildLut()
+
+void HealpixMap::writeFITSExtensionHeader(fitsfile *fptr, int newnside)
 {
-    PixLUTCache &lut_cache = (ordering == RING) ? lut_cache_ring : lut_cache_nest;
-    PixLUT &lut = lut_cache[nside];
-    lut.resize(12*nside*nside);
-    int  face = 0, x = 0, y = 0;
-    long dy = 4*nside;
-    long pix;
-    long k = 0;
-    for(face = 0; face < 12; face++)
-    {
-        long xo = nside*(face % 4);
-        long yo = nside*(face / 4);
-        long face_offset = face*nside*nside;
-        for(y = 0; y < nside; y++)
-        {
-            for(x = 0; x < nside; x++)
-            {
-                k = x + xo + (y+yo)*dy;
-                pix = xy2pix(x,y)  + face_offset;
-                if (ordering == RING)
-                    nest2ring(nside,pix,&pix);
-                lut[pix] = 4*k;
-            }
-        }
-    }
-    return true;
-}
+    char         stmp[80], comm[80];
+    unsigned int itmp;
+    int          status = 0;
 
+    strcpy(comm, "Pixel algorithm");
+    strcpy(stmp, "HEALPIX");
+    fits_write_key(fptr, TSTRING, "PIXTYPE", stmp, comm, &status);
 
+    strcpy(comm, "Ordering scheme");
+    strcpy(stmp, "NEST");
+    fits_write_key(fptr, TSTRING, "ORDERING", stmp, comm, &status);
 
-long HealpixMap::xy2pix(long ix, long iy)
-{
-        static int x2pix[128];
-        static int y2pix[128];
-        static bool xy2pix_called = false;
-        if( ! xy2pix_called ) {
-                mk_xy2pix(x2pix, y2pix);
-        xy2pix_called = true;
-        }
-        //int ix_low = (int)fmod(ix,128);
-        int ix_low = ix % 128;
-        int ix_hi  = ix / 128;
-        int iy_low = iy % 128;
-        int iy_hi  = iy / 128;
-        return (x2pix[ix_hi]+y2pix[iy_hi]) * (128 * 128)
-                        + (x2pix[ix_low]+y2pix[iy_low]);
+    strcpy(comm, "Resolution index");
+    itmp = NSide2Res(newnside);
+    fits_write_key(fptr, TUINT, "RESOLUTN", &itmp, comm, &status);
+
+    strcpy(comm, "Resolution parameter");
+    itmp = newnside;
+    fits_write_key(fptr, TUINT, "NSIDE", &itmp, comm, &status);
+
+    strcpy(comm, "First pixel index (0 based)");
+    itmp = 0;
+    fits_write_key(fptr, TUINT, "FIRSTPIX", &itmp, comm, &status);
+
+    strcpy(comm, "Last pixel index (0 based)");
+    itmp = newnside*newnside*12 - 1;
+    fits_write_key(fptr, TUINT, "LASTPIX", &itmp, comm, &status);
 }
