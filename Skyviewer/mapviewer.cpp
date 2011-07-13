@@ -184,7 +184,7 @@ void MapViewer::checkVisibility()
 
     visibleFaces.clear();
 
-    qDebug("==================");
+    //qDebug("==================");
 
     for(int face=0; face<12; face++)
     {
@@ -314,13 +314,13 @@ bool MapViewer::zoomIn()
         /* update camera position */
         cameraPosition -= CAMERA_ZOOM_INC;
         camera()->setPosition(Vec(cameraPosition, 0.0, 0.0));
-        qDebug() << cameraPosition;
+        //qDebug() << cameraPosition;
 
         currentZoomLevel++;
         int nextNside = zoomToNside(currentZoomLevel);
         //qDebug() << "current zoom level = " << currentZoomLevel;
         //qDebug() << "current nside = " << currentNside;
-        qDebug() << "next nside = " << nextNside;
+        //qDebug() << "next nside = " << nextNside;
         if(nextNside!=currentNside)
         {
             currentNside = nextNside;
@@ -345,7 +345,7 @@ bool MapViewer::zoomOut()
         int nextNside = zoomToNside(currentZoomLevel);
         //qDebug() << "current zoom level = " << currentZoomLevel;
         //qDebug() << "current nside = " << currentNside;
-        qDebug() << "next nside = " << nextNside;
+        //qDebug() << "next nside = " << nextNside;
         if(nextNside!=currentNside)
         {
             currentNside = nextNside;

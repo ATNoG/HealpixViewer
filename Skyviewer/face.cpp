@@ -22,6 +22,9 @@ void Face::draw()
     QVector<Vertice>::iterator verticesIT;
 
 
+    //qDebug() << "Drawing face " << faceNumber;
+    //return;
+
     switch(faceNumber)
     {
         case 0:
