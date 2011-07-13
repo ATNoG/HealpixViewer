@@ -2,6 +2,8 @@
 #define TESSELATION_H
 
 #include <QVector>
+#include <QFuture>
+#include <QtConcurrentRun>
 #include <chealpix.h>
 #include <math.h>
 #include <set>
@@ -11,10 +13,16 @@
 class Tesselation
 {
 
+struct faceInfo
+{
+    int faceNumber;
+    int nside;
+};
+
 public:
     Tesselation(int nside, bool mollview);
     void draw();
-    void draw(set<int> facesv);
+    void drawAllFaces();
 
     /* update to new nside */
     void updateNside(int nside);
@@ -24,18 +32,17 @@ public:
 
 private:
     int nside;
-    //QVector<Face> facesv;
-    QMap<int, Face*> availableFaces;
+    //QMap<int, Face*> availableFaces;
 
+    void createInitialTesselation();
+    void getFace(int faceNumber);
+    void predictNeededFaces();
 
-    void createTesselation();
     bool mollview;
 
     FaceCache* faceCache;
-    QVector<Face*> visibleFaces;
-
-    // TODO: delete
     QVector<int> facesv;
+    QVector<Face*> visibleFaces;
 };
 
 #endif // TESSELATION_H
