@@ -4,10 +4,11 @@
 #include <QVector>
 #include <QList>
 #include <QMap>
+#include <QMutex>
 #include "face.h"
 
 #define MAX_TILES 12500
-#define CACHE_MARGIN 2500//12498
+#define CACHE_MARGIN 3000//12498
 //2500
 
 typedef QMap<int, Face*> CacheEntry;
@@ -32,6 +33,9 @@ public:
     /* get the face with faceNumber and for the given nside */
     Face* getFace(int faceNumber, int nside);
 
+    /* preload face */
+    void preloadFace(int faceNumber, int nside);
+
     static FaceCache *instance()
     {
         if(!s_instance)
@@ -52,8 +56,6 @@ private:
     Face* getFaceFromCache(int faceNumber, int nside);
     /* discard old faces on cache */
     bool cleanCache(int minSpace=0);
-    /* predict the faces that will be needed, and preload it */
-    void predictNeededFaces();
 
     /* return the number of tiles necessary for display the face with nside */
     int calculateFaceTiles(int nside);

@@ -1,5 +1,8 @@
 #include "facecache.h"
 
+QMutex lruMutex;
+QMutex cacheMutex;
+
 FaceCache* FaceCache::s_instance = 0;
 
 FaceCache::FaceCache(int maxTiles)
@@ -28,32 +31,40 @@ Face* FaceCache::getFace(int faceNumber, int nside)
 
     /* update lru info */
     int lru = (faceNumber+1)*10000 + nside;
+    cacheMutex.lock();
     cacheControl.removeAll(lru);
     cacheControl.push_back(lru);
+    //cacheMutex.unlock();
 
-    //qDebug() << "cache control:";
-    //for(int i=0; i<cacheControl.size(); i++)
-    //    qDebug() << cacheControl[i];
+    //qDebug() << "FaceCache: Getting face " << faceNumber << "(" << nside << ")";
 
-    //qDebug() << "Getting face " << faceNumber << "(" << nside << ")";
-
+    //cacheMutex.lock();
     /* check if available in cache */
     if(checkFaceAvailable(faceNumber, nside))
     {
-        qDebug() << "Face " << faceNumber << " available on cache";
+        //qDebug() << "Face " << faceNumber << " available on cache";
         /* face is available on cache, just return it */
         face = getFaceFromCache(faceNumber, nside);
+        cacheMutex.unlock();
     }
     else
     {
-        qDebug() << "Face " << faceNumber << " miss!";
+        cacheMutex.unlock();
+        qDebug() << "Face " << faceNumber << " (" << nside << ") " << "miss!";
 
         /* create the face */
         face = loadFace(faceNumber, nside);
+        /* load the face (should be a new thread) */
+        //loadFace(faceNumber, nside);
 
         /* load the face into the cache */
+        cacheMutex.lock();
         storeFace(faceNumber, nside, face);
+        cacheMutex.unlock();
     }
+
+    /* return best available nside for wanted face */
+
 
     return face;
 
@@ -75,9 +86,9 @@ Face* FaceCache::loadFace(int faceNumber, int nside)
 
 bool FaceCache::cleanCache(int minSpace)
 {
-    // TODO: discard the not used faces to get space for new faces
+    // TODO: discard the not used faces to get space for new faces - better algorithm
 
-    qDebug("cleaning cache");
+    //qDebug("cleaning cache");
 
     int lru = cacheControl.front();
     cacheControl.pop_front();
@@ -91,9 +102,16 @@ bool FaceCache::cleanCache(int minSpace)
     discardFace(fn, ns);
 }
 
-void FaceCache::predictNeededFaces()
+void FaceCache::preloadFace(int faceNumber, int nside)
 {
-    // TODO: algorithm to predict the next faces that will be needed
+    if(!checkFaceAvailable(faceNumber, nside))
+    {
+        /* create the face */
+        Face *face = loadFace(faceNumber, nside);
+
+        /* load the face into the cache */
+        storeFace(faceNumber, nside, face);
+    }
 }
 
 
@@ -107,8 +125,8 @@ bool FaceCache::storeFace(int faceNumber, int nside, Face* face)
 {
     int neededTiles = calculateFaceTiles(nside);
 
-    qDebug() << "Storing face " << faceNumber << "(" << nside << ")";
-    qDebug() << "Needed Tiles: " << neededTiles << ", availableTiles: " << availableTiles;
+    //qDebug() << "Storing face " << faceNumber << "(" << nside << ")";
+    //qDebug() << "Needed Tiles: " << neededTiles << ", availableTiles: " << availableTiles;
 
     // TODO: concurrence
     if(neededTiles>=availableTiles-marginTilesSpace)
@@ -117,7 +135,7 @@ bool FaceCache::storeFace(int faceNumber, int nside, Face* face)
         cleanCache();
     }
 
-    qDebug("face stored");
+    qDebug() << "face stored " << faceNumber << " (" << nside << ")";
 
     /* insert faca on cache */
     CacheEntry faceEntry;
