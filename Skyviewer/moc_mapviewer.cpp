@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'mapviewer.h'
 **
-** Created: Thu Jun 9 13:55:12 2011
+** Created: Wed Jul 27 12:23:18 2011
 **      by: The Qt Meta Object Compiler version 62 (Qt 4.7.2)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,7 +23,7 @@ static const uint qt_meta_data_MapViewer[] = {
        5,       // revision
        0,       // classname
        0,    0, // classinfo
-       1,   14, // methods
+       2,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -33,12 +33,16 @@ static const uint qt_meta_data_MapViewer[] = {
  // signals: signature, parameters, type, tag, flags
       25,   11,   10,   10, 0x05,
 
+ // slots: signature, parameters, type, tag, flags
+      74,   63,   10,   10, 0x0a,
+
        0        // eod
 };
 
 static const char qt_meta_stringdata_MapViewer[] = {
     "MapViewer\0\0e,type,viewer\0"
     "cameraChanged(QEvent*,int,MapViewer*)\0"
+    "cleanCache\0checkForUpdates(bool)\0"
 };
 
 const QMetaObject MapViewer::staticMetaObject = {
@@ -71,9 +75,10 @@ int MapViewer::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_c == QMetaObject::InvokeMetaMethod) {
         switch (_id) {
         case 0: cameraChanged((*reinterpret_cast< QEvent*(*)>(_a[1])),(*reinterpret_cast< int(*)>(_a[2])),(*reinterpret_cast< MapViewer*(*)>(_a[3]))); break;
+        case 1: checkForUpdates((*reinterpret_cast< bool(*)>(_a[1]))); break;
         default: ;
         }
-        _id -= 1;
+        _id -= 2;
     }
     return _id;
 }

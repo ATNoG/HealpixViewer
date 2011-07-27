@@ -25,7 +25,12 @@ SOURCES += main.cpp\
     boundary.cpp \
     vertice.cpp \
     tesselation.cpp \
-    colortable.cpp
+    colortable.cpp \
+    fieldmap.cpp \
+    facevertices.cpp \
+    facecache.cpp \
+    texture.cpp \
+    cache.cpp
 
 HEADERS  += mainwindow.h \
     mapviewport.h \
@@ -37,9 +42,20 @@ HEADERS  += mainwindow.h \
     vertice.h \
     tesselation.h \
     colortable.h \
-    define_colortable.h
+    define_colortable.h \
+    healpixutil.h \
+    fieldmap.h \
+    facevertices.h \
+    facecache.h \
+    blockingqueue.h \
+    texture.h \
+    cache.h
 
 FORMS    += mainwindow.ui
 
 RESOURCES += \
     icons.qrc
+
+CONFIG += DEBUG
+QMAKE_CXXFLAGS_DEBUG += -pg
+QMAKE_LFLAGS_DEBUG += -pg -v -da -Q
