@@ -7,39 +7,66 @@ MapViewer::MapViewer(QWidget *parent) :
     QGLViewer(parent)
 {
     skymap = NULL;
+    initialized = false;
+    predictCamera = NULL;
+
+    /* get face cache */
+    faceCache = FaceCache::instance();
+
+    QObject::connect(faceCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
+    //QObject::connect(faceCache, SIGNAL(newFaceAvailable()), this, SLOT(checkForUpdates()) );
+    //QObject::connect(faceCache, SIGNAL(newFaceAvailable(Face*)), this, SLOT(preloadFace(Face*)) );
+
+
+    /* launch thread to wait for new updates to faces available */
+    //QtConcurrent::run(this, &MapViewer::checkForUpdates);
 }
 
 /* create the gl model for the map */
 void MapViewer::draw()
 {
-    // Save the current model view matrix (not needed here in fact)
-    glPushMatrix();
-
-    // Multiply matrix to get in the frame coordinate system.
-    glMultMatrixd(manipulatedFrame()->matrix());
-
-    // Draw an axis using the QGLViewer static function
-    //drawAxis(2.0);
-
-    if(skymap!=NULL)
+    if(initialized)
     {
-        /* show texture */
-        //skymap->drawMap();
+        // Save the current model view matrix (not needed here in fact)
+        glPushMatrix();
+
+        // Multiply matrix to get in the frame coordinate system.
+        glMultMatrixd(manipulatedFrame()->matrix());
+
+        // Draw an axis using the QGLViewer static function
+        //drawAxis(2.0);
+
+        // TODO: select what to draw
+        tesselation->draw();
+
+        // Restore the original (world) coordinate system
+        glPopMatrix();
     }
-
-    //  glColor3f(1.0, 1.0, 1.0);
-
-    // TODO: select what to draw
-    tesselation->draw();
-
-    // Restore the original (world) coordinate system
-    glPopMatrix();
 }
 
 
+/*
 void MapViewer::loadMap(HealpixMap* map)
 {
     skymap = map;
+}
+*/
+
+
+void MapViewer::loadMap(QString fitsfile)
+{
+    qDebug() << "Loading on mapviewer: " << fitsfile;
+
+    if(!initialized)
+    {
+        /* create the sphere tesselation */
+        tesselation = new Tesselation(currentNside, false);
+
+        /* preload next faces */
+        preloadFaces();
+
+        initialized = true;
+    }
 }
 
 
@@ -65,11 +92,19 @@ void MapViewer::init()
     /*
         Enable GL textures.
     */
+    glEnable(GL_TEXTURE_2D);
+    /*
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
     glEnable( GL_TEXTURE_2D );
+    */
                     // Nice texture coordinate interpolation
     glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
+
+
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glCullFace(GL_BACK);
 
 
     setHandlerKeyboardModifiers(QGLViewer::FRAME,  Qt::NoModifier);
@@ -85,16 +120,12 @@ void MapViewer::init()
     camera()->lookAt( Vec(0,0,0) );
     camera()->setUpVector(Vec(0,0,1));
 
-    //camera()->setOrientation(0, 0);
-
-
     /*qglviewer::CameraConstraint *constraint;
     constraint = new CameraConstraint(camera());
     constraint->setRotationConstraintType(AxisPlaneConstraint::FREE);
     camera()->frame()->setConstraint(constraint);*/
 
     setManipulatedFrame(new ManipulatedFrame());
-    setAxisIsDrawn();
 
 /*
     AxisPlaneConstraint* constraint = new LocalConstraint();
@@ -113,9 +144,6 @@ void MapViewer::init()
     /* update initial state */
     currentNside = BASE_NSIDE;
     currentZoomLevel = MIN_ZOOM;
-
-    /* create the sphere tesselation */
-    tesselation = new Tesselation(currentNside, false);
 
     /* get face vertices for nside=1 to know the boundary vertices of face */
     // TODO: do this in tesselation ?
@@ -140,6 +168,9 @@ void MapViewer::init()
         }
         i++;
     }
+
+    QString test;
+    loadMap(test);
 }
 
 void MapViewer::changeToMollview()
@@ -165,88 +196,24 @@ void MapViewer::mouseReleaseEvent(QMouseEvent *e)
     // TODO: just a hack to disable spinning... may have problems when selecting a pixel for example
     //QGLViewer::mouseReleaseEvent(e);
     //emit(cameraChanged(e, MOUSERELEASE, this));
-    checkVisibility();
+    //qDebug("mouse release!!!!!!!!!!!!!!!");
+    //checkVisibility();
+    preloadFaces();
 }
+
 
 void MapViewer::mouseMoveEvent(QMouseEvent* e)
 {
     QGLViewer::mouseMoveEvent(e);
-    emit(cameraChanged(e, MOUSEMOVE, this));
+    //emit(cameraChanged(e, MOUSEMOVE, this));
 
     checkVisibility();
-}
-
-
-void MapViewer::checkVisibility()
-{
-    Vec v1, v2, v3, v4, v1b, v2b, v3b, v4b;
-    bool v1back_hidden, v2back_hidden, v3back_hidden, v4back_hidden;
-
-    visibleFaces.clear();
-
-    //qDebug("==================");
-
-    for(int face=0; face<12; face++)
-    {
-        bool hidden = false;
-
-        v1 = camera()->projectedCoordinatesOf(Vec(faceBoundaries[face][0].x, faceBoundaries[face][0].y, faceBoundaries[face][0].z));
-        v2 = camera()->projectedCoordinatesOf(Vec(faceBoundaries[face][1].x, faceBoundaries[face][1].y, faceBoundaries[face][1].z));
-        v3 = camera()->projectedCoordinatesOf(Vec(faceBoundaries[face][2].x, faceBoundaries[face][2].y, faceBoundaries[face][2].z));
-        v4 = camera()->projectedCoordinatesOf(Vec(faceBoundaries[face][3].x, faceBoundaries[face][3].y, faceBoundaries[face][3].z));
-
-        v1b = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][0].x, faceBoundaries[face][0].y, faceBoundaries[face][0].z));
-        v2b = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][1].x, faceBoundaries[face][1].y, faceBoundaries[face][1].z));
-        v3b = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][2].x, faceBoundaries[face][2].y, faceBoundaries[face][2].z));
-        v4b = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][3].x, faceBoundaries[face][3].y, faceBoundaries[face][3].z));
-
-        v1back_hidden =  v1b.x < INVISIBLE_X;
-        v2back_hidden =  v2b.x < INVISIBLE_X;
-        v3back_hidden =  v3b.x < INVISIBLE_X;
-        v4back_hidden =  v4b.x < INVISIBLE_X;
-
-        /* check if opposite vertice are hidden on left */
-        if((v1.x < 0 && v4.x < 0) || (v2.x < 0 && v3.x < 0))
-        {
-            hidden = true;
-            //qDebug() << "Face " << face << " hidden on left (opposite vertices)";
-        }
-        /* check if opposite vertice are hidden on right */
-        else if((v1.x > width() && v4.x > width()) || (v2.x > width() && v3.x > width()))
-        {
-            hidden = true;
-            //qDebug() << "Face " << face << " hidden on right (opposite vertices)";
-        }
-        /* check if opposite vertice are hidden on top */
-        else if((v1.y < 0 && v4.y < 0) || (v2.y < 0 && v3.y < 0))
-        {
-            hidden = true;
-            //qDebug() << "Face " << face << " hidden on top (opposite vertices)";
-        }
-        /* check if opposite vertice are hidden on bottom */
-        else if((v1.y > height() && v4.y > height()) || (v2.y > height() && v3.y > height()))
-        {
-            hidden = true;
-            //qDebug() << "Face " << face << " hidden on bottom (opposite vertices)";
-        }
-        /* check if all vertices are on backface */
-        else if(v1back_hidden && v2back_hidden && v3back_hidden && v4back_hidden)
-        {
-            hidden = true;
-            //qDebug() << "Face " << face << " hidden on backface";
-        }
-
-        if(!hidden)
-            visibleFaces.append(face);
-    }
-
-    /* update tesselation with visible faces */
-    tesselation->updateVisibleFaces(visibleFaces);
 }
 
 
 void MapViewer::wheelEvent(QWheelEvent *e)
 {
+    //qDebug("==================================");
     bool zoomChanged;
 
     if(e->delta()<0)
@@ -254,14 +221,125 @@ void MapViewer::wheelEvent(QWheelEvent *e)
     else
         zoomChanged = zoomOut();
 
+    /*
     if(zoomChanged)
     {
+        updateGL();
         checkVisibility();
-
-        //QGLViewer::wheelEvent(e);
-        emit(cameraChanged(e, MOUSEWHEEL, this));
+        //emit(cameraChanged(e, MOUSEWHEEL, this));
         updateGL();
     }
+    */
+}
+
+
+void MapViewer::checkVisibility()
+{
+    visibleFaces.clear();
+
+    qDebug("--------------");
+
+    /*
+    Vec a,b;
+    qDebug() << "Viewport witdh: " << width();
+    qDebug() << "Viewport height: " << height();
+    a = manipulatedFrame()->inverseCoordinatesOf(Vec(0, 1.0, 0));
+    b = camera()->projectedCoordinatesOf(Vec(a.x, a.y, a.z));
+    qDebug() << "Top left corner: (" << b.x << "," << b.y << ")";
+    */
+
+    /* compute matrixs because camera could be changed */
+    camera()->computeModelViewMatrix();
+    camera()->computeProjectionMatrix();
+
+    for(int face=0; face<12; face++)
+    {
+        bool hidden = false;
+
+        Vec verticesCoords[4];
+        verticesCoords[0] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][0].x, faceBoundaries[face][0].y, faceBoundaries[face][0].z));
+        verticesCoords[1] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][1].x, faceBoundaries[face][1].y, faceBoundaries[face][1].z));
+        verticesCoords[2] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][2].x, faceBoundaries[face][2].y, faceBoundaries[face][2].z));
+        verticesCoords[3] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][3].x, faceBoundaries[face][3].y, faceBoundaries[face][3].z));
+
+        Vec projectedVerticesVP[4];
+        projectedVerticesVP[0] = camera()->projectedCoordinatesOf(Vec(verticesCoords[0].x, verticesCoords[0].y, verticesCoords[0].z));
+        projectedVerticesVP[1] = camera()->projectedCoordinatesOf(Vec(verticesCoords[1].x, verticesCoords[1].y, verticesCoords[1].z));
+        projectedVerticesVP[2] = camera()->projectedCoordinatesOf(Vec(verticesCoords[2].x, verticesCoords[2].y, verticesCoords[2].z));
+        projectedVerticesVP[3] = camera()->projectedCoordinatesOf(Vec(verticesCoords[3].x, verticesCoords[3].y, verticesCoords[3].z));
+
+        bool verticeHidden[4];
+        verticeHidden[0] = verticesCoords[0].x < INVISIBLE_X;
+        verticeHidden[1] = verticesCoords[1].x < INVISIBLE_X;
+        verticeHidden[2] = verticesCoords[2].x < INVISIBLE_X;
+        verticeHidden[3] = verticesCoords[3].x < INVISIBLE_X;
+
+        QList<Vec> outOfViewport;
+        int totalBack = 0;
+        int totalOut  = 0;
+
+
+        for(int v=0; v<4; v++)
+        {
+            //if(face==4 && v==1)
+                //qDebug() << "Pos on viewport (cam) = " << projectedVerticesVP[v].x << ", " << projectedVerticesVP[v].y;
+            if(!verticeHidden[v])
+            {
+                /* vertice is not on backface */
+                /* check if vertice is inside viewport */
+                if(!(projectedVerticesVP[v].x>0 && projectedVerticesVP[v].x<width() && projectedVerticesVP[v].y>0 && projectedVerticesVP[v].y<height()))
+                {
+                    totalOut++;
+                    outOfViewport.push_front(projectedVerticesVP[v]);
+                }
+            }
+            else
+                totalBack++;
+        }
+
+        //qDebug() << "Face " << face << " - Vertice on back: " << totalBack << ", not in back but out of viewport: " << totalOut;
+
+        /* out only count number of vertices out that are not on backface */
+
+        if(totalBack==4)
+            hidden = true;
+        else if(totalBack==3 && totalOut>=1)
+            hidden = true;
+        else if(totalBack>=2 && totalOut>=2)
+        {
+            //qDebug() << "Face " << face << " - check inside";
+            if(outOfViewport[0].x<outOfViewport[1].x)
+            {
+                hidden = !faceIsInside(outOfViewport[0].x, outOfViewport[0].y, outOfViewport[1].x, outOfViewport[1].y, width(), height());
+                //qDebug() << "Face " << face << " - Check if inside (" << outOfViewport[0].x << "," << outOfViewport[0].y << ") (" << outOfViewport[1].x << "," << outOfViewport[1].y << ")";
+            }
+            else
+            {
+                hidden = !faceIsInside(outOfViewport[1].x, outOfViewport[1].y, outOfViewport[0].x, outOfViewport[0].y, width(), height());
+                //qDebug() << "Face " << face << " - Check if inside (" << outOfViewport[1].x << "," << outOfViewport[1].y << ") (" << outOfViewport[0].x << "," << outOfViewport[0].y << ")";
+            }
+            /*
+            float dx = fabs(outOfViewport[0].x-outOfViewport[1].x)/2;
+            float dy = fabs(outOfViewport[0].y-outOfViewport[1].y)/2;
+
+            //if(dx>dy)
+                if(outOfViewport[0].x < -dx || outOfViewport[1].x < -dx || outOfViewport[0].x > width()+dx || outOfViewport[1].x > width()+dx)
+                    if(outOfViewport[0].y < -dy || outOfViewport[1].y < -dy || outOfViewport[0].y > height()+dy || outOfViewport[1].y > height()+dy)
+                        hidden = true;
+                    //hidden = true;
+            */
+
+        }
+
+        if(!hidden)
+        {
+            qDebug() << "Face " << face << " visible";
+            visibleFaces.append(face);
+        }
+    }
+
+    /* update tesselation with visible faces */
+    tesselation->updateVisibleFaces(visibleFaces);
 }
 
 
@@ -314,19 +392,29 @@ bool MapViewer::zoomIn()
         /* update camera position */
         cameraPosition -= CAMERA_ZOOM_INC;
         camera()->setPosition(Vec(cameraPosition, 0.0, 0.0));
-        //qDebug() << cameraPosition;
 
         currentZoomLevel++;
         int nextNside = zoomToNside(currentZoomLevel);
         //qDebug() << "current zoom level = " << currentZoomLevel;
         //qDebug() << "current nside = " << currentNside;
         //qDebug() << "next nside = " << nextNside;
+
+        /* check visibilty (after apply the zoom, some face can be no longer visible */
+        checkVisibility();
+
+        /* check if need to update nside */
         if(nextNside!=currentNside)
         {
             currentNside = nextNside;
-            qDebug() << "Nside changed to " << currentNside;
             tesselation->updateNside(currentNside);
         }
+
+        /* refresh the view */
+        updateGL();
+
+        /* calculate faces to preload */
+        preloadFaces();
+
         return true;
     }
     return false;
@@ -346,12 +434,22 @@ bool MapViewer::zoomOut()
         //qDebug() << "current zoom level = " << currentZoomLevel;
         //qDebug() << "current nside = " << currentNside;
         //qDebug() << "next nside = " << nextNside;
+
+        /* check visibilty (after apply the zoom, some face can be no longer visible */
+        checkVisibility();
+
         if(nextNside!=currentNside)
         {
             currentNside = nextNside;
-            qDebug() << "Nside changed to " << currentNside;
             tesselation->updateNside(currentNside);
         }
+
+        /* refresh the view */
+        updateGL();
+
+        /* calculate faces to preload */
+        preloadFaces();
+
         return true;
     }
     return false;
@@ -370,4 +468,205 @@ int MapViewer::zoomToNside(int zoomLevel)
     int nside = pow(2, EXP_NSIDE+baseZoomLevel);
 
     return nside;
+}
+
+
+void MapViewer::checkForUpdates(bool cleanCache)
+{
+    //QGLContext* newContext = new QGLContext(format(),this);
+
+
+    //qDebug("check for updates");
+    updateGL();
+
+    // TODO: try to clean cache from thread...
+    if(cleanCache)
+        faceCache->cleanCache();
+    /*
+    Face* f = NULL;
+
+    while(true)
+    {
+        f = faceCache->waitForUpdates();
+
+        if(f!=NULL)
+        {
+            qDebug() << "New face available on cache";
+            // new face is available on cache
+            // create display list for face
+            f->createDisplayList();
+            // force update
+            updateGL();
+        }
+    }
+    */
+}
+
+
+bool MapViewer::faceIsInside(float ax, float ay, float bx, float by, float width, float height)
+{
+    bool inside = true;
+    float tl_x, tl_y, tr_x, tr_y, bl_x, bl_y, br_x, br_y;
+
+    tl_x = tl_y = 0;
+    tr_x = width; tr_y = 0;
+    bl_x = 0; bl_y = height;
+    br_x = width; br_y = height;
+
+    /*
+    qDebug() << "Face points: (" << ax << "," << ay << "), (" << bx << "," << by << ")";
+    qDebug() << "Top Left Corner: " << tl_x << "," << tl_y;
+    qDebug() << "Top Right Corner: " << tr_x << "," << tr_y;
+    qDebug() << "Bottom Left Corner: " << bl_x << "," << bl_y;
+    qDebug() << "Bottom Right Corner: " << br_x << "," << br_y;
+    */
+
+    /* check top left corner */
+    if(ax<0 && by<0)
+    //if(ax<0 && ay>0 && bx>0 && by<0)
+    //if(ax<0 && ay>0 && ay<height && bx>0 && by<0)
+    {
+        //qDebug("Check top left corner");
+        if(((bx - ax)*(tl_y - ay) - (by - ay)*(tl_x - ax)) > 0)
+        {
+            inside = false;
+            //qDebug("out on top left corner");
+        }
+    }
+
+
+    /* check top right corner */
+    else if(ay<0 && bx>width)
+    //else if(ax<width && ay<0 && bx>width && by>0)
+    //else if(ax>0 && ax<width && ay<0 && bx>width && bx>0)
+    {
+        //qDebug("Check top right corner");
+        if(((bx - ax)*(tr_y - ay) - (by - ay)*(tr_x - ax)) >= 0)
+        {
+            inside = false;
+            //qDebug("out on top right corner");
+        }
+    }
+
+    /* check bottom left corner */
+    else if(ax<0 && by>height)
+    //else if(ax<0 && ay<height && bx>0 && by>height)
+    //else if(ax<0 && ay>0 && ay<height && bx>0 && by>height)
+    {
+        //qDebug("Check bottom left corner");
+        if(((bx - ax)*(bl_y - ay) - (by - ay)*(bl_x - ax)) < 0)
+        {
+            inside = false;
+            //qDebug("out on bottom left corner");
+        }
+    }
+
+
+    /* check bottom right corner */
+    else if(ay>height && bx>width)
+    //else if(ax<width && ay>height && bx>width && by<height)
+    //else if(ax>0 && ax<width && ay>height && bx>width && by>0 && by<height)
+    {
+        //qDebug("Check bottom right corner");
+        if(((bx - ax)*(br_y - ay) - (by - ay)*(br_x - ax)) < 0)
+        {
+            inside = false;
+            //qDebug("out on bottom right corner");
+        }
+    }
+
+    return inside;
+}
+
+
+
+void MapViewer::preloadFaces()
+{
+    if(PRELOAD_FACES)
+    {
+        /* zoomlevel that changed nside */
+        if(currentZoomLevel % 2 == 0 && currentNside!=MAX_NSIDE)
+        {
+            float camPosition = cameraPosition-2*CAMERA_ZOOM_INC;
+            int nextNside = currentNside*2;
+
+            QVector<int> facesToPreload;
+
+            for(int face=0; face<12; face++)
+            {
+                bool hidden = false;
+
+                if(predictCamera!=NULL)
+                    delete predictCamera;
+                predictCamera = new Camera(*camera());
+                predictCamera->setPosition(Vec(camPosition, 0.0, 0.0));
+                predictCamera->setScreenWidthAndHeight(width(), height());
+                predictCamera->computeProjectionMatrix();
+                predictCamera->computeModelViewMatrix();
+
+                Vec verticesCoords[4];
+                verticesCoords[0] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][0].x, faceBoundaries[face][0].y, faceBoundaries[face][0].z));
+                verticesCoords[1] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][1].x, faceBoundaries[face][1].y, faceBoundaries[face][1].z));
+                verticesCoords[2] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][2].x, faceBoundaries[face][2].y, faceBoundaries[face][2].z));
+                verticesCoords[3] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][3].x, faceBoundaries[face][3].y, faceBoundaries[face][3].z));
+
+                Vec projectedVerticesVP[4];
+                projectedVerticesVP[0] = predictCamera->projectedCoordinatesOf(Vec(verticesCoords[0].x, verticesCoords[0].y, verticesCoords[0].z));
+                projectedVerticesVP[1] = predictCamera->projectedCoordinatesOf(Vec(verticesCoords[1].x, verticesCoords[1].y, verticesCoords[1].z));
+                projectedVerticesVP[2] = predictCamera->projectedCoordinatesOf(Vec(verticesCoords[2].x, verticesCoords[2].y, verticesCoords[2].z));
+                projectedVerticesVP[3] = predictCamera->projectedCoordinatesOf(Vec(verticesCoords[3].x, verticesCoords[3].y, verticesCoords[3].z));
+
+                bool verticeHidden[4];
+                verticeHidden[0] = verticesCoords[0].x < INVISIBLE_X;
+                verticeHidden[1] = verticesCoords[1].x < INVISIBLE_X;
+                verticeHidden[2] = verticesCoords[2].x < INVISIBLE_X;
+                verticeHidden[3] = verticesCoords[3].x < INVISIBLE_X;
+
+                QList<Vec> outOfViewport;
+                int totalBack = 0;
+                int totalOut  = 0;
+
+
+                for(int v=0; v<4; v++)
+                {
+                    //if(face==4 && v==1)
+                        //qDebug() << "Pos on viewport (predict) = " << projectedVerticesVP[v].x << ", " << projectedVerticesVP[v].y;
+                    if(!verticeHidden[v])
+                    {
+                        /* vertice is not on backface */
+                        /* check if vertice is inside viewport */
+                        if(!(projectedVerticesVP[v].x>0 && projectedVerticesVP[v].x<width() && projectedVerticesVP[v].y>0 && projectedVerticesVP[v].y<height()))
+                        {
+                            totalOut++;
+                            outOfViewport.push_front(projectedVerticesVP[v]);
+                        }
+                    }
+                    else
+                        totalBack++;
+                }
+
+                /* out only count number of vertices out that are not on backface */
+                if(totalBack==4)
+                    hidden = true;
+                else if(totalBack==3 && totalOut>=1)
+                    hidden = true;
+                else if(totalBack>=2 && totalOut>=2)
+                {
+                    if(outOfViewport[0].x<outOfViewport[1].x)
+                        hidden = !faceIsInside(outOfViewport[0].x, outOfViewport[0].y, outOfViewport[1].x, outOfViewport[1].y, width(), height());
+                    else
+                        hidden = !faceIsInside(outOfViewport[1].x, outOfViewport[1].y, outOfViewport[0].x, outOfViewport[0].y, width(), height());
+                }
+
+                if(!hidden)
+                {
+                    //qDebug() << "Preload face " << face << " with nside " << nextNside;
+                    facesToPreload.append(face);
+                }
+
+            }
+
+            tesselation->preloadFaces(facesToPreload, nextNside);
+        }
+    }
 }

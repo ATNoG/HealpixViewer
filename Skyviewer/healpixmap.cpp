@@ -154,6 +154,7 @@ void HealpixMap::processFile(QString path)
     }
 
 
+    /*
     int newNside = 64;
     QTime time;
     int total = 0;
@@ -163,7 +164,7 @@ void HealpixMap::processFile(QString path)
     //{
         time.restart();
 
-        /* just for test */
+        // just for test
         FieldMap temperatureField;
         float* degraded_map = temperatureField.downgradeMap(temperature, maxNside, newNside);
         int elapsed = time.elapsed();
@@ -175,6 +176,8 @@ void HealpixMap::processFile(QString path)
     qDebug("Write to FITS");
     writeFITS("2048to64.fits", "Sky Maps", degraded_map, newNside);
     qDebug("Write done");
+
+    */
 
     /* close fits file */
     fits_close_file(fptr, &status);
@@ -305,12 +308,6 @@ bool HealpixMap::hasNObs()
 {
     return availableMaps.contains(NObs);
 }
-
-void HealpixMap::drawMap()
-{
-    /* TODO: draw current map */
-}
-
 
 void HealpixMap::changeCurrentMap(MapType mapType)
 {
@@ -493,4 +490,11 @@ void HealpixMap::writeFITSExtensionHeader(fitsfile *fptr, int newnside)
     strcpy(comm, "Last pixel index (0 based)");
     itmp = newnside*newnside*12 - 1;
     fits_write_key(fptr, TUINT, "LASTPIX", &itmp, comm, &status);
+}
+
+
+
+float* HealpixMap::getFaceTexture(int faceNumber, int nside)
+{
+
 }

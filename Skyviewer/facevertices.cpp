@@ -143,6 +143,8 @@ QVector<Strip> FaceVertices::getRigging_SP(int faceNumber, int nside, QVector<do
     Boundary boundry0;
     Boundary boundry1;
 
+    //qDebug("set Rigging");
+
     QVector<Strip> strips;
     strips.resize(nside);
 
@@ -190,6 +192,8 @@ QVector<Strip> FaceVertices::getRigging_SP(int faceNumber, int nside, QVector<do
         s += ds;
         stripIT++;
     }
+
+    //qDebug("Ring finished");
 
     return strips;
 }

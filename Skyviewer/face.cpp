@@ -1,106 +1,226 @@
 #include "face.h"
 
+
 Face::Face()
 {
-
+    vertexBuffer = NULL;
 }
 
 
 Face::Face(int _faceNumber)
 {
     faceNumber = _faceNumber;
+    vertexsCalculated = false;
+    bufferInitialized = false;
+    vertexBuffer = NULL;
 }
 
 
-/* draw the face */
+Face::~Face()
+{
+    qDebug("Destroying face");
+    if(vertexBuffer!=NULL)
+    {
+        vertexBuffer->release();
+        vertexBuffer->destroy();
+        delete vertexBuffer;
+    }
+}
+
+
 void Face::draw()
 {
-    int i=0;
-    QColor color;
+    if(!bufferInitialized)
+        createBuffer();
+
+    //QTime time1;
+    //time1.start();
+
+    if(!DISPLAY_TEXTURE)
+    {
+        if(!COLOR_PER_NSIDE)
+        {
+            switch(faceNumber)
+            {
+                case 0:
+                    glColor3f(1.0, 0.0, 0.0);
+                    break;
+                case 1:
+                    glColor3f(0.0, 1.0, 0.0);
+                    break;
+                case 2:
+                    glColor3f(0.0, 0.0, 1.0);
+                    break;
+                case 3:
+                    glColor3f(1.0, 1.0, 0.0);
+                    break;
+                case 4:
+                    glColor3f(0.0, 1.0, 1.0);
+                    break;
+                case 5:
+                    glColor3f(1.0, 0.0, 1.0);
+                    break;
+                case 6:
+                    glColor3f(0.5, 1.0, 0.0);
+                    break;
+                case 7:
+                    glColor3f(0.0, 1.0, 0.5);
+                    break;
+                case 8:
+                    glColor3f(0.5, 1.0, 0.5);
+                    break;
+                case 9:
+                    glColor3f(0.5, 0.0, 1.0);
+                    break;
+                case 10:
+                    glColor3f(1.0, 0.0, 0.5);
+                    break;
+                case 11:
+                    glColor3f(0.5, 0.5, 1.0);
+                    break;
+            }
+        }
+        else
+        {
+            switch(nside)
+            {
+                case 64:
+                    glColor3f(1.0, 0.0, 0.0);
+                    break;
+                case 128:
+                    glColor3f(0.0, 1.0, 0.0);
+                    break;
+                case 256:
+                    glColor3f(0.0, 0.0, 1.0);
+                    break;
+                case 512:
+                    glColor3f(1.0, 1.0, 0.0);
+                    break;
+                case 1024:
+                    glColor3f(0.0, 1.0, 1.0);
+                    break;
+                case 2048:
+                    glColor3f(1.0, 0.0, 1.0);
+                    break;
+            }
+        }
+    }
+
+
+    //glPolygonMode(GL_FRONT, GL_FILL);
+    //glPolygonMode(GL_FRONT, GL_LINE);
+    //glPolygonMode(GL_BACK, GL_NONE);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    vertexBuffer->bind();
+    glVertexPointer(3, GL_FLOAT, 0, BUFFER_OFFSET(0));
+
+    textureBuffer->bind();
+    glTexCoordPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
+
+    for(int i=0; i<nside; i++)
+    {
+        glDrawArrays(GL_QUAD_STRIP, 2*(nside+1)*i, 2*(nside+1));
+    }
+
+    vertexBuffer->release();
+    textureBuffer->release();
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    //int ms = time1.elapsed();
+    //qDebug() << "Time drawbuffer (nside " << nside << "): " << ms;
+}
+
+
+int Face::getFaceNumber()
+{
+    return faceNumber;
+}
+
+
+/* create vertex list */
+void Face::createVertexs()
+{
+    int i=0, j=0;
+
+    vertexs = new GLfloat[3*totalVertices];
+    textureCoords = new GLfloat[2*totalVertices];
+
+    if(vertexs==NULL || textureCoords==NULL)
+        qDebug("Error allocation memory for vertexs");
 
     QVector<Strip>::iterator stripIT;
     QVector<Vertice>::iterator verticesIT;
 
-
-    //qDebug() << "Drawing face " << faceNumber;
-    //return;
-
-    switch(faceNumber)
-    {
-        case 0:
-            glColor3f(1.0, 0.0, 0.0);
-            break;
-        case 1:
-            glColor3f(0.0, 1.0, 0.0);
-            break;
-        case 2:
-            glColor3f(0.0, 0.0, 1.0);
-            break;
-        case 3:
-            glColor3f(1.0, 1.0, 0.0);
-            break;
-        case 4:
-            glColor3f(0.0, 1.0, 1.0);
-            break;
-        case 5:
-            glColor3f(1.0, 0.0, 1.0);
-            break;
-        case 6:
-            glColor3f(0.5, 1.0, 0.0);
-            break;
-        case 7:
-            glColor3f(0.0, 1.0, 0.5);
-            break;
-        case 8:
-            glColor3f(0.5, 1.0, 0.5);
-            break;
-        case 9:
-            glColor3f(0.5, 0.0, 1.0);
-            break;
-        case 10:
-            glColor3f(1.0, 0.0, 0.5);
-            break;
-        case 11:
-            glColor3f(0.5, 0.5, 1.0);
-            break;
-    }
-
-
-    /*
-    if(faceNumber==0)
-    {
-        glColor3f(1.0, 0.0, 0.0);
-    //glPolygonMode(GL_FRONT, GL_LINE);
-    //glPolygonMode(GL_BACK, GL_LINE);
-    }
-    else
-    {
-        glColor4f(0.0, 1.0, 1.0, 0.3);
-    }
-    */
-
-    //qDebug() << "total strips = " << strips.size() << " (face " << faceNumber << ")";
-
-    /* draw each vertice of each strip */
+    // draw each vertice of each strip
     for(stripIT=strips.begin(); stripIT!=strips.end(); ++stripIT)
     {
-        //color.setHsv((int)(360*i/(strips.size()-1.)), 255, 255);
-        //color.setHsv((int)(360*(i+faceNumber*strips.size())/(strips.size()*12-1.)), 255, 255);
-        //glColor3f(color.red()/255.,color.green()/255.,color.blue()/255.);
-
-        glBegin(GL_QUAD_STRIP);
-
         for(verticesIT=stripIT->begin(); verticesIT!=stripIT->end(); verticesIT++)
         {
-            verticesIT->draw();
+            vertexs[i] = verticesIT->x;
+            vertexs[i+1] = verticesIT->y;
+            vertexs[i+2] = verticesIT->z;
+            i+=3;
+            textureCoords[j] = verticesIT->s;
+            textureCoords[j+1] = verticesIT->t;
+            j+=2;
+            if(faceNumber==4 && nside==1)
+            {
+                qDebug() << "Pixel " << i/3-1 << " vertex: " << verticesIT->x << "," << verticesIT->y << "," << verticesIT->z;
+                qDebug() << "Pixel " << i/3-1 << " textCoord: " << verticesIT->s << "," << verticesIT->t;
+            }
         }
-        i++;
-
-        glEnd();
     }
 
-    glPolygonMode(GL_FRONT, GL_FILL);
-    glPolygonMode(GL_BACK, GL_FILL);
+    // free strips structure
+    strips.clear();
+
+    vertexsCalculated = true;
+}
+
+
+
+/* create opengl buffers */
+void Face::createBuffer()
+{
+    //QTime time1;
+    //time1.start();
+
+    createVertexs();
+
+    vertexBuffer = new QGLBuffer(QGLBuffer::VertexBuffer);
+    textureBuffer = new QGLBuffer(QGLBuffer::VertexBuffer);
+
+    vertexBuffer->create();
+    textureBuffer->create();
+
+    vertexBuffer->bind();
+    vertexBuffer->setUsagePattern(QGLBuffer::StaticDraw);
+    vertexBuffer->allocate(vertexs, 3*totalVertices*sizeof(GLfloat));
+    vertexBuffer->release();
+
+    textureBuffer->bind();
+    textureBuffer->setUsagePattern(QGLBuffer::StaticDraw);
+    textureBuffer->allocate(textureCoords, 2*totalVertices*sizeof(GLfloat));
+    textureBuffer->release();
+
+    delete vertexs;
+    delete textureCoords;
+
+    bufferInitialized = true;
+
+    //int ms = time1.elapsed();
+    //qDebug() << "Time createBuffer (nside " << nside << "): " << ms;
+}
+
+
+void Face::freeVertices()
+{
+    strips.clear();
 }
 
 
@@ -109,6 +229,9 @@ void Face::setRigging(int nside, bool mollview, double radius)
     if(!mollview)
         strips = FaceVertices::instance()->getFaceVertices(faceNumber, nside, radius);
 
+    /* 2*(nside+1) per each strip */
+    totalVertices = 2*(nside+1)*nside;
+    this->nside = nside;
 
     QVector<Strip>::iterator stripIT;
     QVector<Vertice>::iterator verticeIT;
@@ -121,8 +244,8 @@ void Face::setRigging(int nside, bool mollview, double radius)
     {
         for(verticeIT=stripIT->begin(); verticeIT!=stripIT->end(); ++verticeIT)
         {
-            verticeIT->s = 0.25*verticeIT->s + 0.25*(faceNumber % 4);
-            verticeIT->t = 0.25*verticeIT->t + 0.25*(faceNumber / 4);
+            //verticeIT->s = 0.25*verticeIT->s + 0.25*(faceNumber % 4);
+            //verticeIT->t = 0.25*verticeIT->t + 0.25*(faceNumber / 4);
             j++;
         }
         stripIT++;
@@ -131,12 +254,6 @@ void Face::setRigging(int nside, bool mollview, double radius)
     if(mollview)
         toMollweide(radius);
 }
-
-
-
-
-
-
 
 
 void Face::toMollweide(double rad)

@@ -9,6 +9,7 @@
 #include <QGLViewer/qglviewer.h>
 #include <chealpix.h>
 #include <fitsio.h>
+#include <healpixutil.h>
 
 #define MINZOOM 32
 #define MAXZOOM 2048
@@ -40,6 +41,8 @@ public:
     bool hasPolarization();
     bool hasNObs();
 
+    bool generateDowngrades();
+
     void changeCurrentMap(MapType mapType);
     FieldMap* getMap(MapType mapType);
     QList<MapType> getAvailableMaps();
@@ -48,7 +51,7 @@ public:
     bool zoomIn();
     bool zoomOut();
 
-    void drawMap();
+    float* getFaceTexture(int faceNumber, int nside);
 
     static unsigned int NSide2Res  (unsigned int ns);
 

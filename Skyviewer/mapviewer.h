@@ -6,18 +6,26 @@
 #include <QDebug>
 #include <QMap>
 #include <QVector>
+#include <QSet>
+#include <QtConcurrentRun>
+#include <QGLBuffer>
+#include <QFileDialog>
 #include <math.h>
 #include "healpixmap.h"
 #include "tesselation.h"
 #include "facevertices.h"
 
 #define BASE_NSIDE 64
+#define MAX_NSIDE 2048
 #define EXP_NSIDE 6
 #define MIN_ZOOM 0
 #define MAX_ZOOM 10
 #define ZOOM_LEVEL 2
-#define INVISIBLE_X 0.25
+#define INVISIBLE_X 0.37//0.25
 #define CAMERA_ZOOM_INC 0.16
+#define PRELOAD_FACES true
+
+#define BUFFER_OFFSET(i) ((GLbyte *)NULL + (i))
 
 
 using namespace qglviewer;
@@ -31,11 +39,14 @@ public:
     explicit MapViewer(QWidget *parent = 0);
     void changeToMollview();
     void changeTo3D();
-    void loadMap(HealpixMap* map);
+    //void loadMap(HealpixMap* map);
+    void loadMap(QString fitsfile);
     void synchronize(QEvent* e, int type);
     bool zoomIn();
     bool zoomOut();
     void resetView();
+
+    //void checkForUpdates();
 
 signals:
     void cameraChanged(QEvent* e, int type, MapViewer* viewer);
@@ -49,6 +60,8 @@ protected:
     virtual void wheelEvent(QWheelEvent* e);
 
 public slots:
+    void checkForUpdates(bool cleanCache);
+    //void checkForUpdates(void);
 
 private:
     HealpixMap* skymap;
@@ -56,9 +69,17 @@ private:
     int currentNside;
     int currentZoomLevel;
     float cameraPosition;
+    bool initialized;
+
+    QGLBuffer* buffer;
+    GLfloat* vertexs;
+
+    Camera* predictCamera;
 
     int zoomToNside(int zoomLevel);
     void resetZoom();
+    bool faceIsInside(float ax, float ay, float bx, float by, float width, float height);
+    void preloadFaces();
 
     enum MouseEvent {MOUSEPRESS, MOUSEMOVE, MOUSEWHEEL, MOUSERELEASE};
 
@@ -66,6 +87,8 @@ private:
 
     QMap<int, QVector<Vec> > faceBoundaries;
     QVector<int> visibleFaces;
+
+    FaceCache* faceCache;
 
 };
 

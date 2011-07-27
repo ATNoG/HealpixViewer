@@ -135,9 +135,11 @@ void MapViewport::openMap(QString fitsfile)
     //closeMap();
 
     /* create new map */
+    /*
     HealpixMap* map = new HealpixMap(fitsfile);
     qDebug("map created");
-    mapviewer->loadMap(map);
+    */
+    mapviewer->loadMap(fitsfile);
 }
 
 
@@ -145,8 +147,8 @@ void MapViewport::closeMap()
 {
     // TODO: ask if really wanna close, etc...
     // TODO: mapviewer should be deleted, or just load the file into the current mapview ?
-    if(mapviewer!=NULL)
-        delete mapviewer;
+    //if(mapviewer!=NULL)
+        //delete mapviewer;
 }
 
 

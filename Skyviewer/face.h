@@ -3,28 +3,48 @@
 
 #include <QVector>
 #include <QDebug>
+#include <QGLBuffer>
 #include <chealpix.h>
 #include "vertice.h"
 #include "facevertices.h"
 
-using namespace std;
+#define BUFFER_OFFSET(i) ((GLbyte *)NULL + (i))
+#define COLOR_PER_NSIDE false
+#define DISPLAY_TEXTURE false
 
+using namespace std;
 
 class Face
 {
 public:
     Face();
     Face(int faceNumber);
+    ~Face();
     void setRigging(int nside, bool mollview, double rad = 1.);
+    void createVertexs();
+    void createDisplayList();
+    void createBuffer();
     void draw();
+    int getFaceNumber();
 
 private:
     int faceNumber;
+    int nside;
+    int totalVertices;
     QVector<Strip> strips;
+    bool bufferInitialized;
+    bool vertexsCalculated;
+
 
     void toMollweide(double rad);
     double toMollweide(const double phi, const double lambda, double &x, double &y);
     void toMollweideBackfaceSplit();
+    void freeVertices();
+
+    GLfloat* vertexs;
+    GLfloat* textureCoords;
+    QGLBuffer* vertexBuffer;
+    QGLBuffer* textureBuffer;
 };
 
 #endif // FACE_H
