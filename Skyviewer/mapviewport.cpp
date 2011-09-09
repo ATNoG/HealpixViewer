@@ -10,6 +10,7 @@ MapViewport::MapViewport(QWidget *parent, QString title, WorkSpace* _workspace) 
     this->selected = false;  // by default viewport is not selected
     this->mollview = !DEFAULT_VIEW_3D;
     this->workspace = _workspace;
+    this->loaded = false;
 
     /* configure the user interface */
     configureUI();
@@ -36,15 +37,35 @@ void MapViewport::configureUI()
     titlewidget->setMaximumHeight(30);
     titlewidget->setLayout(titlebarlayout);
 
-    /* create the widgets: title, checkbox and viewer area */
+    /* create the widgets: title, and viewer area */
     QLabel* lbltitle = new QLabel;
     lbltitle->setText(title);
-    checkbox = new QCheckBox;
     mapviewer = new MapViewer(this);
     mapviewer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);   // allow viewer area to expand
 
+    /* create toolbar */
+    /*
+    QToolBar *toolbar = new QToolBar();
+    QAction *open = new QAction(QIcon::fromTheme("document-open"), "Open Map", toolbar);
+    QAction *close = new QAction(QIcon::fromTheme("window-close"), "Close Map", toolbar);
+    QAction *reset = new QAction(QIcon::fromTheme("edit-undo"), "Reset view", toolbar);
+    QAction *maximize = new QAction(QIcon::fromTheme("view-fullscreen"), "Fullscreen", toolbar);
+    QAction *restore = new QAction(QIcon::fromTheme("view-restore"), "Restore window", toolbar);
+    toolbar->addAction(open);
+    toolbar->addAction(close);
+    toolbar->addAction(reset);
+    toolbar->addAction(maximize);
+    toolbar->addAction(restore);
+    toolbar->addSeparator();
+    */
+    checkbox = new QCheckBox;
+    checkbox->setEnabled(false);
+    //toolbar->addWidget(checkbox);
+
     /* add widgets */
     titlebarlayout->addWidget(lbltitle);
+    //titlebarlayout->addWidget(progressBar);
+    //titlebarlayout->addWidget(toolbar, 0, Qt::AlignRight);
     titlebarlayout->addWidget(checkbox, 0, Qt::AlignRight);
     vboxlayout->addWidget(titlewidget);
     vboxlayout->addWidget(mapviewer);
@@ -53,16 +74,6 @@ void MapViewport::configureUI()
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
-
-void MapViewport::loadHealpixMap(QString path)
-{
-    /* create new healpixmap */
-    //healpixMap(path);
-
-    // TODO: verify if no map is currently loaded
-}
-
-
 bool MapViewport::isSelected()
 {
     return selected;
@@ -70,23 +81,26 @@ bool MapViewport::isSelected()
 
 void MapViewport::selectViewport(bool changeCheckbox)
 {
-    selected = true;
+    if(inUse() && !isSelected())
+    {
+        selected = true;
 
-    /* if function called by workspace, change the checkbox status */
-    if(changeCheckbox)
-        checkbox->setChecked(true);
+        /* if function called by workspace, change the checkbox status */
+        if(changeCheckbox)
+            checkbox->setChecked(true);
 
-    /* change titlebar color */
-    // TODO: dont rewrite all properties again
-    titlewidget->setStyleSheet(QString("background-color: %1; border-top-right-radius: 9px; border-top-left-radius: 9px; ").arg(COLOR_SELECTED));
+        /* change titlebar color */
+        // TODO: dont rewrite all properties again
+        titlewidget->setStyleSheet(QString("background-color: %1; border-top-right-radius: 9px; border-top-left-radius: 9px; ").arg(COLOR_SELECTED));
 
-    /* connect signals */
-    /* listen for object moved in a viewport */
-    connect(mapviewer, SIGNAL(cameraChanged(QEvent*, int, MapViewer*)), workspace, SLOT(syncViewports(QEvent*, int, MapViewer*)));
-    /* listen for sync needed, to force viewports to update */
-    connect(workspace, SIGNAL(syncNeeded(QEvent*,int, MapViewer*)), this, SLOT(synchronizeView(QEvent*, int, MapViewer*)));
+        /* connect signals */
+        /* listen for object moved in a viewport */
+        connect(mapviewer, SIGNAL(cameraChanged(QEvent*, int, MapViewer*)), workspace, SLOT(syncViewports(QEvent*, int, MapViewer*)));
+        /* listen for sync needed, to force viewports to update */
+        connect(workspace, SIGNAL(syncNeeded(QEvent*,int, MapViewer*)), this, SLOT(synchronizeView(QEvent*, int, MapViewer*)));
 
-    mapviewer->resetView();
+        //mapviewer->resetView();
+    }
 }
 
 void MapViewport::deselectViewport(bool changeCheckbox)
@@ -126,20 +140,29 @@ void MapViewport::changeTo3D()
     }
 }
 
+void MapViewport::resetViewport()
+{
+    mapviewer->resetView();
+}
+
 
 void MapViewport::openMap(QString fitsfile)
 {
     qDebug() << "Opening " << fitsfile << " on " << title;
 
     /* close the current map */
-    //closeMap();
+    //closeMap();    
 
-    /* create new map */
-    /*
-    HealpixMap* map = new HealpixMap(fitsfile);
-    qDebug("map created");
-    */
+    /* load the map into viewport */
     mapviewer->loadMap(fitsfile);
+
+    /* viewport is now in use */
+    loaded = true;
+
+    checkbox->setEnabled(true);
+
+    /* set viewport as selected */
+    selectViewport(true);
 }
 
 
@@ -166,6 +189,13 @@ void MapViewport::selectionChanged(bool selected)
 void MapViewport::synchronizeView(QEvent *event, int type, MapViewer* source)
 {
     if(isSelected() && mapviewer!=source)
-        // && mapviewer!=source
+    {
         mapviewer->synchronize(event, type);
+    }
+}
+
+
+bool MapViewport::inUse()
+{
+    return loaded;
 }

@@ -14,6 +14,7 @@
 #include "healpixmap.h"
 #include "tesselation.h"
 #include "facevertices.h"
+#include "maploader.h"
 
 #define BASE_NSIDE 64
 #define MAX_NSIDE 2048
@@ -23,7 +24,10 @@
 #define ZOOM_LEVEL 2
 #define INVISIBLE_X 0.37//0.25
 #define CAMERA_ZOOM_INC 0.16
-#define PRELOAD_FACES true
+#define PRELOAD_FACES false
+#define INITIAL_CAMERA_POSITION 2.8
+
+#define DISPLAY_TEXTURE true
 
 #define BUFFER_OFFSET(i) ((GLbyte *)NULL + (i))
 
@@ -59,6 +63,7 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent* e);
     virtual void wheelEvent(QWheelEvent* e);
 
+
 public slots:
     void checkForUpdates(bool cleanCache);
     //void checkForUpdates(void);
@@ -70,16 +75,26 @@ private:
     int currentZoomLevel;
     float cameraPosition;
     bool initialized;
+    int maxNside;
+    HealpixMap *healpixMap;
+    HealpixMap::MapType maptype;
+
+    QProgressDialog *progressDialog;
 
     QGLBuffer* buffer;
     GLfloat* vertexs;
 
     Camera* predictCamera;
+    ManipulatedFrame* currentManipulatedFrame;
 
     int zoomToNside(int zoomLevel);
-    void resetZoom();
     bool faceIsInside(float ax, float ay, float bx, float by, float width, float height);
     void preloadFaces();
+
+    void mousePressEvent(QMouseEvent* e, bool propagate);
+    void mouseReleaseEvent(QMouseEvent* e, bool propagate);
+    void mouseMoveEvent(QMouseEvent* e, bool propagate);
+    void wheelEvent(QWheelEvent* e, bool propagate);
 
     enum MouseEvent {MOUSEPRESS, MOUSEMOVE, MOUSEWHEEL, MOUSERELEASE};
 
@@ -89,6 +104,7 @@ private:
     QVector<int> visibleFaces;
 
     FaceCache* faceCache;
+    TextureCache* textureCache;
 
 };
 

@@ -2,33 +2,39 @@
 #define PIXELMAP_H
 
 #include <QDebug>
+#include <QFile>
+#include <QTextStream>
+#include <stdio.h>
 #include "healpixutil.h"
+
+using namespace std;
+
+typedef vector<long> PixelLUT;
+typedef map<int, PixLUT* > PixelLUTCache;
 
 class FieldMap
 {
 
 public:
-    FieldMap();
-
-    void drawMap();
-    float* downgradeMap(float* map, int oldNside, int newNside);
-    //unsigned char* getTexture();
+    FieldMap(float* map, int nside, bool nest);
+    float* getFaceValues(int faceNumber);
+    float* downgradeMap(int newNside);
+    void generateDowngrades(QString path, QString prefix, int minNside);
 
 private:
     float* map;
-    float* newMap;
+    int currentNside;
+    bool nest;
 
-    //bool buildLut();
-    //void buildTexture();
+    void convertToNest();
+    float* orderMap(float* values, int nside);
 
-    //PixLUT *lut;                                    /* pointer to lut */
-    //PixLUTCache lut_cache_ring, lut_cache_nest;
+    PixelLUT* getLut(int nside);
 
-    //unsigned char *texture;
-    //int texture_res;
+    PixelLUTCache lut_cache;
 
     int degradePixel(int pixel, int oldNside, int newNside);
-
+    void saveFieldMap(QString filepath, float* values, int nvalues);
 };
 
 #endif // PIXELMAP_H

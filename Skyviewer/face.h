@@ -10,7 +10,7 @@
 
 #define BUFFER_OFFSET(i) ((GLbyte *)NULL + (i))
 #define COLOR_PER_NSIDE false
-#define DISPLAY_TEXTURE false
+#define DISPLAY_TEXTURE true
 
 using namespace std;
 

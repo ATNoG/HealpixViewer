@@ -1,11 +1,13 @@
 #include "tesselation.h"
 
-Tesselation::Tesselation(int _nside, bool _mollview)
+Tesselation::Tesselation(int _nside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache)
 {
     nside = _nside;
     mollview = _mollview;
 
-    faceCache = FaceCache::instance();
+    this->faceCache = faceCache;
+    this->textureCache = textureCache;
+    //this->mapType = mapType;
 
     createInitialTesselation();
 }
@@ -38,6 +40,8 @@ void Tesselation::updateVisibleFaces(QVector<int> faces)
 
     /* tell cache which faces are visible */
     faceCache->updateStatus(faces, nside);
+    if(DISPLAY_TEXTURE)
+        textureCache->updateStatus(faces, nside);
 }
 
 
@@ -47,6 +51,8 @@ void Tesselation::preloadFaces(QVector<int> faces, int nside)
     for(int i=0; i<faces.size(); i++)
     {
         faceCache->preloadFace(faces[i], nside);
+        if(DISPLAY_TEXTURE)
+            textureCache->preloadFace(faces[i], nside);
     }
 }
 
@@ -72,11 +78,15 @@ void Tesselation::draw()
 
         if(DISPLAY_TEXTURE)
         {
-            //texture = textureCache->getTexture(facesv[i], nside);
-            texture = new Texture(facesv[i], nside);
+            texture = textureCache->getFace(facesv[i], nside);
             texture->draw();
         }
 
         face->draw();
+
+        if(DISPLAY_TEXTURE)
+        {
+            texture->unbind();
+        }
     }
 }

@@ -13,17 +13,24 @@ Face::Face(int _faceNumber)
     vertexsCalculated = false;
     bufferInitialized = false;
     vertexBuffer = NULL;
+    textureBuffer = NULL;
 }
 
 
 Face::~Face()
 {
-    qDebug("Destroying face");
+    //qDebug("Destroying face");
     if(vertexBuffer!=NULL)
     {
         vertexBuffer->release();
         vertexBuffer->destroy();
         delete vertexBuffer;
+    }
+    if(textureBuffer!=NULL)
+    {
+        textureBuffer->release();
+        textureBuffer->destroy();
+        delete textureBuffer;
     }
 }
 
@@ -238,18 +245,20 @@ void Face::setRigging(int nside, bool mollview, double radius)
 
 
     /* texture coordinates */
+    /*
     stripIT = strips.begin();
     int j=0;
     for(int i = 0; i < nside; i++)
     {
         for(verticeIT=stripIT->begin(); verticeIT!=stripIT->end(); ++verticeIT)
         {
-            //verticeIT->s = 0.25*verticeIT->s + 0.25*(faceNumber % 4);
-            //verticeIT->t = 0.25*verticeIT->t + 0.25*(faceNumber / 4);
+            verticeIT->s = 0.25*verticeIT->s + 0.25*(faceNumber % 4);
+            verticeIT->t = 0.25*verticeIT->t + 0.25*(faceNumber / 4);
             j++;
         }
         stripIT++;
     }
+    */
 
     if(mollview)
         toMollweide(radius);

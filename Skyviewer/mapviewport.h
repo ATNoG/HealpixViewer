@@ -32,6 +32,8 @@ public:
     void closeMap();
     void selectViewport(bool changeCheckbox);
     void deselectViewport(bool changeCheckbox);
+    void resetViewport();
+    bool inUse();
 
 signals:
 
@@ -50,10 +52,10 @@ private:
     MapViewer* mapviewer;
     WorkSpace* workspace;
 
+    bool loaded;
     bool selected;
     bool mollview;
 
-    void loadHealpixMap(QString path);
     void configureUI();
 };
 

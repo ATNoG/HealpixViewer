@@ -68,6 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSynchronize, SIGNAL(triggered(bool)), workspace, SLOT(changeSynchronization(bool)));
     connect(ui->actionSelectAll, SIGNAL(triggered()), workspace, SLOT(selectAllViewports()));
     connect(ui->actionDeselectAll, SIGNAL(triggered()), workspace, SLOT(deselectAllViewports()));
+    connect(ui->actionReset, SIGNAL(triggered()), workspace, SLOT(resetViewports()));
 
 
     /* set viewports */
@@ -80,7 +81,7 @@ MainWindow::MainWindow(QWidget *parent) :
     signalMapper->setMapping(setviewport9, 9);
     connect(signalMapper, SIGNAL(mapped(int)), workspace, SLOT(configureWorkspace(int)));
 
-    QStringList files;
+    //QStringList files;
     //files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32.fits");
     //files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside64.fits");
     //files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside128.fits");
@@ -90,10 +91,15 @@ MainWindow::MainWindow(QWidget *parent) :
     //files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside2048.fits");
     //files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/2048to1024to512to256to128to64.fits");
     //files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside4096.fits");
-    workspace->openFiles(files);
+    //workspace->openFiles(files);
     //HealpixMap* map1 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/temponly.fits");
     //HealpixMap* map2 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/iqu.fits");
     //HealpixMap* map3 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32_synfast.fits");
+
+
+
+    //loadingDialog->hide();
+    //loadingDialog->show();
 }
 
 MainWindow::~MainWindow()
@@ -107,8 +113,15 @@ void MainWindow::openFiles()
     QStringList fileNames;
 
     /* create the file dialog */
-    fileNames = QFileDialog::getOpenFileNames(this, tr("Choose fits file to open"), QString::null, tr("Fits Files (*.fits)"));
+    //fileNames = QFileDialog::getOpenFileNames(this, tr("Choose fits file to open"), QString::null, tr("Fits Files (*.fits)"));
 
-    /* ask workspace to open that files */
-    workspace->openFiles(fileNames);
+    QFileDialog dialog(this, tr("Choose fits file to open"), ".", tr("Fits Files (*.fits)"));
+    if(dialog.exec())
+    {
+        fileNames = dialog.selectedFiles();
+        dialog.close();
+
+        /* ask workspace to open that files */
+        workspace->openFiles(fileNames);
+    }
 }

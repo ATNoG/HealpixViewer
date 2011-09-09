@@ -1,9 +1,10 @@
-#include "facecache.h"
+#include "texturecache.h"
 
 
-FaceCache* FaceCache::s_instance = 0;
+//TextureCache* TextureCache::s_instance = 0;
 
-FaceCache::FaceCache(int maxTiles)
+
+TextureCache::TextureCache(HealpixMap* map, int maxTiles)
 {
     this->maxTiles = maxTiles;
     this->availableTiles = maxTiles;
@@ -11,15 +12,28 @@ FaceCache::FaceCache(int maxTiles)
     marginTilesSpace = CACHE_MARGIN;
 
     supportedNsides << 64 << 128 << 256 << 512 << 1024 << 2048;
+
+    /* open healpix map */
+    healpixMap = map;
 }
 
 
 /* PUBLIC INTERFACE */
 
-/* get the face with faceNumber and for the given nside */
-Face* FaceCache::getFace(int faceNumber, int nside)
+int TextureCache::getMaximumNside()
 {
-    Face* face;
+    return healpixMap->getMaxNside();
+}
+
+/* get the face with faceNumber and for the given nside */
+Texture* TextureCache::getFace(int faceNumber, int nside)
+{
+    Texture* face;
+
+    /* verify the maximum nside available */
+    int maxNside = healpixMap->getMaxNside();
+    if(nside>maxNside)
+        nside = maxNside;
 
     bool locked = true;
     int faceId = (faceNumber+1)*10000 + nside;
@@ -35,13 +49,14 @@ Face* FaceCache::getFace(int faceNumber, int nside)
         cacheControl.push_back(faceId);
     }
 
-    //qDebug() << "FaceCache: Getting face " << faceNumber << "(" << nside << ")";
+    //qDebug() << "TextureCache: Getting face " << faceNumber << "(" << nside << ")";
 
     /* check if available in cache */
     if(!checkFaceAvailable(faceNumber, nside))
-    {        
+    {
         /* initial nside, so wait for texture to load */
         if(nside==BASENSIDE)
+        //if(true)
         {
             /* release accesss to cache */
             cacheAccess.unlock();
@@ -55,7 +70,7 @@ Face* FaceCache::getFace(int faceNumber, int nside)
             /* face already requested ? */
             if(!requestedFaces.contains(faceId))
             {
-                //REMOVE qDebug() << "Face " << faceNumber << " (" << nside << ") -> Miss";
+                //REMOVE qDebug() << "Texture " << faceNumber << " (" << nside << ") -> Miss";
 
                 requestedFaces.insert(faceId);
 
@@ -64,7 +79,7 @@ Face* FaceCache::getFace(int faceNumber, int nside)
                 locked = false;
 
                 /* create the face (new thread) */
-                QtConcurrent::run(this, &FaceCache::loadFace, faceNumber, nside);
+                QtConcurrent::run(this, &TextureCache::loadFace, faceNumber, nside);
             }
         }
     }
@@ -75,8 +90,6 @@ Face* FaceCache::getFace(int faceNumber, int nside)
 
     /* return best available nside for wanted face */
     face = getBestFaceFromCache(faceNumber, nside);
-
-    //printCache();
 
     /* release access to cache */
     cacheAccess.unlock();
@@ -90,22 +103,20 @@ Face* FaceCache::getFace(int faceNumber, int nside)
 /* PRIVATE METHODS */
 
 /* calculate the new face */
-Face* FaceCache::loadFace(int faceNumber, int nside)
+Texture* TextureCache::loadFace(int faceNumber, int nside)
 {
-    //REMOVE qDebug()<< "Face " << faceNumber << "(" << nside << ") - Loading";
+    //REMOVE qDebug()<< "TextureCache: loading face " << faceNumber << "(" << nside << ")";
 
-    Face* face = new Face(faceNumber);
-    if(face==NULL)
-        qDebug("Face is null");
+    Texture* texture = new Texture(faceNumber, nside);
+    if(texture==NULL)
+        qDebug("Texture is null");
 
-    face->setRigging(nside, false);
-    //face->createDisplayList();
-    //face->createBuffer();
+    texture->buildTexture(healpixMap->getFaceValues(faceNumber, nside));
 
     /* store the face into the cache */
-    bool clean = storeFace(faceNumber, nside, face);
+    bool clean = storeFace(faceNumber, nside, texture);
 
-    qDebug() << "Face " << faceNumber << "(" << nside << ") - Loaded";
+    qDebug() << "Texture " << faceNumber << "(" << nside << ") - Loaded";
 
     /* remove the request */
     int faceId = (faceNumber+1)*10000 + nside;
@@ -115,14 +126,16 @@ Face* FaceCache::loadFace(int faceNumber, int nside)
         emit(newFaceAvailable(clean));
         //emit(newFaceAvailable(face));
 
-    return face;
+    //qDebug("Returning texture");
+
+    return texture;
 }
 
-bool FaceCache::cleanCache(int minSpace)
+bool TextureCache::cleanCache(int minSpace)
 {
     // TODO: discard the not used faces to get space for new faces - better algorithm
 
-    qDebug("-------------============Cleaning cache ==================-------------");
+    qDebug("============Cleaning cache ==================");
 
     int lru, fn, ns;
     int nFacesInUse = 0;
@@ -130,10 +143,8 @@ bool FaceCache::cleanCache(int minSpace)
     /* request access to cache */
     cacheAccess.lock();
 
-    //printCache();
-
-    qDebug() << "Margin tiles: " << marginTilesSpace;
-    qDebug() << "Available tiles: " << availableTiles;
+    qDebug() << "TextureCache Margin tiles: " << marginTilesSpace;
+    qDebug() << "TextureCache Available tiles: " << availableTiles;
 
     while(availableTiles<marginTilesSpace && cacheControl.size()>nFacesInUse)
     //while(availableTiles<marginTilesSpace && !cacheControl.empty())
@@ -153,17 +164,19 @@ bool FaceCache::cleanCache(int minSpace)
             nFacesInUse++;
     }
 
-    //printCache();
-
     /* release cache access */
     cacheAccess.unlock();
 
     return true;
 }
 
-void FaceCache::preloadFace(int faceNumber, int nside)
+void TextureCache::preloadFace(int faceNumber, int nside)
 {
-    //REMOVE qDebug() << "Preload face " << faceNumber << "(" << nside << ")";
+    //qDebug() << "Preload face " << faceNumber << "(" << nside << ") - waiting";
+
+    int maxNside = healpixMap->getMaxNside();
+    if(nside>maxNside)
+        nside = maxNside;
 
     /* request access to cache */
     cacheAccess.lock();
@@ -176,7 +189,7 @@ void FaceCache::preloadFace(int faceNumber, int nside)
 
         if(!requestedFaces.contains(faceId))
         {
-            //REMOVE qDebug() << "Face " << faceNumber << " (" << nside << ") -> Preloading";
+            //REMOVE qDebug() << "Texture " << faceNumber << " (" << nside << ") -> Preloading";
 
             requestedFaces.insert(faceId);
 
@@ -186,7 +199,7 @@ void FaceCache::preloadFace(int faceNumber, int nside)
             //qDebug() << "Requested Face " << faceId;
 
             /* create the face (new thread) */
-            QtConcurrent::run(this, &FaceCache::loadFace, faceNumber, nside);
+            QtConcurrent::run(this, &TextureCache::loadFace, faceNumber, nside);
         }
     }
     else
@@ -199,7 +212,7 @@ void FaceCache::preloadFace(int faceNumber, int nside)
 }
 
 
-void FaceCache::updateStatus(QVector<int> faces, int nside)
+void TextureCache::updateStatus(QVector<int> faces, int nside)
 {
     int faceId;
 
@@ -222,7 +235,7 @@ void FaceCache::updateStatus(QVector<int> faces, int nside)
 /* CACHE OPERATIONS FUNCTIONS */
 
 /* store face in the cache */
-bool FaceCache::storeFace(int faceNumber, int nside, Face* face)
+bool TextureCache::storeFace(int faceNumber, int nside, Texture* face)
 {
 
     int neededTiles = calculateFaceTiles(nside);
@@ -247,16 +260,16 @@ bool FaceCache::storeFace(int faceNumber, int nside, Face* face)
 
     if(availableTiles>=neededTiles)
     {
-        /* insert face on cache */
-        FaceCacheEntry* faceEntry;
+        /* insert faca on cache */
+        TextureCacheEntry* faceEntry;
 
-        if(faceCache.contains(nside))
-            faceEntry = faceCache[nside];
+        if(textureCache.contains(nside))
+            faceEntry = textureCache[nside];
         else
-            faceEntry = new FaceCacheEntry;
+            faceEntry = new TextureCacheEntry;
 
         faceEntry->insert(faceNumber, face);
-        faceCache.insert(nside, faceEntry);
+        textureCache.insert(nside, faceEntry);
 
         /* change number of tiles available */
         availableTiles -= neededTiles;
@@ -282,18 +295,18 @@ bool FaceCache::storeFace(int faceNumber, int nside, Face* face)
 }
 
 /* discard face in cache */
-void FaceCache::discardFace(int faceNumber, int nside)
+void TextureCache::discardFace(int faceNumber, int nside)
 {
     // TODO: do this in an atomic operation */
 
-    qDebug() << "Discarding face " << faceNumber << " with nside " << nside;
+    qDebug() << "Discarding texture " << faceNumber << " with nside " << nside;
 
     /* free the allocated memory for face */
-    Face* face = getFaceFromCache(faceNumber, nside);
+    Texture* face = getFaceFromCache(faceNumber, nside);
     delete face;
 
     /* remove the entry */
-    FaceCacheEntry* entry = faceCache.value(nside);
+    TextureCacheEntry* entry = textureCache.value(nside);
     entry->remove(faceNumber);
 
     /* update available tiles */
@@ -301,12 +314,12 @@ void FaceCache::discardFace(int faceNumber, int nside)
 }
 
 /* check if face is available on cache */
-bool FaceCache::checkFaceAvailable(int faceNumber, int nside)
+bool TextureCache::checkFaceAvailable(int faceNumber, int nside)
 {
     //qDebug() << "check if available: face " << faceNumber << " nside " << nside;
-    if(faceCache.contains(nside))
+    if(textureCache.contains(nside))
     {
-        FaceCacheEntry* entry = faceCache.value(nside);
+        TextureCacheEntry* entry = textureCache.value(nside);
         if(entry->contains(faceNumber))
         {
             return true;
@@ -316,14 +329,14 @@ bool FaceCache::checkFaceAvailable(int faceNumber, int nside)
 }
 
 /* get face from cache */
-Face* FaceCache::getFaceFromCache(int faceNumber, int nside)
+Texture* TextureCache::getFaceFromCache(int faceNumber, int nside)
 {
-    FaceCacheEntry* entry = faceCache.value(nside);
+    TextureCacheEntry* entry = textureCache.value(nside);
     return entry->value(faceNumber);
 }
 
 
-Face* FaceCache::getBestFaceFromCache(int faceNumber, int nside)
+Texture* TextureCache::getBestFaceFromCache(int faceNumber, int nside)
 {
     bool faceAvailable;
     do
@@ -338,8 +351,6 @@ Face* FaceCache::getBestFaceFromCache(int faceNumber, int nside)
         }
     }while(!faceAvailable);
 
-    //qDebug() << "Best face " << faceNumber << " in cache has nside " << nside;
-
     return getFaceFromCache(faceNumber, nside);
 }
 
@@ -347,27 +358,7 @@ Face* FaceCache::getBestFaceFromCache(int faceNumber, int nside)
 /* AUXILIAR FUNCTIONS */
 
 /* return the number of tiles (tiles of nside64) necessary for display the face with nside */
-int FaceCache::calculateFaceTiles(int nside)
+int TextureCache::calculateFaceTiles(int nside)
 {
     return pow(nside/BASENSIDE, 2);
-}
-
-
-void FaceCache::printCache()
-{
-    QList<int> nsides = faceCache.keys();
-    qDebug("=============== Face Cache ===============");
-    //for(int i=0; i<faceCache.size(); i++)
-    foreach(int nside, nsides)
-    {
-        cout << "Nside " << nside << ": ";
-        FaceCacheEntry* entry = faceCache[nside];
-        QList<int> faces = entry->keys();
-        foreach(int face, faces)
-        {
-            cout << face << " ";
-        }
-        cout << endl;
-    }
-    qDebug("==========================================");
 }

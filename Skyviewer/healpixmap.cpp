@@ -25,16 +25,45 @@ char  DEFFORM[]   = "1024E";
 HealpixMap::HealpixMap(QString _path)
 {
     path = _path;
-    processFile(_path);
 
-    /* current map is temperature map */
-    currentMap = I;
-    // TODO: verify if file exists, etc..
+    /* get name of file */
+    QFileInfo pathInfo(path);
+    filename = pathInfo.fileName();
+
+    /* creating progress dialog */
+    loadingDialog = new QProgressDialog("Loading Map (reading fits info)", "Cancel", 0, 6);
+    loadingDialog->setWindowModality(Qt::WindowModal);
+    loadingDialog->setValue(1);
+
+    /* Map already processed ? Check cache */
+    if(!checkMapCache())
+    {
+        qDebug() << "Map doesnt exists on cache";
+        /* creating folder on cache */
+        QDir cachedDir(QString(CACHE_DIR));
+        cachedDir.mkdir(filename);
+        /* map not exists on cache: read FITS info and create individual maps */
+        processFile(_path, true);
+        /* save map info */
+        writeMapInfo();
+    }
+    else
+    {
+        qDebug() << "Map already cached";
+        /* read FITS information */
+        processFile(_path, false);
+    }
+
+    loadingDialog->setValue(loadingDialog->maximum());
+
+    changeCurrentMap(I);
 }
 
 
-void HealpixMap::processFile(QString path)
+void HealpixMap::processFile(QString path, bool generateMaps)
 {
+    // TODO: verify if file exists, etc..
+
     fitsfile *fptr;
     int status=0, hducount, exttype, result, t, icol=0, ncol, qcol, ucol;
     bool correctHDU;
@@ -95,12 +124,19 @@ void HealpixMap::processFile(QString path)
         /* TODO: throw exception */
     }
 
-    /* temperature map is always available */
-    availableMaps.append(I);
-
-
     /* read the extension header */
     readFITSExtensionHeader(fptr);
+
+
+    /* update progress */
+    loadingDialog->setLabelText("Loading Map (reading available maps)");
+    loadingDialog->setValue(2);
+
+
+    // TODO: optimization: information about available maps can be saved on cache
+
+    /* temperature map is always available */
+    availableMaps.append(I);
 
 
     /* get fields positions */
@@ -141,46 +177,100 @@ void HealpixMap::processFile(QString path)
         availableMaps.append(U);
 
 
+    int MIN_NSIDE = 64;
 
-    /* create map fields */
 
-    float nul = -999.;
-    temperature = new float[npixels];
-
-    status = 0;
-    if (fits_read_col(fptr, TFLOAT, icol, 1, 1, npixels, &nul, temperature, &t, &status) != 0)
+    /* need to create the maps ? */
+    if(generateMaps)
     {
-        qDebug("error reading temperature");
+        int i = 4;
+        loadingDialog->setMaximum(availableMaps.size()+loadingDialog->maximum());
+
+        foreach(MapType maptype, availableMaps)
+        {
+            int col;
+            QString prefix;
+
+            switch(maptype)
+            {
+                case I: col=icol; prefix="I"; break;
+                case Q: col=qcol; prefix="Q"; break;
+                case U: col=ucol; prefix="U"; break;
+                case NObs: col=ncol; prefix="NObs"; break;
+            }
+
+            /* update progress */
+            loadingDialog->setLabelText("Loading Map (processing " + prefix + ")");
+            loadingDialog->setValue(i);
+            i++;
+
+            /* create map fields */
+            float nul = -999.;
+            float *values = new float[npixels];
+
+            status = 0;
+            if (fits_read_col(fptr, TFLOAT, col, 1, 1, npixels, &nul, values, &t, &status) != 0)
+            {
+                qDebug("error reading values from file");
+            }
+
+            qDebug() << "Pre processing map " << maptype;
+
+            /* create field map */
+            FieldMap *fieldMap = new FieldMap(values, maxNside, isOrderNested());
+
+            // TODO: define minNside in some place...
+            fieldMap->generateDowngrades(cachePath, prefix, MIN_NSIDE);
+
+            qDebug() << "Map saved";
+        }
+
+        /* generate polarization map ? */
+        if(hasPolarization())
+        {
+            /* create polarization map for each nside */
+            for(int nside=maxNside; nside>=MIN_NSIDE; nside=nside/2)
+            {
+                qDebug() << "Generating polarization for " << nside;
+
+                /* read Q and U */
+                float *_Q = readMapCache(nside, Q);
+                float *_U = readMapCache(nside, U);
+
+                /* calculate total pixels */
+                long totalPixels = nside2npix(nside);
+
+                /* allocate space for polarization angles and magnitude */
+                float *polarizationAng = new float[totalPixels];
+                float *polarizationMag = new float[totalPixels];
+
+                /* calculate polarization angles and magnitude */
+                for(int i=0; i<totalPixels; i++)
+                {
+                    polarizationAng[i] = atan2(_U[i], _Q[i]) / 2;
+                    polarizationMag[i] = sqrt(_Q[i]*_Q[i] + _U[i]*_U[i]);
+                }
+
+                /* calculate filename to write */
+                QString nsideStr;
+                nsideStr.setNum(nside);
+                QString filepath = cachePath + "/P_" + nsideStr;
+
+                /* save polarization into cache */
+                QFile file(filepath);
+                file.open(QIODevice::WriteOnly);
+                file.write((const char*)polarizationMag, totalPixels*sizeof(float));
+                file.close();
+            }
+        }
     }
-
-
-    /*
-    int newNside = 64;
-    QTime time;
-    int total = 0;
-
-    qDebug() << "starting tests";
-    //for(int i=0; i<10; i++)
-    //{
-        time.restart();
-
-        // just for test
-        FieldMap temperatureField;
-        float* degraded_map = temperatureField.downgradeMap(temperature, maxNside, newNside);
-        int elapsed = time.elapsed();
-        qDebug() << "Total time from " << maxNside << " to " << newNside << " = " << elapsed << " ms";
-        total += elapsed;
-    //}
-    //qDebug() << "Mean time from " << maxNside << " to " << newNside << " = " << total/10 << " ms";
-
-    qDebug("Write to FITS");
-    writeFITS("2048to64.fits", "Sky Maps", degraded_map, newNside);
-    qDebug("Write done");
-
-    */
 
     /* close fits file */
     fits_close_file(fptr, &status);
+
+    loadingDialog->setValue(loadingDialog->maximum());
+
+    //qDebug() << "Available Maps: " << availableMaps;
 }
 
 
@@ -208,7 +298,6 @@ void HealpixMap::readFITSExtensionHeader(fitsfile *fptr)
     }
     /* trim string */
     this->ordering = parseOrdering(value);
-    qDebug() << "Ordering is " << value;
 
     /* Read Coordsys */
     status = 0;
@@ -242,9 +331,11 @@ void HealpixMap::readFITSExtensionHeader(fitsfile *fptr)
 
 HealpixMap::Ordering HealpixMap::parseOrdering(char *value)
 {
-    if(!strcmp(value, "RING"))
+    QString aux(value);
+
+    if(aux.contains("RING", Qt::CaseInsensitive))
         return RING;
-    else if(!strcmp(value, "NESTED"))
+    else if(aux.contains("NESTED", Qt::CaseInsensitive))
         return NESTED;
 
     // TODO: throw exception if invalid order
@@ -309,33 +400,8 @@ bool HealpixMap::hasNObs()
     return availableMaps.contains(NObs);
 }
 
-void HealpixMap::changeCurrentMap(MapType mapType)
-{
-    /* check if map exists */
-    if(availableMaps.contains(mapType))
-    {
-        currentMap = mapType;
-    }
-    else
-    {
-        /* TODO: throw exception: maptype doesnt exist */
-    }
-}
 
 
-FieldMap* HealpixMap::getMap(MapType mapType)
-{
-    /* check if map exists and returns it */
-    if(availableMaps.contains(mapType))
-    {
-        /* TODO: return map type */
-        return NULL;
-    }
-    else
-    {
-        /* TODO: throw exception */
-    }
-}
 
 /* Return list of available maps in FITS file */
 QList<HealpixMap::MapType> HealpixMap::getAvailableMaps()
@@ -347,47 +413,6 @@ long HealpixMap::getNumberPixels()
 {
     return npixels;
 }
-
-
-/* get higher resolution for the current map field */
-bool HealpixMap::zoomIn()
-{
-    long nextNside = currentNside * 2;
-
-    /* check if can zoom in */
-    if(nextNside <= min(maxNside, long(MAXZOOM)))
-    {
-        /* get higher map texture resolution */
-        //loadMap(nextNside);
-        currentNside = nextNside;
-        return true;
-    }
-    else
-        return false;
-}
-
-
-/* get lower resolution for the current map field */
-bool HealpixMap::zoomOut()
-{
-    long nextNside = currentNside / 2;
-
-    /* check if can zoom out */
-    if(nextNside >= MINZOOM)
-    {
-        /* get lower map texture resolution */
-        //loadMap(nextNside);
-        currentNside = nextNside;
-        return true;
-    }
-    else
-        return false;
-}
-
-
-
-
-
 
 
 void HealpixMap::writeFITS(char* filename, char* tabname, float* temperature, int newnside)
@@ -460,7 +485,6 @@ void HealpixMap::writeFITSPrimaryHeader(fitsfile *fptr)
 }
 
 
-
 void HealpixMap::writeFITSExtensionHeader(fitsfile *fptr, int newnside)
 {
     char         stmp[80], comm[80];
@@ -494,7 +518,154 @@ void HealpixMap::writeFITSExtensionHeader(fitsfile *fptr, int newnside)
 
 
 
-float* HealpixMap::getFaceTexture(int faceNumber, int nside)
+float* HealpixMap::getFaceValues(int faceNumber, int nside)
+{
+    int pixelsPerFace = nside2npix(nside)/12;
+
+    float *values = readMapCache(nside, currentMapType, faceNumber*pixelsPerFace, pixelsPerFace);
+    return values;
+}
+
+
+float* HealpixMap::getPolarizationVectors(int faceNumber, int nside)
+{
+    int pixelsPerFace = nside2npix(nside)/12;
+
+    float *values = readMapCache(nside, P, faceNumber*pixelsPerFace, pixelsPerFace);
+    return values;
+}
+
+
+float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, int length)
+{
+    QString mapTypeStr;
+
+    switch(mapType)
+    {
+        case I: mapTypeStr="I"; break;
+        case Q: mapTypeStr="Q"; break;
+        case U: mapTypeStr="U"; break;
+        case P: mapTypeStr="P"; break;
+        case NObs: mapTypeStr="NObs"; break;
+    }
+
+    /* get filename */
+    QString nsideStr;
+    nsideStr.setNum(nside);
+    QString path = cachePath + "/" + mapTypeStr + "_" + nsideStr;
+
+    /* if length is 0 read all content */
+    if(length==0)
+        length = nside2npix(nside);
+
+    float *values = new float[length];
+
+    /* read content */
+    QFile f(path);
+    f.open(QIODevice::ReadOnly);
+    f.seek(firstPosition*sizeof(float));
+    f.read((char*)values, length*sizeof(float));
+    f.close();
+
+    return values;
+}
+
+
+
+void HealpixMap::writeMapInfo()
+{
+    // save file with map info
+    QFile infoFile(cacheInfo);
+    infoFile.open(QIODevice::WriteOnly | QIODevice::Text);
+    QTextStream out(&infoFile);
+    out << path << endl;
+    out << maxNside << endl;
+    /*
+    out << coordsys << endl;
+    QString availableMapsStr = "";
+    foreach(MapType maptype, availableMaps)
+    {
+        availableMapsStr.append(getMapType(maptype));
+        availableMapsStr.append(",");
+    }
+    out << availableMapsStr << endl;
+    */
+    infoFile.close();
+}
+
+void HealpixMap::readMapInfo()
 {
 
+}
+
+
+bool HealpixMap::checkMapCache()
+{
+    cachePath = QString(CACHE_DIR) + "/" + filename;
+    cacheInfo = cachePath + "/info";
+
+    QDir cachedDir(cachePath);
+
+    //qDebug() << "Checking cached map on " << cachedDirStr;
+
+    return false;
+    return cachedDir.exists();
+}
+
+
+QString HealpixMap::mapTypeToString(MapType type)
+{
+    QString mapTypeName;
+    switch(type)
+    {
+        case I:
+            mapTypeName = "Temperature";
+            break;
+        case Q:
+            mapTypeName = "Q Polarization";
+            break;
+        case U:
+            mapTypeName = "U Polarization";
+            break;
+        case P:
+            mapTypeName = "Polarization";
+            break;
+        case NObs:
+            mapTypeName = "NObs";
+            break;
+    }
+    return mapTypeName;
+}
+
+/*
+QString HealpixMap::coordsysToString(Coordsys coordsys)
+{
+    QString coordsysName;
+    switch(coordsys)
+    {
+        case CELESTIAL:
+            coordsysName = "CELESTIAL";
+            break;
+        case ECLIPTIC:
+            coordsysName = "ECLIPTIC";
+            break;
+        case GALACTIC:
+            coordsysName = "GALACTIC";
+            break;
+    }
+    return coordsysName;
+}
+*/
+
+
+int HealpixMap::getMaxNside()
+{
+    return maxNside;
+}
+
+
+void HealpixMap::changeCurrentMap(MapType type)
+{
+    // TODO: check if map is available
+    currentMapType = type;
 }

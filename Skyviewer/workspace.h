@@ -8,6 +8,8 @@
 #include <QStringList>
 #include "mapviewport.h"
 
+#define MAX_VIEWPORTS 9
+
 
 class WorkSpace : public QWidget
 {
@@ -27,9 +29,11 @@ public slots:
     void syncViewports(QEvent* e, int type, MapViewer* viewer);
     void selectAllViewports();
     void deselectAllViewports();
+    void resetViewports();
 
 private:
     int numberViewports;
+    int usedViewports;
     QGridLayout *gridlayout;
     QList<MapViewport*> viewports;
 

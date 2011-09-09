@@ -3,6 +3,7 @@
 
 #include <QtOpenGL>
 #include <QDebug>
+#include "colortable.h"
 
 using namespace std;
 
@@ -13,12 +14,14 @@ public:
     ~Texture();
 
     void draw();
+    void buildTexture(float* data);
+    void unbind();
 
 private:
     int faceNumber;
     int nside;
 
-    float* texture;
+    unsigned char* texture;
     GLuint textureId;
 
     bool created;

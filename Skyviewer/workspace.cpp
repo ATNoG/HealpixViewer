@@ -10,6 +10,7 @@ WorkSpace::WorkSpace(QWidget *parent, int numberViewports) :
 
     /* configure the viewports wanted */
     this->numberViewports = 0;
+    this->usedViewports = 0;
     configureWorkspace(numberViewports);
 
     this->setMinimumSize(350, 300);
@@ -64,15 +65,39 @@ void WorkSpace::drawViewports(int oldnviewports, int newnviewports)
 
 void WorkSpace::openFiles(QStringList filenames)
 {
-    QString fitsfile;
-    int i = 0;
-    qDebug() << "Available viewports = " << viewports.count();
-    foreach(fitsfile, filenames)
-    {
+    //qDebug() << "Available viewports = " << viewports.count();
+
+    // TODO: allow open multiple files at a time
+    //foreach(QString fitsfile, filenames)
+    //{
         // TODO: select in which viewport map will be opened
-        viewports[i]->openMap(fitsfile);
-        i++;
+    //    viewports[i]->openMap(fitsfile);
+    //    i++;
+    //}
+
+    if(numberViewports==usedViewports)
+    {
+        /* no viewports free to open new map. Verify if more viewports can be added */
+        if(numberViewports!=MAX_VIEWPORTS)
+            configureWorkspace(MAX_VIEWPORTS);
+        else
+        {
+            qDebug("All viewports in use");
+            return;
+        }
     }
+
+    int i = 0;
+    bool found = false;
+    do
+    {
+        if(!viewports[i]->inUse())
+        {
+            viewports[i]->openMap(filenames[0]);
+            found = true;
+        }
+        i++;
+    }while(i<numberViewports && !found);
 }
 
 
@@ -149,7 +174,10 @@ void WorkSpace::selectAllViewports()
 {
     MapViewport* viewport;
     foreach(viewport, viewports)
-        viewport->selectViewport(true);
+    {
+        if(viewport->inUse())
+            viewport->selectViewport(true);
+    }
 }
 
 
@@ -158,4 +186,13 @@ void WorkSpace::deselectAllViewports()
     MapViewport* viewport;
     foreach(viewport, viewports)
         viewport->deselectViewport(true);
+}
+
+
+void WorkSpace::resetViewports()
+{
+    MapViewport* viewport;
+    foreach(viewport, viewports)
+        if(viewport->inUse() && viewport->isSelected())
+            viewport->resetViewport();
 }

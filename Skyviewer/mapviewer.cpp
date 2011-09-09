@@ -10,16 +10,13 @@ MapViewer::MapViewer(QWidget *parent) :
     initialized = false;
     predictCamera = NULL;
 
-    /* get face cache */
-    faceCache = FaceCache::instance();
+    maxNside = MAX_NSIDE;
 
-    QObject::connect(faceCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
-    //QObject::connect(faceCache, SIGNAL(newFaceAvailable()), this, SLOT(checkForUpdates()) );
-    //QObject::connect(faceCache, SIGNAL(newFaceAvailable(Face*)), this, SLOT(preloadFace(Face*)) );
-
-
-    /* launch thread to wait for new updates to faces available */
-    //QtConcurrent::run(this, &MapViewer::checkForUpdates);
+    /*
+    progressDialog = new QProgressDialog("Processing Map", "Cancel", 0, 20, this);
+    progressDialog->setWindowModality(Qt::WindowModal);
+    progressDialog->hide();
+    */
 }
 
 /* create the gl model for the map */
@@ -45,27 +42,57 @@ void MapViewer::draw()
 }
 
 
-/*
-void MapViewer::loadMap(HealpixMap* map)
-{
-    skymap = map;
-}
-*/
-
-
 void MapViewer::loadMap(QString fitsfile)
 {
     qDebug() << "Loading on mapviewer: " << fitsfile;
 
     if(!initialized)
     {
+        /*
+        progressDialog->setValue(10);
+        progressDialog->show();
+        */
+
+        /* open fits file */
+        healpixMap = new HealpixMap(fitsfile);
+
+        /* get available maps */
+        QList<HealpixMap::MapType> availableMaps = healpixMap->getAvailableMaps();
+        HealpixMap::MapType mapType = HealpixMap::I;
+
+        MapLoader* mapLoader = new MapLoader(this, fitsfile, availableMaps);
+        if(mapLoader->exec())
+        {
+            mapType = mapLoader->getSelectedMapType();
+        }
+
+        qDebug() << "Opening map with type: " << HealpixMap::mapTypeToString(mapType);
+        healpixMap->changeCurrentMap(mapType);
+
+
+        /* get face cache */
+        faceCache = FaceCache::instance();
+        textureCache = new TextureCache(healpixMap);
+
+        QObject::connect(faceCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
+        QObject::connect(textureCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
+
+        maxNside = min(textureCache->getMaximumNside(), MAX_NSIDE);
+
+        qDebug() << "Max nside for this map is " << textureCache->getMaximumNside();
+
         /* create the sphere tesselation */
-        tesselation = new Tesselation(currentNside, false);
+        tesselation = new Tesselation(currentNside, false, faceCache, textureCache);
 
         /* preload next faces */
         preloadFaces();
 
         initialized = true;
+
+        //loadingDialog->hide();
+
+        //progressDialog->setValue(18);
+        //progressDialog->hide();
     }
 }
 
@@ -111,7 +138,7 @@ void MapViewer::init()
 
 
     /* initial X position of the camera */
-    cameraPosition = 2.8;
+    cameraPosition = INITIAL_CAMERA_POSITION;
 
     /*
         Configure the camera.
@@ -125,7 +152,8 @@ void MapViewer::init()
     constraint->setRotationConstraintType(AxisPlaneConstraint::FREE);
     camera()->frame()->setConstraint(constraint);*/
 
-    setManipulatedFrame(new ManipulatedFrame());
+    currentManipulatedFrame = new ManipulatedFrame();
+    setManipulatedFrame(currentManipulatedFrame);
 
 /*
     AxisPlaneConstraint* constraint = new LocalConstraint();
@@ -168,9 +196,6 @@ void MapViewer::init()
         }
         i++;
     }
-
-    QString test;
-    loadMap(test);
 }
 
 void MapViewer::changeToMollview()
@@ -186,12 +211,23 @@ void MapViewer::changeTo3D()
 
 void MapViewer::mousePressEvent(QMouseEvent* e)
 {
+    mousePressEvent(e, true);
+}
+
+void MapViewer::mousePressEvent(QMouseEvent* e, bool propagate)
+{
     QGLViewer::mousePressEvent(e);
-    emit(cameraChanged(e, MOUSEPRESS, this));
+    if(propagate)
+        emit(cameraChanged(e, MOUSEPRESS, this));
 }
 
 
 void MapViewer::mouseReleaseEvent(QMouseEvent *e)
+{
+    mouseReleaseEvent(e, true);
+}
+
+void MapViewer::mouseReleaseEvent(QMouseEvent *e, bool propagate)
 {
     // TODO: just a hack to disable spinning... may have problems when selecting a pixel for example
     //QGLViewer::mouseReleaseEvent(e);
@@ -204,14 +240,26 @@ void MapViewer::mouseReleaseEvent(QMouseEvent *e)
 
 void MapViewer::mouseMoveEvent(QMouseEvent* e)
 {
+    mouseMoveEvent(e, true);
+}
+
+void MapViewer::mouseMoveEvent(QMouseEvent* e, bool propagate)
+{
     QGLViewer::mouseMoveEvent(e);
-    //emit(cameraChanged(e, MOUSEMOVE, this));
+
+    if(propagate)
+        emit(cameraChanged(e, MOUSEMOVE, this));
 
     checkVisibility();
 }
 
 
 void MapViewer::wheelEvent(QWheelEvent *e)
+{
+    wheelEvent(e, true);
+}
+
+void MapViewer::wheelEvent(QWheelEvent *e, bool propagate)
 {
     //qDebug("==================================");
     bool zoomChanged;
@@ -221,15 +269,14 @@ void MapViewer::wheelEvent(QWheelEvent *e)
     else
         zoomChanged = zoomOut();
 
-    /*
     if(zoomChanged)
     {
-        updateGL();
-        checkVisibility();
-        //emit(cameraChanged(e, MOUSEWHEEL, this));
-        updateGL();
+        //updateGL();
+        //checkVisibility();
+        if(propagate)
+            emit(cameraChanged(e, MOUSEWHEEL, this));
+        //updateGL();
     }
-    */
 }
 
 
@@ -237,7 +284,7 @@ void MapViewer::checkVisibility()
 {
     visibleFaces.clear();
 
-    qDebug("--------------");
+    //REMOVE qDebug("--------------");
 
     /*
     Vec a,b;
@@ -333,7 +380,7 @@ void MapViewer::checkVisibility()
 
         if(!hidden)
         {
-            qDebug() << "Face " << face << " visible";
+            //REMOVE qDebug() << "Face " << face << " visible";
             visibleFaces.append(face);
         }
     }
@@ -345,43 +392,57 @@ void MapViewer::checkVisibility()
 
 void MapViewer::resetView()
 {
-    // TODO: reset object position
     /* reset zoom to inital position */
-    //resetZoom();
+    currentZoomLevel = MIN_ZOOM;
+    currentNside = BASE_NSIDE;
 
-    tesselation->updateNside(1);
+    /* change to initial position */
+    ManipulatedFrame* newManipulatedFrame = new ManipulatedFrame();
+    setManipulatedFrame(newManipulatedFrame);
+    delete currentManipulatedFrame;
+    currentManipulatedFrame = newManipulatedFrame;
 
-    /* redraw scene */
+    /* update camera position */
+    cameraPosition = INITIAL_CAMERA_POSITION;
+    camera()->setPosition(Vec(cameraPosition, 0.0, 0.0));
+    camera()->lookAt( Vec(0,0,0) );
+
+    int nextNside = zoomToNside(currentZoomLevel);
+
+    /* check visibilty (after apply the zoom, some face can be no longer visible */
+    checkVisibility();
+
+    currentNside = nextNside;
+    tesselation->updateNside(currentNside);
+
+    /* refresh the view */
     updateGL();
+
+    /* calculate faces to preload */
+    preloadFaces();
 }
+
 
 void MapViewer::synchronize(QEvent *e, int type)
 {
     switch(type)
     {
         case MOUSEMOVE:
-            QGLViewer::mouseMoveEvent((QMouseEvent*) e);
+            mouseMoveEvent((QMouseEvent*) e, false);
             break;
 
         case MOUSEPRESS:
-            QGLViewer::mousePressEvent((QMouseEvent*) e);
+            mousePressEvent((QMouseEvent*) e, false);
             break;
 
         case MOUSERELEASE:
-            QGLViewer::mouseReleaseEvent((QMouseEvent*) e);
+            mouseReleaseEvent((QMouseEvent*) e, false);
             break;
 
         case MOUSEWHEEL:
-            QGLViewer::wheelEvent((QWheelEvent*) e);
+            wheelEvent((QWheelEvent*) e, false);
             break;
     }
-}
-
-
-void MapViewer::resetZoom()
-{
-    currentZoomLevel = MIN_ZOOM;
-    currentNside = BASE_NSIDE;
 }
 
 
@@ -403,7 +464,7 @@ bool MapViewer::zoomIn()
         checkVisibility();
 
         /* check if need to update nside */
-        if(nextNside!=currentNside)
+        if(nextNside!=currentNside && nextNside<=maxNside)
         {
             currentNside = nextNside;
             tesselation->updateNside(currentNside);
@@ -585,7 +646,7 @@ void MapViewer::preloadFaces()
     if(PRELOAD_FACES)
     {
         /* zoomlevel that changed nside */
-        if(currentZoomLevel % 2 == 0 && currentNside!=MAX_NSIDE)
+        if(currentZoomLevel % 2 == 0 && currentNside!=maxNside)
         {
             float camPosition = cameraPosition-2*CAMERA_ZOOM_INC;
             int nextNside = currentNside*2;

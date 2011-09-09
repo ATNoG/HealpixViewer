@@ -1,7 +1,7 @@
 #ifndef TESSELATION_H
 #define TESSELATION_H
 
-#define DISPLAY_TEXTURE false
+#define DISPLAY_TEXTURE true
 
 #include <QVector>
 #include <QFuture>
@@ -12,6 +12,7 @@
 #include "face.h"
 #include "facecache.h"
 #include "texture.h"
+#include "texturecache.h"
 
 class Tesselation
 {
@@ -23,7 +24,7 @@ struct faceInfo
 };
 
 public:
-    Tesselation(int nside, bool mollview);
+    Tesselation(int nside, bool mollview, FaceCache* faceCache, TextureCache* textureCache);
     void draw();
     void drawAllFaces();
 
@@ -46,8 +47,10 @@ private:
     bool mollview;
 
     FaceCache* faceCache;
+    TextureCache* textureCache;
     QVector<int> facesv;
     QVector<Face*> visibleFaces;
+    //HealpixMap::MapType mapType;
 };
 
 #endif // TESSELATION_H
