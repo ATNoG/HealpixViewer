@@ -1,6 +1,6 @@
 #include "workspace.h"
 
-WorkSpace::WorkSpace(QWidget *parent, int numberViewports) :
+WorkSpace::WorkSpace(int numberViewports, QWidget *parent) :
     QWidget(parent)
 {
     /* create the layout */

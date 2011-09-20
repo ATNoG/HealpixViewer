@@ -15,7 +15,7 @@ class WorkSpace : public QWidget
 {
     Q_OBJECT
 public:
-    explicit WorkSpace(QWidget *parent = 0, int numberViewports=1);
+    explicit WorkSpace(int numberViewports=1, QWidget *parent = 0);
     void openFiles(QStringList filenames);
 
 signals:
