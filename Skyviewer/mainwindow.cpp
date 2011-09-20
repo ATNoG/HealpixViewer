@@ -2,8 +2,8 @@
 #include "ui_mainwindow.h"
 
 #include <QSignalMapper>
-#include "healpixmap.h"
-#include "fieldmap.h"
+
+#include "histogramwidget.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -58,8 +58,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionViewports->setMenu(menu);
 
     /* Configure workspace */
-    workspace = new WorkSpace(this, DEFAULT_VIEWPORTS);
+    workspace = new WorkSpace(DEFAULT_VIEWPORTS);
     setCentralWidget(workspace);
+
+
+    //HistogramWidget *histogramWidget = new HistogramWidget();
+    //setCentralWidget(histogramWidget);
 
     /* configure events */
     connect(ui->action3Dview, SIGNAL(triggered()), workspace, SLOT(changeTo3D()));
@@ -69,6 +73,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSelectAll, SIGNAL(triggered()), workspace, SLOT(selectAllViewports()));
     connect(ui->actionDeselectAll, SIGNAL(triggered()), workspace, SLOT(deselectAllViewports()));
     connect(ui->actionReset, SIGNAL(triggered()), workspace, SLOT(resetViewports()));
+    //connect(ui->actionColors, SIGNAL(triggered()), workspace, SLOT(showHistogram()));
 
 
     /* set viewports */

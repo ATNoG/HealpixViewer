@@ -43,6 +43,7 @@ void Face::draw()
     //QTime time1;
     //time1.start();
 
+    /*
     if(!DISPLAY_TEXTURE)
     {
         if(!COLOR_PER_NSIDE)
@@ -112,6 +113,7 @@ void Face::draw()
             }
         }
     }
+    */
 
 
     //glPolygonMode(GL_FRONT, GL_FILL);

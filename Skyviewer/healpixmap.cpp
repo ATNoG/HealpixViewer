@@ -3,6 +3,8 @@
 #include <QDebug>
 #include "fieldmap.h"
 
+const double boost = 0.001;
+
 
 /* keywords used to specify the columns */
 char  ICOLNAME[]  = "TEMPERATURE";
@@ -52,7 +54,12 @@ HealpixMap::HealpixMap(QString _path)
         qDebug() << "Map already cached";
         /* read FITS information */
         processFile(_path, false);
+        /* read extra info */
+        readMapInfo();
     }
+
+    qDebug() << "Mean nside=256 -> " << meanPolMagnitudes[256];
+    qDebug() << "Dev nside=256 -> " << devPolMagnitudes[256];
 
     loadingDialog->setValue(loadingDialog->maximum());
 
@@ -245,11 +252,35 @@ void HealpixMap::processFile(QString path, bool generateMaps)
                 float *polarizationMag = new float[totalPixels];
 
                 /* calculate polarization angles and magnitude */
+                float maxPolMagnitude = 0.0;
+                float mean = 0.0;
+
                 for(int i=0; i<totalPixels; i++)
                 {
                     polarizationAng[i] = atan2(_U[i], _Q[i]) / 2;
                     polarizationMag[i] = sqrt(_Q[i]*_Q[i] + _U[i]*_U[i]);
+
+                    mean+=polarizationMag[i];
+
+                    if(polarizationMag[i]>maxPolMagnitude)
+                        maxPolMagnitude = polarizationMag[i];
                 }
+
+                /* calculate standard deviation */
+                mean = mean/totalPixels;
+                float aux = 0.0;
+                for(int i=0; i<totalPixels; i++)
+                {
+                    aux += pow(polarizationMag[i]-mean, 2);
+                }
+
+                maxPolMagnitudes[nside] = maxPolMagnitude;
+                meanPolMagnitudes[nside] = mean;
+                devPolMagnitudes[nside] = sqrt(aux/(totalPixels-1));
+
+                qDebug() << "Media para nside = " << nside << " -> " << meanPolMagnitudes[nside];
+                qDebug() << "Max -> " << maxPolMagnitudes[nside];
+                qDebug() << "Desvio padrao -> " << devPolMagnitudes[nside];
 
                 /* calculate filename to write */
                 QString nsideStr;
@@ -259,6 +290,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
                 /* save polarization into cache */
                 QFile file(filepath);
                 file.open(QIODevice::WriteOnly);
+                file.write((const char*)polarizationAng, totalPixels*sizeof(float));
                 file.write((const char*)polarizationMag, totalPixels*sizeof(float));
                 file.close();
             }
@@ -518,6 +550,12 @@ void HealpixMap::writeFITSExtensionHeader(fitsfile *fptr, int newnside)
 
 
 
+float* HealpixMap::getFullMap(int nside)
+{
+    return readMapCache(nside, currentMapType, 0, nside2npix(nside));
+}
+
+
 float* HealpixMap::getFaceValues(int faceNumber, int nside)
 {
     int pixelsPerFace = nside2npix(nside)/12;
@@ -527,12 +565,107 @@ float* HealpixMap::getFaceValues(int faceNumber, int nside)
 }
 
 
-float* HealpixMap::getPolarizationVectors(int faceNumber, int nside)
+float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, long &totalVectors)
 {
     int pixelsPerFace = nside2npix(nside)/12;
 
-    float *values = readMapCache(nside, P, faceNumber*pixelsPerFace, pixelsPerFace);
-    return values;
+    long startPixel = faceNumber*pixelsPerFace;
+
+    float *polAngles = readMapCache(nside, P, startPixel, pixelsPerFace);
+    float *polMagnitudes = readMapCache(nside, P, (12+faceNumber)*pixelsPerFace, pixelsPerFace);
+    float *nobs = readMapCache(nside, NObs, startPixel, pixelsPerFace);
+
+    long npixels = pixelsPerFace;
+
+    /* calculate number of pixels with observations */
+    for(long i=0; i<pixelsPerFace; i++)
+    {
+        if(nobs[i]==0)
+            npixels--;
+    }
+
+    /* allocate space (each vector will have 2 endpoints, of 3 coordinates each */
+    float* polVectors = new float[npixels*3*2];
+
+    // TODO: what is this pixsize ?
+    double pixsize = (sqrt(M_PI/3.) / nside) / 2.;
+
+    double theta, phi;
+    long pointer = 0;
+
+    /* get max polarization magnitude */
+
+
+    for(long i=0; i<npixels; i++)
+    {
+        if(nobs[i]>0)
+        {
+            pix2ang_nest(nside, i+startPixel, &theta, &phi);
+            float* vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, (double)(meanPolMagnitudes[nside]-devPolMagnitudes[nside]), (double)(meanPolMagnitudes[nside]+devPolMagnitudes[nside]));
+
+            for(int j=0; j<6; j++)
+            {
+                polVectors[pointer] = vector[j];
+                pointer++;
+            }
+            delete vector;
+        }
+    }
+
+    totalVectors = npixels;
+
+    return polVectors;
+}
+
+
+float* HealpixMap::calculatePolarizationVector(double theta, double phi, double angle, double mag, double pixsize, double minMag, double maxMag)
+{
+    if(mag>maxMag)
+        mag = maxMag;
+    else if(mag<minMag)
+        mag = minMag;
+
+    //qDebug() << "Minmag " << minMag;
+    double size = (mag-minMag) * ((pixsize/2)/(maxMag-minMag)) + pixsize/2;
+    //qDebug() << "pixsize = " << pixsize;
+    //qDebug() << "size = " << size;
+    Vec v0(cos(phi)*sin(theta),sin(phi)*sin(theta),cos(theta));
+    theta -= M_PI/2;
+    Vec vin(cos(phi)*sin(theta),sin(phi)*sin(theta),cos(theta));
+    Vec v1 = (1+boost)*v0 + size*spinVector(v0,vin,angle);
+    Vec v2 = (1+boost)*v0 + size*spinVector(v0,vin,angle+M_PI);
+
+    float* coords = new float[6];
+    coords[0] = v1.x;
+    coords[1] = v1.y;
+    coords[2] = v1.z;
+    coords[3] = v2.x;
+    coords[4] = v2.y;
+    coords[5] = v2.z;
+    return coords;
+}
+
+
+Vec HealpixMap::spinVector(const Vec &v0, const Vec &vin, double psi)
+{
+        double e1,e2,e3;
+        double A[3][3];
+
+        e1 = v0[0];	e2 = v0[1];	e3 = v0[2];
+        double cosp = cos(psi);
+        double sinp = sin(psi);
+
+        A[0][0] = cosp + e1*e1*(1-cosp); 	A[0][1] = e1*e2*(1-cosp)+e3*sinp;	A[0][2] = e1*e3*(1-cosp)-e2*sinp;
+        A[1][0] = e1*e2*(1-cosp)-e3*sinp;	A[1][1] = cosp+e2*e2*(1-cosp);		A[1][2] = e2*e3*(1-cosp)+e1*sinp;
+        A[2][0] = e1*e3*(1-cosp)+e2*sinp;	A[2][1] = e2*e3*(1-cosp)-e1*sinp;	A[2][2] = cosp+e3*e3*(1-cosp);
+
+        Vec vout;
+        for(int i = 0; i < 3; i++) {
+                vout[i] = 0;
+                for(int j = 0; j < 3; j++)
+                        vout[i] += A[i][j]*vin[j];
+        }
+        return vout;
 }
 
 
@@ -580,6 +713,27 @@ void HealpixMap::writeMapInfo()
     QTextStream out(&infoFile);
     out << path << endl;
     out << maxNside << endl;
+
+    /* write polarization magnitudes - means */
+    out << "[polmeans]" << endl;
+    QMapIterator<int, float> i(meanPolMagnitudes);
+    while (i.hasNext())
+    {
+        i.next();
+        out << i.key() << ":" << i.value() << endl;
+    }
+    out << "[/polmeans]" << endl;
+
+    /* write polarization magnitudes - standar deviation */
+    out << "[poldeviations]" << endl;
+    QMapIterator<int, float> j(devPolMagnitudes);
+    while (j.hasNext())
+    {
+        j.next();
+        out << j.key() << ":" << j.value() << endl;
+    }
+    out << "[/poldeviations]" << endl;
+
     /*
     out << coordsys << endl;
     QString availableMapsStr = "";
@@ -595,7 +749,46 @@ void HealpixMap::writeMapInfo()
 
 void HealpixMap::readMapInfo()
 {
+    /* open file */
+    QFile infoFile(cacheInfo);
+    infoFile.open(QIODevice::ReadOnly | QIODevice::Text);
+    QTextStream in(&infoFile);
 
+    QString line;
+    bool readingMeans = false;
+    bool readingDeviations = false;
+
+    /* read polarization magnitude means */
+    do
+    {
+        line = in.readLine();
+
+        if(!readingMeans && !readingDeviations)
+        {
+            if(line=="[polmeans]")
+                readingMeans = true;
+            else if(line=="[poldeviations]")
+                readingDeviations = true;
+        }
+        else
+        {
+            /* check stop */
+            if(line=="[/polmeans]")
+                readingMeans = false;
+            else if(line=="[/poldeviations]")
+                readingDeviations = false;
+            else
+            {
+                QStringList aux = line.split(":");
+                int nside = aux[0].toInt();
+                float value = aux[1].toFloat();
+                if(readingMeans)
+                    meanPolMagnitudes[nside] = value;
+                else
+                    devPolMagnitudes[nside] = value;
+            }
+        }
+    }while(!line.isNull());
 }
 
 
@@ -608,7 +801,7 @@ bool HealpixMap::checkMapCache()
 
     //qDebug() << "Checking cached map on " << cachedDirStr;
 
-    return false;
+    //return false;
     return cachedDir.exists();
 }
 

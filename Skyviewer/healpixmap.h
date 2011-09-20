@@ -14,6 +14,8 @@
 #include <chealpix.h>
 #include <fitsio.h>
 #include <healpixutil.h>
+#include <QGLViewer/vec.h>
+#include <math.h>
 
 #define MINZOOM 32
 #define MAXZOOM 2048
@@ -21,20 +23,11 @@
 #define CACHE_DIR "cache"
 
 using namespace std;
+using namespace qglviewer;
 
 
 /* forward declaration of PixelMap */
 class FieldMap;
-
-/*
-typedef enum MapType
-{
-    I = 0,
-    Q = 1,
-    U = 2,
-    NObs = 3
-} MapType;
-*/
 
 
 class HealpixMap
@@ -63,7 +56,8 @@ public:
     long getNumberPixels();
 
     float* getFaceValues(int faceNumber, int nside);
-    float* getPolarizationVectors(int faceNumber, int nside);
+    float* getPolarizationVectors(int faceNumber, int nside, long &totalVectors);
+    float* getFullMap(int nside);
 
     int getMaxNside();
 
@@ -85,6 +79,10 @@ private:
     QList<MapType> availableMaps;
     MapType currentMapType;
 
+    QMap<int, float> meanPolMagnitudes;
+    QMap<int, float> maxPolMagnitudes;
+    QMap<int, float> devPolMagnitudes;
+
     Ordering parseOrdering(char *value);
     Coordsys parseCoordsys(char* value);
 
@@ -94,6 +92,9 @@ private:
     void writeFITS(char* filename, char* tabname, float* temperature, int newnside);
     void writeFITSPrimaryHeader(fitsfile *fptr);
     void writeFITSExtensionHeader(fitsfile *fptr, int newnside);
+
+    float* calculatePolarizationVector(double theta, double phi, double angle, double mag, double pixsize, double minMag, double maxMag);
+    Vec spinVector(const Vec &v0, const Vec &vin, double psi);
 
     void writeMapInfo();
     void readMapInfo();
