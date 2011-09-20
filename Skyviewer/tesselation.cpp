@@ -1,12 +1,16 @@
 #include "tesselation.h"
 
-Tesselation::Tesselation(int _nside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache)
+Tesselation::Tesselation(int _nside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache)
 {
     nside = _nside;
     mollview = _mollview;
 
+    /* by default dont show the polarization vectors */
+    displayPolarizationVectors = false;
+
     this->faceCache = faceCache;
     this->textureCache = textureCache;
+    this->overlayCache = overlayCache;
     //this->mapType = mapType;
 
     createInitialTesselation();
@@ -64,18 +68,25 @@ void Tesselation::getFace(int faceNumber)
 }
 */
 
+void Tesselation::setMap(HealpixMap* map)
+{
+    healpixmap = map;
+}
+
 /* Draw opengl primitives */
 void Tesselation::draw()
 {
     int totalFaces = facesv.size();
     Face* face;
     Texture* texture;
+    PolarizationVectors* polVectors;
 
     /* get faces */
     for(int i=0; i<totalFaces; i++)
     {
         face = faceCache->getFace(facesv[i], nside);
 
+        /* display texture */
         if(DISPLAY_TEXTURE)
         {
             texture = textureCache->getFace(facesv[i], nside);
@@ -88,5 +99,19 @@ void Tesselation::draw()
         {
             texture->unbind();
         }
+
+        /* display polarization vectors */
+        if(displayPolarizationVectors)
+        {
+            //qDebug() << "Displaying polarization vectors";
+            polVectors = (PolarizationVectors*)overlayCache->getFace(facesv[i], nside, MapOverlay::POLARIZATION_VECTORS);
+            polVectors->draw();
+        }
     }
+}
+
+/* enable polarization vectors */
+void Tesselation::showPolarizationVectors(bool show)
+{
+    displayPolarizationVectors = show;
 }

@@ -13,6 +13,9 @@
 #include "facecache.h"
 #include "texture.h"
 #include "texturecache.h"
+#include "overlaycache.h"
+#include "polarizationvectors.h"
+#include "healpixmap.h"
 
 class Tesselation
 {
@@ -24,7 +27,7 @@ struct faceInfo
 };
 
 public:
-    Tesselation(int nside, bool mollview, FaceCache* faceCache, TextureCache* textureCache);
+    Tesselation(int nside, bool mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache);
     void draw();
     void drawAllFaces();
 
@@ -37,6 +40,10 @@ public:
     /* preload faces */
     void preloadFaces(QVector<int> faces, int nside);
 
+    void setMap(HealpixMap* map);
+
+    void showPolarizationVectors(bool show=true);
+
 private:
     int nside;
     //QMap<int, Face*> availableFaces;
@@ -45,11 +52,15 @@ private:
     //void getFace(int faceNumber);
 
     bool mollview;
+    bool displayPolarizationVectors;
 
     FaceCache* faceCache;
     TextureCache* textureCache;
+    OverlayCache* overlayCache;
     QVector<int> facesv;
     QVector<Face*> visibleFaces;
+
+    HealpixMap* healpixmap;
     //HealpixMap::MapType mapType;
 };
 
