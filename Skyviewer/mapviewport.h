@@ -10,6 +10,7 @@
 #include <QCheckBox>
 #include <QDebug>
 #include "mapviewer.h"
+#include "histogramwidget.h"
 
 #define COLOR_SELECTED "#fa8252"
 #define COLOR_INACTIVE "#c3c3c3"
@@ -34,6 +35,7 @@ public:
     void deselectViewport(bool changeCheckbox);
     void resetViewport();
     bool inUse();
+    void showHistogram();
 
 signals:
 

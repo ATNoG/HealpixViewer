@@ -72,6 +72,9 @@ void MapViewport::configureUI()
 
     /* configure the size policy */
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    /* disable mapviewer */
+    mapviewer->setDisabled(true);
 }
 
 bool MapViewport::isSelected()
@@ -155,6 +158,7 @@ void MapViewport::openMap(QString fitsfile)
 
     /* load the map into viewport */
     mapviewer->loadMap(fitsfile);
+    mapviewer->setDisabled(false);
 
     /* viewport is now in use */
     loaded = true;
@@ -163,6 +167,8 @@ void MapViewport::openMap(QString fitsfile)
 
     /* set viewport as selected */
     selectViewport(true);
+
+    showHistogram();
 }
 
 
@@ -198,4 +204,16 @@ void MapViewport::synchronizeView(QEvent *event, int type, MapViewer* source)
 bool MapViewport::inUse()
 {
     return loaded;
+}
+
+
+void MapViewport::showHistogram()
+{
+    HistogramWidget* histogramDialog = new HistogramWidget();
+    // TODO: dynamic number of pixels
+    histogramDialog->setValues(mapviewer->getValues(), nside2npix(128));
+
+    histogramDialog->show();
+    histogramDialog->raise();
+    histogramDialog->activateWindow();
 }
