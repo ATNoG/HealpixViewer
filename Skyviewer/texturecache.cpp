@@ -1,17 +1,15 @@
 #include "texturecache.h"
 
-
-//TextureCache* TextureCache::s_instance = 0;
-
-
-TextureCache::TextureCache(HealpixMap* map, int maxTiles)
+TextureCache::TextureCache(HealpixMap* map, int minNside, int maxNside, int maxTiles)
 {
+    this->MIN_NSIDE = minNside;
+    this->MAX_NSIDE = maxNside;
     this->maxTiles = maxTiles;
     this->availableTiles = maxTiles;
 
     marginTilesSpace = CACHE_MARGIN;
 
-    supportedNsides << 64 << 128 << 256 << 512 << 1024 << 2048;
+    //supportedNsides << 64 << 128 << 256 << 512 << 1024 << 2048;
 
     /* open healpix map */
     healpixMap = map;
@@ -20,20 +18,15 @@ TextureCache::TextureCache(HealpixMap* map, int maxTiles)
 
 /* PUBLIC INTERFACE */
 
-int TextureCache::getMaximumNside()
-{
-    return healpixMap->getMaxNside();
-}
-
 /* get the face with faceNumber and for the given nside */
 Texture* TextureCache::getFace(int faceNumber, int nside)
 {
     Texture* face;
 
     /* verify the maximum nside available */
-    int maxNside = healpixMap->getMaxNside();
-    if(nside>maxNside)
-        nside = maxNside;
+    // TODO: throw exception ?
+    if(nside>MAX_NSIDE)
+        nside = MAX_NSIDE;
 
     bool locked = true;
     int faceId = (faceNumber+1)*10000 + nside;
@@ -41,8 +34,8 @@ Texture* TextureCache::getFace(int faceNumber, int nside)
     /* request access to cache */
     cacheAccess.lock();
 
-    /* nside BASE_NSIDE face are not inserted into lru list to never get deleted */
-    if(nside>BASENSIDE)
+    /* nside MIN_NSIDE face are not inserted into lru list to never get deleted */
+    if(nside>MIN_NSIDE)
     {
         /* update lru info */
         cacheControl.removeAll(faceId);
@@ -55,7 +48,7 @@ Texture* TextureCache::getFace(int faceNumber, int nside)
     if(!checkFaceAvailable(faceNumber, nside))
     {
         /* initial nside, so wait for texture to load */
-        if(nside==BASENSIDE)
+        if(nside==MIN_NSIDE)
         //if(true)
         {
             /* release accesss to cache */
@@ -122,7 +115,7 @@ Texture* TextureCache::loadFace(int faceNumber, int nside)
     int faceId = (faceNumber+1)*10000 + nside;
     requestedFaces.remove(faceId);
 
-    if(nside>BASENSIDE)
+    if(nside>MIN_NSIDE)
         emit(newFaceAvailable(clean));
         //emit(newFaceAvailable(face));
 
@@ -174,9 +167,9 @@ void TextureCache::preloadFace(int faceNumber, int nside)
 {
     //qDebug() << "Preload face " << faceNumber << "(" << nside << ") - waiting";
 
-    int maxNside = healpixMap->getMaxNside();
-    if(nside>maxNside)
-        nside = maxNside;
+    // TODO: throw exception ?
+    if(nside>MAX_NSIDE)
+        nside = MAX_NSIDE;
 
     /* request access to cache */
     cacheAccess.lock();
@@ -344,10 +337,12 @@ Texture* TextureCache::getBestFaceFromCache(int faceNumber, int nside)
         faceAvailable = checkFaceAvailable(faceNumber, nside);
         if(!faceAvailable)
         {
+            if(nside > MIN_NSIDE)
+                nside = nside/2;
             /* search for downgraded nside */
-            int pos = supportedNsides.indexOf(nside);
-            if(pos>0)
-                nside = supportedNsides[pos-1];
+            //int pos = supportedNsides.indexOf(nside);
+            //if(pos>0)
+            //    nside = supportedNsides[pos-1];
         }
     }while(!faceAvailable);
 
@@ -360,5 +355,5 @@ Texture* TextureCache::getBestFaceFromCache(int faceNumber, int nside)
 /* return the number of tiles (tiles of nside64) necessary for display the face with nside */
 int TextureCache::calculateFaceTiles(int nside)
 {
-    return pow(nside/BASENSIDE, 2);
+    return pow(nside/MIN_NSIDE, 2);
 }

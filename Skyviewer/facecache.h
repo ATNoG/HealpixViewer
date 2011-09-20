@@ -15,24 +15,18 @@
 
 #define MAX_TILES 12500//14000//59//10000//12500
 #define CACHE_MARGIN 5200//0//3000//12498
-#define BASENSIDE 64
 
 
 typedef QMap<int, Face*> FaceCacheEntry;
 typedef QMap<int, FaceCacheEntry*> FaceCacheTable;
 
-struct lruEntryTexture
-{
-    int faceNumber;
-    int nside;
-};
 
 class FaceCache : public QObject
 {
     Q_OBJECT
 
 public:
-    FaceCache(int maxTiles = MAX_TILES);
+    FaceCache(int minNside, int maxNside, int maxTiles = MAX_TILES);
 
     /* inform cache about the faces that are visible and the nside used, so cache can preview the next faces to preload */
     //void updateStatus(QVector<int> visibleFaces, int nside);
@@ -45,10 +39,10 @@ public:
 
     void updateStatus(QVector<int> faces, int nside);
 
-    static FaceCache *instance()
+    static FaceCache *instance(int minNside, int maxNside)
     {
         //if(!s_instance)
-            s_instance = new FaceCache;
+            s_instance = new FaceCache(minNside, maxNside);
         return s_instance;
     }
 
@@ -73,6 +67,9 @@ private:
     /* get best face available in cache */
     Face* getBestFaceFromCache(int faceNumber, int nside);
 
+    int MIN_NSIDE;
+    int MAX_NSIDE;
+
     /* return the number of tiles necessary for display the face with nside */
     int calculateFaceTiles(int nside);
 
@@ -88,7 +85,7 @@ private:
     QList<int> cacheControl;
     QSet<int>  requestedFaces;
     QSet<int>  facesInUse;
-    QList<int> supportedNsides;
+    //QList<int> supportedNsides;
 
     QMutex cacheAccess;
 };

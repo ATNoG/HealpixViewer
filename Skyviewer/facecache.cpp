@@ -3,14 +3,16 @@
 
 FaceCache* FaceCache::s_instance = 0;
 
-FaceCache::FaceCache(int maxTiles)
+FaceCache::FaceCache(int minNside, int maxNside, int maxTiles)
 {
+    this->MIN_NSIDE = minNside;
+    this->MAX_NSIDE = maxNside;
     this->maxTiles = maxTiles;
     this->availableTiles = maxTiles;
 
     marginTilesSpace = CACHE_MARGIN;
 
-    supportedNsides << 64 << 128 << 256 << 512 << 1024 << 2048;
+    //supportedNsides << 64 << 128 << 256 << 512 << 1024 << 2048;
 }
 
 
@@ -28,7 +30,7 @@ Face* FaceCache::getFace(int faceNumber, int nside)
     cacheAccess.lock();
 
     /* nside BASE_NSIDE face are not inserted into lru list to never get deleted */
-    if(nside>BASENSIDE)
+    if(nside>MIN_NSIDE)
     {
         /* update lru info */
         cacheControl.removeAll(faceId);
@@ -41,7 +43,7 @@ Face* FaceCache::getFace(int faceNumber, int nside)
     if(!checkFaceAvailable(faceNumber, nside))
     {        
         /* initial nside, so wait for texture to load */
-        if(nside==BASENSIDE)
+        if(nside==MIN_NSIDE)
         {
             /* release accesss to cache */
             cacheAccess.unlock();
@@ -111,7 +113,7 @@ Face* FaceCache::loadFace(int faceNumber, int nside)
     int faceId = (faceNumber+1)*10000 + nside;
     requestedFaces.remove(faceId);
 
-    if(nside>BASENSIDE)
+    if(nside>MIN_NSIDE)
         emit(newFaceAvailable(clean));
         //emit(newFaceAvailable(face));
 
@@ -331,10 +333,12 @@ Face* FaceCache::getBestFaceFromCache(int faceNumber, int nside)
         faceAvailable = checkFaceAvailable(faceNumber, nside);
         if(!faceAvailable)
         {
+            if(nside > MIN_NSIDE)
+                nside = nside/2;
             /* search for downgraded nside */
-            int pos = supportedNsides.indexOf(nside);
-            if(pos>0)
-                nside = supportedNsides[pos-1];
+            //int pos = supportedNsides.indexOf(nside);
+            //if(pos>0)
+            //    nside = supportedNsides[pos-1];
         }
     }while(!faceAvailable);
 
@@ -349,7 +353,7 @@ Face* FaceCache::getBestFaceFromCache(int faceNumber, int nside)
 /* return the number of tiles (tiles of nside64) necessary for display the face with nside */
 int FaceCache::calculateFaceTiles(int nside)
 {
-    return pow(nside/BASENSIDE, 2);
+    return pow(nside/MIN_NSIDE, 2);
 }
 
 
