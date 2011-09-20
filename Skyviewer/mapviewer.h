@@ -16,7 +16,7 @@
 #include "facevertices.h"
 #include "maploader.h"
 
-#define BASE_NSIDE 64
+#define MIN_NSIDE 64
 #define MAX_NSIDE 2048
 #define EXP_NSIDE 6
 #define MIN_ZOOM 0
@@ -50,7 +50,12 @@ public:
     bool zoomOut();
     void resetView();
 
+    void showPolarizationVectors(bool show=true);
+
     //void checkForUpdates();
+
+    // TODO: maybe delete this...
+    float* getValues();
 
 signals:
     void cameraChanged(QEvent* e, int type, MapViewer* viewer);
@@ -105,6 +110,9 @@ private:
 
     FaceCache* faceCache;
     TextureCache* textureCache;
+    OverlayCache* overlayCache;
+
+    PolarizationVectors* polVectors;
 
 };
 

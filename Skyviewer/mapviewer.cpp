@@ -35,6 +35,8 @@ void MapViewer::draw()
 
         // TODO: select what to draw
         tesselation->draw();
+        //glColor3f(1.0, 0, 0);
+        //polVectors->draw();
 
         // Restore the original (world) coordinate system
         glPopMatrix();
@@ -69,20 +71,25 @@ void MapViewer::loadMap(QString fitsfile)
         qDebug() << "Opening map with type: " << HealpixMap::mapTypeToString(mapType);
         healpixMap->changeCurrentMap(mapType);
 
+        /* calculate max nside */
+        maxNside = min(healpixMap->getMaxNside(), MAX_NSIDE);
 
         /* get face cache */
-        faceCache = FaceCache::instance();
-        textureCache = new TextureCache(healpixMap);
+        faceCache = FaceCache::instance(MIN_NSIDE, MAX_NSIDE);          // TODO: correct ? MAX_NSIDE is used because facecache is shared
+        textureCache = new TextureCache(healpixMap, MIN_NSIDE, maxNside);
+        overlayCache = new OverlayCache(healpixMap, MIN_NSIDE, maxNside);
 
         QObject::connect(faceCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
         QObject::connect(textureCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
+        QObject::connect(overlayCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
 
-        maxNside = min(textureCache->getMaximumNside(), MAX_NSIDE);
-
-        qDebug() << "Max nside for this map is " << textureCache->getMaximumNside();
+        qDebug() << "Max nside for this map is " << healpixMap->getMaxNside();
 
         /* create the sphere tesselation */
-        tesselation = new Tesselation(currentNside, false, faceCache, textureCache);
+        tesselation = new Tesselation(currentNside, false, faceCache, textureCache, overlayCache);
+        tesselation->setMap(healpixMap);
+
+        //tesselation->showPolarizationVectors();
 
         /* preload next faces */
         preloadFaces();
@@ -170,7 +177,7 @@ void MapViewer::init()
 
 
     /* update initial state */
-    currentNside = BASE_NSIDE;
+    currentNside = MIN_NSIDE;
     currentZoomLevel = MIN_ZOOM;
 
     /* get face vertices for nside=1 to know the boundary vertices of face */
@@ -394,7 +401,7 @@ void MapViewer::resetView()
 {
     /* reset zoom to inital position */
     currentZoomLevel = MIN_ZOOM;
-    currentNside = BASE_NSIDE;
+    currentNside = MIN_NSIDE;
 
     /* change to initial position */
     ManipulatedFrame* newManipulatedFrame = new ManipulatedFrame();
@@ -525,7 +532,7 @@ int MapViewer::zoomToNside(int zoomLevel)
 
     //qDebug() << "  zoomToNside: basezoomlevel=" << baseZoomLevel;
 
-    // TODO: calculate exp based on BASE_NSIDE
+    // TODO: calculate exp based on MIN_NSIDE
     int nside = pow(2, EXP_NSIDE+baseZoomLevel);
 
     return nside;
@@ -730,4 +737,17 @@ void MapViewer::preloadFaces()
             tesselation->preloadFaces(facesToPreload, nextNside);
         }
     }
+}
+
+
+
+float* MapViewer::getValues()
+{
+    return healpixMap->getFullMap(128);
+}
+
+
+void MapViewer::showPolarizationVectors(bool show)
+{
+    tesselation->showPolarizationVectors(show);
 }
