@@ -58,8 +58,10 @@ HealpixMap::HealpixMap(QString _path)
         readMapInfo();
     }
 
+#if DEBUG > 0
     qDebug() << "Mean nside=256 -> " << meanPolMagnitudes[256];
     qDebug() << "Dev nside=256 -> " << devPolMagnitudes[256];
+#endif
 
     loadingDialog->setValue(loadingDialog->maximum());
 
@@ -89,7 +91,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
 
     /* get the number of hdus in fits file */
     result = fits_get_num_hdus(fptr, &hducount, &status);
-    qDebug() << "Hdus = " << hducount;
+    //qDebug() << "Hdus = " << hducount;
     if(result!=0)
     {
         qDebug("error on fits_get_num_hdus");
@@ -105,7 +107,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
     {
         if(fits_movabs_hdu(fptr, i, &exttype, &status)!=0)
         {
-            qDebug("error on fits_movabs_hdu");
+            //qDebug("error on fits_movabs_hdu");
             fits_close_file(fptr, &status);
             // TODO: throw exception
             return;
@@ -221,7 +223,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
                 qDebug("error reading values from file");
             }
 
-            qDebug() << "Pre processing map " << maptype;
+            //qDebug() << "Pre processing map " << maptype;
 
             /* create field map */
             FieldMap *fieldMap = new FieldMap(values, maxNside, isOrderNested());
@@ -229,7 +231,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
             // TODO: define minNside in some place...
             fieldMap->generateDowngrades(cachePath, prefix, MIN_NSIDE);
 
-            qDebug() << "Map saved";
+            //qDebug() << "Map saved";
         }
 
         /* generate polarization map ? */
@@ -238,7 +240,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
             /* create polarization map for each nside */
             for(int nside=maxNside; nside>=MIN_NSIDE; nside=nside/2)
             {
-                qDebug() << "Generating polarization for " << nside;
+                //qDebug() << "Generating polarization for " << nside;
 
                 /* read Q and U */
                 float *_Q = readMapCache(nside, Q);
@@ -278,9 +280,11 @@ void HealpixMap::processFile(QString path, bool generateMaps)
                 meanPolMagnitudes[nside] = mean;
                 devPolMagnitudes[nside] = sqrt(aux/(totalPixels-1));
 
+#if DEBUG > 0
                 qDebug() << "Media para nside = " << nside << " -> " << meanPolMagnitudes[nside];
                 qDebug() << "Max -> " << maxPolMagnitudes[nside];
                 qDebug() << "Desvio padrao -> " << devPolMagnitudes[nside];
+#endif
 
                 /* calculate filename to write */
                 QString nsideStr;
@@ -341,7 +345,7 @@ void HealpixMap::readFITSExtensionHeader(fitsfile *fptr)
     {
         /* trim string */
         this->coordsys = parseCoordsys(value);
-        qDebug() << "Coordsys is " << value;
+        //qDebug() << "Coordsys is " << value;
     }
 
     /* Read Nside */
@@ -357,7 +361,7 @@ void HealpixMap::readFITSExtensionHeader(fitsfile *fptr)
     QString nside_qs(value);
     this->maxNside = nside_qs.toInt();
     this->npixels = nside2npix(this->maxNside);
-    qDebug() << "Nside is " << maxNside << " with " << npixels << " pixels";
+    //qDebug() << "Nside is " << maxNside << " with " << npixels << " pixels";
 }
 
 
@@ -861,4 +865,10 @@ void HealpixMap::changeCurrentMap(MapType type)
 {
     // TODO: check if map is available
     currentMapType = type;
+}
+
+
+HealpixMap::MapType HealpixMap::getCurrentMapField()
+{
+    return currentMapType;
 }

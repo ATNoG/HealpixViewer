@@ -62,6 +62,7 @@ public:
     int getMaxNside();
 
     void changeCurrentMap(MapType type);
+    MapType getCurrentMapField();
 
     static unsigned int NSide2Res  (unsigned int ns);
     static QString mapTypeToString(MapType type);
@@ -116,5 +117,22 @@ inline unsigned int HealpixMap::NSide2Res (unsigned int ns)
     return (unsigned int) (0.4 + (log(double(ns)) / log(2.0)));
 }
 
+
+inline HealpixMap::MapType getMapField(int i)
+{
+    switch(i)
+    {
+        case HealpixMap::I:
+            return HealpixMap::I;
+        case HealpixMap::Q:
+            return HealpixMap::Q;
+        case HealpixMap::U:
+            return HealpixMap::U;
+        case HealpixMap::NObs:
+            return HealpixMap::NObs;
+    }
+}
+
+Q_DECLARE_METATYPE(HealpixMap::MapType);
 
 #endif // SKYMAP_H
