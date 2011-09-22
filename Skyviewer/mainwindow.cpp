@@ -59,11 +59,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     /* Configure workspace */
     workspace = new WorkSpace(DEFAULT_VIEWPORTS);
-    setCentralWidget(workspace);
 
+    /* add workspace to splitter */
+    ui->splitter->insertWidget(0, workspace);
 
-    //HistogramWidget *histogramWidget = new HistogramWidget();
-    //setCentralWidget(histogramWidget);
 
     /* configure events */
     connect(ui->action3Dview, SIGNAL(triggered()), workspace, SLOT(changeTo3D()));
@@ -73,7 +72,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSelectAll, SIGNAL(triggered()), workspace, SLOT(selectAllViewports()));
     connect(ui->actionDeselectAll, SIGNAL(triggered()), workspace, SLOT(deselectAllViewports()));
     connect(ui->actionReset, SIGNAL(triggered()), workspace, SLOT(resetViewports()));
-    //connect(ui->actionColors, SIGNAL(triggered()), workspace, SLOT(showHistogram()));
+    connect(ui->actionPolarizationVectors, SIGNAL(triggered(bool)), workspace, SLOT(showPolarizationVectors(bool)));
+    connect(ui->actionColors, SIGNAL(triggered(bool)), this, SLOT(showHistogram(bool)));
 
 
     /* set viewports */
@@ -85,6 +85,15 @@ MainWindow::MainWindow(QWidget *parent) :
     signalMapper->setMapping(setviewport4, 4);
     signalMapper->setMapping(setviewport9, 9);
     connect(signalMapper, SIGNAL(mapped(int)), workspace, SLOT(configureWorkspace(int)));
+
+
+    /* connect workspace to histogram widget */
+    connect(workspace, SIGNAL(mapOpened(int,QString,mapInfo*)), ui->histogramControl, SLOT(addViewport(int,QString,mapInfo*)));
+    connect(workspace, SIGNAL(mapClosed(int)), ui->histogramControl, SLOT(removeViewport(int)));
+    connect(ui->histogramControl, SIGNAL(thresholdUpdated(QList<int>,float,float)), workspace, SLOT(updateThreshold(QList<int>,float,float)));
+    connect(ui->histogramControl, SIGNAL(mapFieldChanged(int,HealpixMap::MapType)), workspace, SLOT(updateMapField(int,HealpixMap::MapType)));
+
+
 
     //QStringList files;
     //files.append("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32.fits");
@@ -105,6 +114,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //loadingDialog->hide();
     //loadingDialog->show();
+
+    /* open application in fullscreen */
+    QWidget::showMaximized();
 }
 
 MainWindow::~MainWindow()
@@ -128,5 +140,23 @@ void MainWindow::openFiles()
 
         /* ask workspace to open that files */
         workspace->openFiles(fileNames);
+    }
+}
+
+
+void MainWindow::showHistogram(bool show)
+{
+    if(show)
+    {
+        ui->tabWidget->show();
+        QList<int> sizes;
+        sizes.append(centralWidget()->width()-SIDEPANE_WIDTH);
+        sizes.append(SIDEPANE_WIDTH);
+        ui->splitter->setSizes(sizes);
+        ui->tabWidget->setCurrentIndex(0);
+    }
+    else
+    {
+        ui->tabWidget->hide();
     }
 }

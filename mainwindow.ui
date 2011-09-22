@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>679</width>
+    <height>1000</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Healpix Viewer</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="icons.qrc">
+    <normaloff>:/images/icons/3dview.gif</normaloff>:/images/icons/3dview.gif</iconset>
+  </property>
+  <widget class="QWidget" name="centralWidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QSplitter" name="splitter">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>0</height>
+       </size>
+      </property>
+      <property name="lineWidth">
+       <number>0</number>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="opaqueResize">
+       <bool>true</bool>
+      </property>
+      <property name="childrenCollapsible">
+       <bool>true</bool>
+      </property>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>2</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>200</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>300</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="baseSize">
+        <size>
+         <width>100</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <widget class="QWidget" name="histogramTab">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>300</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <attribute name="title">
+         <string>Histogram</string>
+        </attribute>
+        <widget class="HistogramWidget" name="histogramControl" native="true">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="geometry">
+          <rect>
+           <x>0</x>
+           <y>0</y>
+           <width>300</width>
+           <height>131</height>
+          </rect>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>300</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QWidget" name="valuesTab">
+        <property name="maximumSize">
+         <size>
+          <width>300</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <attribute name="title">
+         <string>Values</string>
+        </attribute>
+       </widget>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>679</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+   </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
+   <addaction name="menuAbout"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>40</width>
+     <height>300</height>
+    </size>
+   </property>
+   <property name="windowTitle">
+    <string>ToolBar</string>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>LeftToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionOpen"/>
+   <addaction name="actionSave"/>
+   <addaction name="actionReset"/>
+   <addaction name="action3Dview"/>
+   <addaction name="actionMollview"/>
+   <addaction name="actionViewports"/>
+   <addaction name="actionSynchronize"/>
+   <addaction name="actionColors"/>
+   <addaction name="actionExtract"/>
+   <addaction name="actionPolarizationVectors"/>
+   <addaction name="actionSelectAll"/>
+   <addaction name="actionDeselectAll"/>
+  </widget>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;About</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Exit</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Open Map</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>Save</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Save</string>
+   </property>
+  </action>
+  <action name="actionReset">
+   <property name="text">
+    <string>Reset</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Reset Views</string>
+   </property>
+  </action>
+  <action name="action3Dview">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/3dview.gif</normaloff>:/images/icons/3dview.gif</iconset>
+   </property>
+   <property name="text">
+    <string>3D view</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Switch to 3D</string>
+   </property>
+  </action>
+  <action name="actionMollview">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/mollview.gif</normaloff>:/images/icons/mollview.gif</iconset>
+   </property>
+   <property name="text">
+    <string>Mollview</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Switch to Mollview</string>
+   </property>
+  </action>
+  <action name="actionViewports">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/viewports.gif</normaloff>:/images/icons/viewports.gif</iconset>
+   </property>
+   <property name="text">
+    <string>Viewports</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Choose Viewports</string>
+   </property>
+  </action>
+  <action name="actionSynchronize">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/sync.gif</normaloff>:/images/icons/sync.gif</iconset>
+   </property>
+   <property name="text">
+    <string>Synchronize views</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Synchronize views</string>
+   </property>
+  </action>
+  <action name="actionColors">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/colormap.gif</normaloff>:/images/icons/colormap.gif</iconset>
+   </property>
+   <property name="text">
+    <string>Colors</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Select colors</string>
+   </property>
+  </action>
+  <action name="actionExtract">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/extract.gif</normaloff>:/images/icons/extract.gif</iconset>
+   </property>
+   <property name="text">
+    <string>Extract</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Extract ROI</string>
+   </property>
+  </action>
+  <action name="actionSelectAll">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/selectall.gif</normaloff>:/images/icons/selectall.gif</iconset>
+   </property>
+   <property name="text">
+    <string>Select All</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Select All Viewports</string>
+   </property>
+  </action>
+  <action name="actionDeselectAll">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/deselectall.gif</normaloff>:/images/icons/deselectall.gif</iconset>
+   </property>
+   <property name="text">
+    <string>Deselect All</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Deselect All</string>
+   </property>
+  </action>
+  <action name="actionPolarizationVectors">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/polvectors.gif</normaloff>:/images/icons/polvectors.gif</iconset>
+   </property>
+   <property name="text">
+    <string>Polarization Vectors</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Show/Hide Polarization Vectors</string>
+   </property>
+  </action>
+ </widget>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>HistogramWidget</class>
+   <extends>QWidget</extends>
+   <header>histogramwidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
+ <connections/>
+</ui>

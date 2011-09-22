@@ -7,6 +7,9 @@
 
 // TODO: default number of viewports
 #define DEFAULT_VIEWPORTS 1
+#define SIDEPANE_WIDTH 300
+
+#define DEBUG 1
 
 namespace Ui {
     class MainWindow;
@@ -22,6 +25,9 @@ public:
 
 public slots:
     void openFiles();
+
+private slots:
+    void showHistogram(bool show=true);
 
 private:
     Ui::MainWindow *ui;
