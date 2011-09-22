@@ -6,6 +6,7 @@ WorkSpace::WorkSpace(int numberViewports, QWidget *parent) :
     /* create the layout */
     gridlayout = new QGridLayout(this);
     gridlayout->setSpacing(0);
+    gridlayout->setMargin(0);
     setLayout(gridlayout);
 
     /* configure the viewports wanted */
@@ -65,7 +66,7 @@ void WorkSpace::drawViewports(int oldnviewports, int newnviewports)
 
 void WorkSpace::openFiles(QStringList filenames)
 {
-    //qDebug() << "Available viewports = " << viewports.count();
+    qDebug() << "Available viewports = " << viewports.count();
 
     // TODO: allow open multiple files at a time
     //foreach(QString fitsfile, filenames)
@@ -79,10 +80,20 @@ void WorkSpace::openFiles(QStringList filenames)
     {
         /* no viewports free to open new map. Verify if more viewports can be added */
         if(numberViewports!=MAX_VIEWPORTS)
-            configureWorkspace(MAX_VIEWPORTS);
+        {
+            if(numberViewports<4)
+                configureWorkspace(4);
+            else
+                configureWorkspace(MAX_VIEWPORTS);
+            qDebug("Configuring more viewport");
+        }
         else
         {
             qDebug("All viewports in use");
+
+            /* show warning dialog */
+            QMessageBox::warning (this, "HealpixViewer", "No more viewports available to open a new map. Please close some map first");
+
             return;
         }
     }
@@ -93,8 +104,22 @@ void WorkSpace::openFiles(QStringList filenames)
     {
         if(!viewports[i]->inUse())
         {
-            viewports[i]->openMap(filenames[0]);
+            /* open map in viewport */
             found = true;
+
+            qDebug() << "Trying to load on viewport " << i;
+            bool opened = viewports[i]->openMap(filenames[0]);
+
+            if(opened)
+            {
+                usedViewports++;
+
+                /* emit signal */
+                QString title = QString("Healpixmap %1").arg(i);
+                emit(mapOpened(i, title, viewports[i]->getMapInfo()));
+            }
+            else
+                qDebug() << "ERROR OPENING!!!!";
         }
         i++;
     }while(i<numberViewports && !found);
@@ -195,4 +220,31 @@ void WorkSpace::resetViewports()
     foreach(viewport, viewports)
         if(viewport->inUse() && viewport->isSelected())
             viewport->resetViewport();
+}
+
+void WorkSpace::showPolarizationVectors(bool show)
+{
+    MapViewport* viewport;
+    foreach(viewport, viewports)
+        if(viewport->inUse() && viewport->isSelected())
+            viewport->showPolarizationVectors(show);
+}
+
+void WorkSpace::updateMapField(int viewportId, HealpixMap::MapType field)
+{
+    viewports[viewportId]->changeMapField(field);
+}
+
+void WorkSpace::updateThreshold(QList<int> viewportIds, float min, float max)
+{
+    for(int i=0; i<viewportIds.size(); i++)
+    {
+        int viewportId = viewportIds[i];
+
+        /* check if it exists */
+        if(viewportId<numberViewports)
+        {
+            viewports[viewportId]->updateThreshold(min, max);
+        }
+    }
 }

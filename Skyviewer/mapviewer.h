@@ -35,6 +35,17 @@
 using namespace qglviewer;
 
 
+struct mapInfo
+{
+    float* values;
+    int nvalues;
+    QList<HealpixMap::MapType> availableFields;
+    HealpixMap::MapType currentField;
+    float min;
+    float max;
+};
+
+
 class MapViewer : public QGLViewer
 {
     Q_OBJECT
@@ -44,7 +55,7 @@ public:
     void changeToMollview();
     void changeTo3D();
     //void loadMap(HealpixMap* map);
-    void loadMap(QString fitsfile);
+    bool loadMap(QString fitsfile);
     void synchronize(QEvent* e, int type);
     bool zoomIn();
     bool zoomOut();
@@ -52,10 +63,12 @@ public:
 
     void showPolarizationVectors(bool show=true);
 
+    void updateThreshold(float min, float max);
+    void changeMapField(HealpixMap::MapType field);
+
     //void checkForUpdates();
 
-    // TODO: maybe delete this...
-    float* getValues();
+    mapInfo* getMapInfo();
 
 signals:
     void cameraChanged(QEvent* e, int type, MapViewer* viewer);
@@ -67,6 +80,7 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent *);
     virtual void mouseMoveEvent(QMouseEvent* e);
     virtual void wheelEvent(QWheelEvent* e);
+    virtual void postSelection(const QPoint &point);
 
 
 public slots:
@@ -82,7 +96,7 @@ private:
     bool initialized;
     int maxNside;
     HealpixMap *healpixMap;
-    HealpixMap::MapType maptype;
+    HealpixMap::MapType mapType;
 
     QProgressDialog *progressDialog;
 

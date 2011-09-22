@@ -5,6 +5,7 @@
 #include <QGridLayout>
 #include <QDebug>
 #include <QList>
+#include <QString>
 #include <QStringList>
 #include "mapviewport.h"
 
@@ -20,6 +21,8 @@ public:
 
 signals:
     void syncNeeded(QEvent* e, int type, MapViewer* source);
+    void mapOpened(int viewportId, QString title, mapInfo *info);
+    void mapClosed(int viewportId);
 
 public slots:
     void configureWorkspace(int numberViewports);
@@ -30,6 +33,11 @@ public slots:
     void selectAllViewports();
     void deselectAllViewports();
     void resetViewports();
+
+    void showPolarizationVectors(bool show);
+    void updateMapField(int viewportId, HealpixMap::MapType field);
+    void updateThreshold(QList<int> viewports, float min, float max);
+// TODO: updateColorTable
 
 private:
     int numberViewports;

@@ -115,3 +115,16 @@ void Tesselation::showPolarizationVectors(bool show)
 {
     displayPolarizationVectors = show;
 }
+
+
+void Tesselation::updateTextureThreshold(float min, float max)
+{
+    textureCache->updateTextureThreshold(min, max);
+}
+
+
+void Tesselation::changeMapField(HealpixMap::MapType field)
+{
+    qDebug() << "Updating Map Field to " << HealpixMap::mapTypeToString(field);
+    textureCache->changeMapField(field);
+}

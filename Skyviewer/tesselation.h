@@ -44,6 +44,9 @@ public:
 
     void showPolarizationVectors(bool show=true);
 
+    void updateTextureThreshold(float min, float max);
+    void changeMapField(HealpixMap::MapType field);
+
 private:
     int nside;
     //QMap<int, Face*> availableFaces;

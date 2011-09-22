@@ -44,7 +44,7 @@ void MapViewer::draw()
 }
 
 
-void MapViewer::loadMap(QString fitsfile)
+bool MapViewer::loadMap(QString fitsfile)
 {
     qDebug() << "Loading on mapviewer: " << fitsfile;
 
@@ -60,7 +60,7 @@ void MapViewer::loadMap(QString fitsfile)
 
         /* get available maps */
         QList<HealpixMap::MapType> availableMaps = healpixMap->getAvailableMaps();
-        HealpixMap::MapType mapType = HealpixMap::I;
+        mapType = HealpixMap::I;
 
         MapLoader* mapLoader = new MapLoader(this, fitsfile, availableMaps);
         if(mapLoader->exec())
@@ -68,7 +68,9 @@ void MapViewer::loadMap(QString fitsfile)
             mapType = mapLoader->getSelectedMapType();
         }
 
+#if DEBUG > 0
         qDebug() << "Opening map with type: " << HealpixMap::mapTypeToString(mapType);
+#endif
         healpixMap->changeCurrentMap(mapType);
 
         /* calculate max nside */
@@ -94,13 +96,17 @@ void MapViewer::loadMap(QString fitsfile)
         /* preload next faces */
         preloadFaces();
 
-        initialized = true;
+        //initialized = true;
 
         //loadingDialog->hide();
 
         //progressDialog->setValue(18);
         //progressDialog->hide();
+
+        return true;
     }
+
+    return false;
 }
 
 
@@ -242,6 +248,20 @@ void MapViewer::mouseReleaseEvent(QMouseEvent *e, bool propagate)
     //qDebug("mouse release!!!!!!!!!!!!!!!");
     //checkVisibility();
     preloadFaces();
+}
+
+
+void MapViewer::postSelection (const QPoint &point)
+{
+    qDebug() << "Pixel selected: " << point.x() << "," << point.y();
+    Vec origin, direction;
+    camera()->convertClickToLine(point, origin, direction);
+
+    qDebug() << "Origin: " << origin.x << "," << origin.y << "," << origin.z;
+    qDebug() << "Direction: " << direction.x << "," << direction.y << "," << direction.z;
+
+    Vec v = currentManipulatedFrame->coordinatesOf(origin);
+    qDebug() << "ManFrame: " << v.x << "," << v.y << "," << v.z;
 }
 
 
@@ -528,12 +548,15 @@ bool MapViewer::zoomOut()
 int MapViewer::zoomToNside(int zoomLevel)
 {
     /* calculate the needed zoom (when changing zoomLevel, baseZoomLevel may not change */
-    int baseZoomLevel = floor(zoomLevel / ZOOM_LEVEL);
+    int baseZoomLevel = floor(zoomLevel / ZOOM_LEVEL); // /2
 
     //qDebug() << "  zoomToNside: basezoomlevel=" << baseZoomLevel;
 
     // TODO: calculate exp based on MIN_NSIDE
     int nside = pow(2, EXP_NSIDE+baseZoomLevel);
+
+    if(nside<64)
+        nside = 64;
 
     return nside;
 }
@@ -740,14 +763,46 @@ void MapViewer::preloadFaces()
 }
 
 
-
-float* MapViewer::getValues()
-{
-    return healpixMap->getFullMap(128);
-}
-
-
 void MapViewer::showPolarizationVectors(bool show)
 {
     tesselation->showPolarizationVectors(show);
+    /* force redraw */
+    updateGL();
+}
+
+
+void MapViewer::updateThreshold(float min, float max)
+{
+    tesselation->updateTextureThreshold(min, max);
+
+    /* now map can be displayed */
+    initialized = true;
+
+    /* force redraw */
+    updateGL();
+}
+
+
+void MapViewer::changeMapField(HealpixMap::MapType field)
+{
+    tesselation->changeMapField(field);
+
+    mapType = field;
+
+    /* force draw */
+    updateGL();
+}
+
+
+mapInfo* MapViewer::getMapInfo()
+{
+    mapInfo *info = new mapInfo;
+    info->values = healpixMap->getFullMap(64);
+    info->nvalues = nside2npix(64);
+    info->currentField = mapType;
+    info->availableFields = healpixMap->getAvailableMaps();
+    info->min = 0;
+    info->max = 0;
+
+    return info;
 }
