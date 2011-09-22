@@ -200,6 +200,7 @@
    <addaction name="actionColors"/>
    <addaction name="actionExtract"/>
    <addaction name="actionPolarizationVectors"/>
+   <addaction name="actionShowGrid"/>
    <addaction name="actionSelectAll"/>
    <addaction name="actionDeselectAll"/>
   </widget>
@@ -358,6 +359,21 @@
    </property>
    <property name="toolTip">
     <string>&amp;Show/Hide Polarization Vectors</string>
+   </property>
+  </action>
+  <action name="actionShowGrid">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/images/icons/grid.gif</normaloff>:/images/icons/grid.gif</iconset>
+   </property>
+   <property name="text">
+    <string>Grid</string>
+   </property>
+   <property name="toolTip">
+    <string>&amp;Show Grid</string>
    </property>
   </action>
  </widget>

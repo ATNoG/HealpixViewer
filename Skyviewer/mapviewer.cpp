@@ -2,6 +2,8 @@
 #include "mapviewport.h"
 #include <math.h>
 
+#include "grid.h"
+
 using namespace qglviewer;
 
 MapViewer::MapViewer(QWidget *parent) :
@@ -810,4 +812,12 @@ mapInfo* MapViewer::getMapInfo()
     info->max = 0;
 
     return info;
+}
+
+
+void MapViewer::showGrid(bool show)
+{
+    tesselation->showGrid(show);
+    /* force draw */
+    updateGL();
 }

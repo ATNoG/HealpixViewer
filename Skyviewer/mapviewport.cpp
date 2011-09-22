@@ -253,3 +253,8 @@ void MapViewport::viewportUpdated(float* values, int nValues)
 {
     emit(mapFieldChanged(viewportId, values, nValues));
 }
+
+void MapViewport::showGrid(bool show)
+{
+    mapviewer->showGrid(show);
+}

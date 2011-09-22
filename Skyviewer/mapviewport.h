@@ -37,6 +37,7 @@ public:
     bool inUse();
     void showHistogram();
     void showPolarizationVectors(bool show);
+    void showGrid(bool show);
     void updateThreshold(float min, float max);
     void changeMapField(HealpixMap::MapType field);
 

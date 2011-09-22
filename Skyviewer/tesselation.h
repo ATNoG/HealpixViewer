@@ -2,6 +2,7 @@
 #define TESSELATION_H
 
 #define DISPLAY_TEXTURE true
+#define GRID_LINES 6
 
 #include <QVector>
 #include <QFuture>
@@ -16,6 +17,7 @@
 #include "overlaycache.h"
 #include "polarizationvectors.h"
 #include "healpixmap.h"
+#include "grid.h"
 
 class Tesselation
 {
@@ -43,6 +45,7 @@ public:
     void setMap(HealpixMap* map);
 
     void showPolarizationVectors(bool show=true);
+    void showGrid(bool show=true);
 
     void updateTextureThreshold(float min, float max);
     void changeMapField(HealpixMap::MapType field);
@@ -52,16 +55,20 @@ private:
     //QMap<int, Face*> availableFaces;
 
     void createInitialTesselation();
+    void createGrid();
     //void getFace(int faceNumber);
 
     bool mollview;
     bool displayPolarizationVectors;
+    bool displayGrid;
 
     FaceCache* faceCache;
     TextureCache* textureCache;
     OverlayCache* overlayCache;
     QVector<int> facesv;
     QVector<Face*> visibleFaces;
+
+    Grid *grid;
 
     HealpixMap* healpixmap;
     //HealpixMap::MapType mapType;

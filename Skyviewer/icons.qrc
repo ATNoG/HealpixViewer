@@ -9,5 +9,6 @@
         <file>images/icons/selectall.gif</file>
         <file>images/icons/deselectall.gif</file>
         <file>images/icons/polvectors.gif</file>
+        <file>images/icons/grid.gif</file>
     </qresource>
 </RCC>

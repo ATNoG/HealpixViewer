@@ -5,8 +5,9 @@ Tesselation::Tesselation(int _nside, bool _mollview, FaceCache* faceCache, Textu
     nside = _nside;
     mollview = _mollview;
 
-    /* by default dont show the polarization vectors */
+    /* by default dont show the polarization vectors neither grid */
     displayPolarizationVectors = false;
+    displayGrid = false;
 
     this->faceCache = faceCache;
     this->textureCache = textureCache;
@@ -14,6 +15,9 @@ Tesselation::Tesselation(int _nside, bool _mollview, FaceCache* faceCache, Textu
     //this->mapType = mapType;
 
     createInitialTesselation();
+
+    /* create grid */
+    grid = new Grid(GRID_LINES);
 }
 
 
@@ -107,6 +111,13 @@ void Tesselation::draw()
             polVectors = (PolarizationVectors*)overlayCache->getFace(facesv[i], nside, MapOverlay::POLARIZATION_VECTORS);
             polVectors->draw();
         }
+
+        /* display grid */
+        if(displayGrid)
+        {
+            glColor3f(1.0, 1.0, 1.0);
+            grid->draw();
+        }
     }
 }
 
@@ -127,4 +138,9 @@ void Tesselation::changeMapField(HealpixMap::MapType field)
 {
     qDebug() << "Updating Map Field to " << HealpixMap::mapTypeToString(field);
     textureCache->changeMapField(field);
+}
+
+void Tesselation::showGrid(bool show)
+{
+    displayGrid = show;
 }

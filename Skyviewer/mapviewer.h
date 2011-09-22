@@ -63,6 +63,7 @@ public:
     void resetView();
 
     void showPolarizationVectors(bool show=true);
+    void showGrid(bool show=true);
 
     void updateThreshold(float min, float max);
     void changeMapField(HealpixMap::MapType field);

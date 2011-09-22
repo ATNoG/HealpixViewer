@@ -75,6 +75,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionReset, SIGNAL(triggered()), workspace, SLOT(resetViewports()));
     connect(ui->actionPolarizationVectors, SIGNAL(triggered(bool)), workspace, SLOT(showPolarizationVectors(bool)));
     connect(ui->actionColors, SIGNAL(triggered(bool)), this, SLOT(showHistogram(bool)));
+    connect(ui->actionShowGrid, SIGNAL(triggered(bool)), workspace, SLOT(showGrid(bool)));
 
 
     /* set viewports */

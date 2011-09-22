@@ -253,5 +253,8 @@ void WorkSpace::updateThreshold(QList<int> viewportIds, float min, float max)
 
 void WorkSpace::showGrid(bool show)
 {
-
+    MapViewport* viewport;
+    foreach(viewport, viewports)
+        if(viewport->inUse() && viewport->isSelected())
+            viewport->showGrid(show);
 }
