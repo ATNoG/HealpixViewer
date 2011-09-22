@@ -29,13 +29,18 @@ public:
     bool isSelected();
     void changeToMollview();
     void changeTo3D();
-    void openMap(QString fitsfile);
+    bool openMap(QString fitsfile);
     void closeMap();
     void selectViewport(bool changeCheckbox);
     void deselectViewport(bool changeCheckbox);
     void resetViewport();
     bool inUse();
     void showHistogram();
+    void showPolarizationVectors(bool show);
+    void updateThreshold(float min, float max);
+    void changeMapField(HealpixMap::MapType field);
+
+    mapInfo* getMapInfo();
 
 signals:
 

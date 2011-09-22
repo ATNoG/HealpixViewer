@@ -149,7 +149,7 @@ void MapViewport::resetViewport()
 }
 
 
-void MapViewport::openMap(QString fitsfile)
+bool MapViewport::openMap(QString fitsfile)
 {
     qDebug() << "Opening " << fitsfile << " on " << title;
 
@@ -157,18 +157,24 @@ void MapViewport::openMap(QString fitsfile)
     //closeMap();    
 
     /* load the map into viewport */
-    mapviewer->loadMap(fitsfile);
-    mapviewer->setDisabled(false);
+    bool _loaded = mapviewer->loadMap(fitsfile);
 
-    /* viewport is now in use */
-    loaded = true;
+    if(_loaded)
+    {
+        mapviewer->setDisabled(false);
 
-    checkbox->setEnabled(true);
+        /* viewport is now in use */
+        loaded = true;
 
-    /* set viewport as selected */
-    selectViewport(true);
+        checkbox->setEnabled(true);
 
-    showHistogram();
+        /* set viewport as selected */
+        selectViewport(true);
+
+        showHistogram();
+    }
+
+    return _loaded;
 }
 
 
@@ -209,11 +215,33 @@ bool MapViewport::inUse()
 
 void MapViewport::showHistogram()
 {
-    HistogramWidget* histogramDialog = new HistogramWidget();
-    // TODO: dynamic number of pixels
-    histogramDialog->setValues(mapviewer->getValues(), nside2npix(128));
+    // TODO
+}
 
-    histogramDialog->show();
-    histogramDialog->raise();
-    histogramDialog->activateWindow();
+
+void MapViewport::showPolarizationVectors(bool show)
+{
+    if(inUse())
+    {
+        mapviewer->showPolarizationVectors(show);
+    }
+}
+
+
+void MapViewport::updateThreshold(float min, float max)
+{
+    //qDebug() << "Updating threshold from " << title << " to " << min << "," << max;
+    mapviewer->updateThreshold(min, max);
+}
+
+
+mapInfo* MapViewport::getMapInfo()
+{
+    return mapviewer->getMapInfo();
+}
+
+
+void MapViewport::changeMapField(HealpixMap::MapType field)
+{
+    mapviewer->changeMapField(field);
 }
