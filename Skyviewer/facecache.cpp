@@ -97,8 +97,11 @@ Face* FaceCache::loadFace(int faceNumber, int nside)
     //REMOVE qDebug()<< "Face " << faceNumber << "(" << nside << ") - Loading";
 
     Face* face = new Face(faceNumber);
+
+#if DEBUG > 0
     if(face==NULL)
         qDebug("Face is null");
+#endif
 
     face->setRigging(nside, false);
     //face->createDisplayList();
@@ -107,7 +110,9 @@ Face* FaceCache::loadFace(int faceNumber, int nside)
     /* store the face into the cache */
     bool clean = storeFace(faceNumber, nside, face);
 
+#if DEBUG > 0
     qDebug() << "Face " << faceNumber << "(" << nside << ") - Loaded";
+#endif
 
     /* remove the request */
     int faceId = (faceNumber+1)*10000 + nside;
@@ -124,7 +129,9 @@ bool FaceCache::cleanCache(int minSpace)
 {
     // TODO: discard the not used faces to get space for new faces - better algorithm
 
+#if DEBUG > 0
     qDebug("-------------============Cleaning cache ==================-------------");
+#endif
 
     int lru, fn, ns;
     int nFacesInUse = 0;
@@ -134,8 +141,10 @@ bool FaceCache::cleanCache(int minSpace)
 
     //printCache();
 
+#if DEBUG > 0
     qDebug() << "Margin tiles: " << marginTilesSpace;
     qDebug() << "Available tiles: " << availableTiles;
+#endif
 
     while(availableTiles<marginTilesSpace && cacheControl.size()>nFacesInUse)
     //while(availableTiles<marginTilesSpace && !cacheControl.empty())
@@ -273,7 +282,7 @@ bool FaceCache::storeFace(int faceNumber, int nside, Face* face)
     }
     else
     {
-        qDebug("no space left on cache");
+        qDebug("no space left on face cache");
         //return false;
     }
 
@@ -288,7 +297,9 @@ void FaceCache::discardFace(int faceNumber, int nside)
 {
     // TODO: do this in an atomic operation */
 
+#if DEBUG > 0
     qDebug() << "Discarding face " << faceNumber << " with nside " << nside;
+#endif
 
     /* free the allocated memory for face */
     Face* face = getFaceFromCache(faceNumber, nside);

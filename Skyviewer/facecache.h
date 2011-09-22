@@ -16,7 +16,6 @@
 #define MAX_TILES 12500//14000//59//10000//12500
 #define CACHE_MARGIN 5200//0//3000//12498
 
-
 typedef QMap<int, Face*> FaceCacheEntry;
 typedef QMap<int, FaceCacheEntry*> FaceCacheTable;
 
