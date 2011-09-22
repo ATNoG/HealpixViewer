@@ -10,15 +10,13 @@
 #include <QTextOStream>
 #include <QProgressDialog>
 #include "colortable.h"
+#include "histogram.h"
 #include <QGLViewer/qglviewer.h>
 #include <chealpix.h>
 #include <fitsio.h>
 #include <healpixutil.h>
 #include <QGLViewer/vec.h>
 #include <math.h>
-
-#define MINZOOM 32
-#define MAXZOOM 2048
 
 #define CACHE_DIR "cache"
 
@@ -34,7 +32,7 @@ class HealpixMap
 {
 public:
     /* load a fits file into a skymap */
-    HealpixMap(QString path);
+    HealpixMap(QString path, int MIN_NSIDE);
 
     enum Ordering {NESTED, RING};
     enum Coordsys {CELESTIAL, ECLIPTIC, GALACTIC};
@@ -63,6 +61,8 @@ public:
 
     void changeCurrentMap(MapType type);
     MapType getCurrentMapField();
+
+    void getMinMax(float &min, float &max);
 
     static unsigned int NSide2Res  (unsigned int ns);
     static QString mapTypeToString(MapType type);
@@ -101,10 +101,12 @@ private:
     void readMapInfo();
     bool checkMapCache();
 
+
     float* readMapCache(int nside, MapType mapType, int firstPosition=0, int length=0);
 
-    //float *temperature;
-    //FieldMap* temperatureMap;
+    float min, max;
+
+    int MIN_NSIDE;
 
     QString getMapType(MapType type);
 

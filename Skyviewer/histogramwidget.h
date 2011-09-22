@@ -28,6 +28,8 @@ public slots:
     void removeViewport(int viewportId);
     /* load map information for viewport */
     void loadViewportInfo(int viewportId);
+    /* update viewport information */
+    void updateViewportInfo(int viewportId, float* values, int nValues);
 
 private slots:
     /* called by lowerThreshold spinbox */

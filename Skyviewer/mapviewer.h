@@ -45,6 +45,7 @@ struct mapInfo
     float max;
 };
 
+class MapViewport;
 
 class MapViewer : public QGLViewer
 {
@@ -72,6 +73,7 @@ public:
 
 signals:
     void cameraChanged(QEvent* e, int type, MapViewer* viewer);
+    void mapFieldChanged(float* values, int nValues);
 
 protected:
     virtual void init(void);

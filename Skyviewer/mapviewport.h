@@ -24,7 +24,7 @@ class MapViewport : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MapViewport(QWidget *parent, QString title, WorkSpace* _workspace);
+    explicit MapViewport(QWidget *parent, QString title, WorkSpace* _workspace, int viewportId);
 
     bool isSelected();
     void changeToMollview();
@@ -42,12 +42,14 @@ public:
 
     mapInfo* getMapInfo();
 
-signals:
 
+signals:
+    void mapFieldChanged(int viewportId, float* values, int nValues);
 
 public slots:
     void selectionChanged(bool selected);
     void synchronizeView(QEvent* event, int type, MapViewer* source);
+    void viewportUpdated(float* values, int nValues);
 
 private:
     QString title;
@@ -62,6 +64,8 @@ private:
     bool loaded;
     bool selected;
     bool mollview;
+
+    int viewportId;
 
     void configureUI();
 };

@@ -1,4 +1,5 @@
 #include "mapviewer.h"
+#include "mapviewport.h"
 #include <math.h>
 
 using namespace qglviewer;
@@ -56,7 +57,7 @@ bool MapViewer::loadMap(QString fitsfile)
         */
 
         /* open fits file */
-        healpixMap = new HealpixMap(fitsfile);
+        healpixMap = new HealpixMap(fitsfile, MIN_NSIDE);
 
         /* get available maps */
         QList<HealpixMap::MapType> availableMaps = healpixMap->getAvailableMaps();
@@ -96,7 +97,7 @@ bool MapViewer::loadMap(QString fitsfile)
         /* preload next faces */
         preloadFaces();
 
-        //initialized = true;
+        initialized = true;
 
         //loadingDialog->hide();
 
@@ -775,9 +776,6 @@ void MapViewer::updateThreshold(float min, float max)
 {
     tesselation->updateTextureThreshold(min, max);
 
-    /* now map can be displayed */
-    initialized = true;
-
     /* force redraw */
     updateGL();
 }
@@ -791,6 +789,13 @@ void MapViewer::changeMapField(HealpixMap::MapType field)
 
     /* force draw */
     updateGL();
+
+    /*
+    MapViewport* mapviewport = (MapViewport*)parent()->parent();
+    mapviewport->viewportUpdated(healpixMap->getFullMap(MIN_NSIDE), nside2npix(MIN_NSIDE));
+    */
+
+    emit(mapFieldChanged(healpixMap->getFullMap(MIN_NSIDE), nside2npix(MIN_NSIDE)));
 }
 
 

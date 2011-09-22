@@ -24,9 +24,10 @@ char  DEFNUNIT[]  = "counts";
 char  DEFFORM[]   = "1024E";
 
 
-HealpixMap::HealpixMap(QString _path)
+HealpixMap::HealpixMap(QString _path, int minNside)
 {
     path = _path;
+    MIN_NSIDE = minNside;
 
     /* get name of file */
     QFileInfo pathInfo(path);
@@ -184,9 +185,6 @@ void HealpixMap::processFile(QString path, bool generateMaps)
     /* add U to available maps */
     if(ucol!=0)
         availableMaps.append(U);
-
-
-    int MIN_NSIDE = 64;
 
 
     /* need to create the maps ? */
@@ -865,10 +863,24 @@ void HealpixMap::changeCurrentMap(MapType type)
 {
     // TODO: check if map is available
     currentMapType = type;
+
+    /* regenerate min and max values */
+    float* values = getFullMap(MIN_NSIDE);
+    Histogram *histo = new Histogram(values, nside2npix(MIN_NSIDE));
+    histo->getMinMax(min, max);
+
+    delete histo;
 }
 
 
 HealpixMap::MapType HealpixMap::getCurrentMapField()
 {
     return currentMapType;
+}
+
+
+void HealpixMap::getMinMax(float &_min, float &_max)
+{
+    _min = min;
+    _max = max;
 }

@@ -5,6 +5,7 @@
 
 #include "histogramwidget.h"
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -90,9 +91,9 @@ MainWindow::MainWindow(QWidget *parent) :
     /* connect workspace to histogram widget */
     connect(workspace, SIGNAL(mapOpened(int,QString,mapInfo*)), ui->histogramControl, SLOT(addViewport(int,QString,mapInfo*)));
     connect(workspace, SIGNAL(mapClosed(int)), ui->histogramControl, SLOT(removeViewport(int)));
+    connect(workspace, SIGNAL(mapFieldChanged(int,float*,int)), ui->histogramControl, SLOT(updateViewportInfo(int,float*,int)));
     connect(ui->histogramControl, SIGNAL(thresholdUpdated(QList<int>,float,float)), workspace, SLOT(updateThreshold(QList<int>,float,float)));
     connect(ui->histogramControl, SIGNAL(mapFieldChanged(int,HealpixMap::MapType)), workspace, SLOT(updateMapField(int,HealpixMap::MapType)));
-
 
 
     //QStringList files;

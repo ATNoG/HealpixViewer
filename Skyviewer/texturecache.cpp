@@ -13,6 +13,8 @@ TextureCache::TextureCache(HealpixMap* map, int minNside, int maxNside, int maxT
 
     /* open healpix map */
     healpixMap = map;
+
+    healpixMap->getMinMax(minTex, maxTex);
 }
 
 
@@ -394,6 +396,7 @@ void TextureCache::changeMapField(HealpixMap::MapType field)
     if(healpixMap->getCurrentMapField()!=field)
     {
         healpixMap->changeCurrentMap(field);
+        healpixMap->getMinMax(minTex, maxTex);
         invalidateCache();
     }
 }

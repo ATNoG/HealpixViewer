@@ -114,6 +114,8 @@ void WorkSpace::openFiles(QStringList filenames)
             {
                 usedViewports++;
 
+                connect(viewports[i], SIGNAL(mapFieldChanged(int,float*,int)), this, SIGNAL(mapFieldChanged(int,float*,int)));
+
                 /* emit signal */
                 QString title = QString("Healpixmap %1").arg(i);
                 emit(mapOpened(i, title, viewports[i]->getMapInfo()));
@@ -146,12 +148,11 @@ void WorkSpace::configureWorkspace(int viewportsWanted)
         qDebug() << " need more " << needed << " viewports";
         for(i=0; i<needed; i++)
         {
-            QString qs1;
-            qs1.setNum(availableViewports + i);
-            QString qs = "HealpixMap " + qs1;
+            int viewportId = availableViewports + i;
+            QString qs = QString("HealpixMap %1").arg(viewportId);
 
             /* create the viewport without parent */
-            MapViewport* viewport = new MapViewport(NULL, qs, this);
+            MapViewport* viewport = new MapViewport(NULL, qs, this, viewportId);
             viewports.append(viewport);
         }
     }
@@ -247,4 +248,10 @@ void WorkSpace::updateThreshold(QList<int> viewportIds, float min, float max)
             viewports[viewportId]->updateThreshold(min, max);
         }
     }
+}
+
+
+void WorkSpace::showGrid(bool show)
+{
+
 }

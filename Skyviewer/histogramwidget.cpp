@@ -162,18 +162,6 @@ void HistogramWidget::addViewport(int viewportId, QString title, mapInfo *info)
     /* add information to map */
     mapsInformation[viewportId] = info;
 
-    /* get map histogram */
-    float mapMin, mapMax;
-    Histogram *histo = new Histogram(info->values, info->nvalues);
-    histo->getMinMax(mapMin, mapMax);
-
-    /* send min and max to map */
-    QList<int> viewports;
-    viewports.append(viewportId);
-    emit(thresholdUpdated(viewports, mapMin, mapMax));
-
-    delete histo;
-
     if(getSelectedViewports().size()<=1)
     {
         loadViewportInfo(viewportId);
@@ -192,6 +180,19 @@ void HistogramWidget::removeViewport(int viewportId)
 
     /* update histogram */
     updateHistogram();
+}
+
+
+void HistogramWidget::updateViewportInfo(int viewportId, float* values, int nValues)
+{
+    mapInfo *info = mapsInformation[viewportId];
+    delete info->values;
+
+    info->values = values;
+    info->nvalues = nValues;
+
+    // TODO: should thsi be called ?
+    loadViewportInfo(viewportId);
 }
 
 

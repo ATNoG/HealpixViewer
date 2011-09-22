@@ -3,7 +3,7 @@
 #include <QAction>
 #include "workspace.h"
 
-MapViewport::MapViewport(QWidget *parent, QString title, WorkSpace* _workspace) :
+MapViewport::MapViewport(QWidget *parent, QString title, WorkSpace* _workspace, int viewportId) :
     QWidget(parent)
 {
     this->title = title;
@@ -11,12 +11,14 @@ MapViewport::MapViewport(QWidget *parent, QString title, WorkSpace* _workspace) 
     this->mollview = !DEFAULT_VIEW_3D;
     this->workspace = _workspace;
     this->loaded = false;
+    this->viewportId = viewportId;
 
     /* configure the user interface */
     configureUI();
 
     /* connect events */
     connect(checkbox, SIGNAL(toggled(bool)), this, SLOT(selectionChanged(bool)));
+    connect(mapviewer, SIGNAL(mapFieldChanged(float*,int)), this, SLOT(viewportUpdated(float*,int)));
 }
 
 
@@ -244,4 +246,10 @@ mapInfo* MapViewport::getMapInfo()
 void MapViewport::changeMapField(HealpixMap::MapType field)
 {
     mapviewer->changeMapField(field);
+}
+
+
+void MapViewport::viewportUpdated(float* values, int nValues)
+{
+    emit(mapFieldChanged(viewportId, values, nValues));
 }

@@ -23,6 +23,7 @@ signals:
     void syncNeeded(QEvent* e, int type, MapViewer* source);
     void mapOpened(int viewportId, QString title, mapInfo *info);
     void mapClosed(int viewportId);
+    void mapFieldChanged(int viewportId, float* values, int nValues);
 
 public slots:
     void configureWorkspace(int numberViewports);
@@ -35,6 +36,7 @@ public slots:
     void resetViewports();
 
     void showPolarizationVectors(bool show);
+    void showGrid(bool show);
     void updateMapField(int viewportId, HealpixMap::MapType field);
     void updateThreshold(QList<int> viewports, float min, float max);
 // TODO: updateColorTable
