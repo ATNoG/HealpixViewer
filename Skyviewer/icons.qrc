@@ -8,5 +8,6 @@
         <file>images/icons/extract.gif</file>
         <file>images/icons/selectall.gif</file>
         <file>images/icons/deselectall.gif</file>
+        <file>images/icons/polvectors.gif</file>
     </qresource>
 </RCC>
