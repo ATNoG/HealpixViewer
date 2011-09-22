@@ -111,15 +111,19 @@ MapOverlay* OverlayCache::loadFace(int faceNumber, int nside, MapOverlay::Overla
             qDebug("OverlayCache: overlay type not supported");
     }
 
+#if DEBUG > 0
     if(overlay==NULL)
         qDebug("Overlay is null");
+#endif
 
     overlay->build();
 
     /* store the face into the cache */
     bool clean = storeFace(faceNumber, nside, type, overlay);
 
+#if DEBUG > 0
     qDebug() << "Overlay " << faceNumber << "(" << nside << ") - Loaded";
+#endif
 
     /* remove the request */
     long faceId = calculateFaceId(faceNumber, nside, type);
@@ -138,7 +142,9 @@ bool OverlayCache::cleanCache(int minSpace)
 {
     // TODO: discard the not used faces to get space for new faces - better algorithm
 
+#if DEBUG > 0
     qDebug("============Cleaning cache ==================");
+#endif
 
     long lru;
     int fn, ns, _type;
@@ -148,8 +154,10 @@ bool OverlayCache::cleanCache(int minSpace)
     /* request access to cache */
     cacheAccess.lock();
 
+#if DEBUG > 0
     qDebug() << "OverlayCache Margin tiles: " << marginTilesSpace;
     qDebug() << "OverlayCache Available tiles: " << availableTiles;
+#endif
 
     while(availableTiles<marginTilesSpace && cacheControl.size()>nFacesInUse)
     //while(availableTiles<marginTilesSpace && !cacheControl.empty())
@@ -293,7 +301,7 @@ bool OverlayCache::storeFace(int faceNumber, int nside, MapOverlay::OverlayType 
     }
     else
     {
-        qDebug("no space left on cache");
+        qDebug("no space left on overlay cache");
         //return false;
     }
 
@@ -308,7 +316,9 @@ void OverlayCache::discardFace(int faceNumber, int nside, MapOverlay::OverlayTyp
 {
     // TODO: do this in an atomic operation */
 
+#if DEBUG > 0
     qDebug() << "Discarding overlay " << faceNumber << " with nside " << nside;
+#endif
 
     /* free the allocated memory for face */
     MapOverlay* overlay = getFaceFromCache(faceNumber, nside, type);
