@@ -43,6 +43,9 @@ public:
     /* discard old faces on cache */
     bool cleanCache(int minSpace=0);
 
+    void updateTextureThreshold(float min, float max);
+    void changeMapField(HealpixMap::MapType field);
+
 signals:
     void newFaceAvailable(Texture* face);
     void newFaceAvailable(bool cleanCache);
@@ -60,6 +63,8 @@ private:
     Texture* getFaceFromCache(int faceNumber, int nside);
     /* get best face available in cache */
     Texture* getBestFaceFromCache(int faceNumber, int nside);
+
+    void invalidateCache();
 
     int MIN_NSIDE;
     int MAX_NSIDE;
@@ -80,6 +85,8 @@ private:
     //QList<int> supportedNsides;
 
     QMutex cacheAccess;
+
+    float minTex, maxTex;
 };
 
 #endif // TEXTURECACHE_H
