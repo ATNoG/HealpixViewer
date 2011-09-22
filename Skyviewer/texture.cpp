@@ -15,12 +15,8 @@ Texture::~Texture()
 }
 
 
-void Texture::buildTexture(float* data)
+void Texture::buildTexture(float* data, float minv, float maxv)
 {
-
-    //double minv=-0.000145, maxv=0.000145;
-    //double minv=-1.0, maxv=3.0;
-    double minv=0.0, maxv=2.0;
     float v = 0.0;
     long texk = 0;
     QColor color;
@@ -48,24 +44,6 @@ void Texture::buildTexture(float* data)
         texture[texk++] = color.blue();
         //texture[texk++] = 255;
     }
-
-/*
-    for(int i=0; i<nside*nside; i++)
-    {
-        int pos = 3*i;
-        color.setHsv((int)(360*((int)(i/nside))/nside), 255, 255);
-        //color.setHsv((int)(360*(faceNumber)/12), 255, 255);
-        //if(i%nside<10)
-        //    color.setRgb(255, 0, 0);
-        //else
-        //    color.setRgb(0, 0, 255);
-
-        texture[pos++] = color.red();
-        texture[pos++] = color.green();
-        texture[pos++] = color.blue();
-    }
-*/
-
 }
 
 

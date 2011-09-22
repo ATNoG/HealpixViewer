@@ -14,7 +14,7 @@ public:
     ~Texture();
 
     void draw();
-    void buildTexture(float* data);
+    void buildTexture(float* data, float min, float max);
     void unbind();
 
 private:
