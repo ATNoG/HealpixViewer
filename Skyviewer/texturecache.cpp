@@ -379,12 +379,12 @@ int TextureCache::calculateFaceTiles(int nside)
 
 void TextureCache::updateTextureThreshold(float min, float max)
 {
-    //qDebug("Regenerating texture for new threshold");
-
-    if(minTex!=min && maxTex!=max)
+    if(minTex!=min || maxTex!=max)
     {
         minTex = min;
         maxTex = max;
+
+        qDebug("Regenerating texture for new threshold");
 
         invalidateCache();
     }
@@ -449,4 +449,10 @@ void TextureCache::invalidateCache()
             QtConcurrent::run(this, &TextureCache::loadFace, fn, ns);
         }
     }
+}
+
+void TextureCache::getTextureMinMax(float &min, float &max)
+{
+    min = minTex;
+    max = maxTex;
 }

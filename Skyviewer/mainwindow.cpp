@@ -113,7 +113,6 @@ MainWindow::MainWindow(QWidget *parent) :
     //HealpixMap* map3 = new HealpixMap("/home/zeux/Tese/3dviewer/code/Skyviewer-build-desktop/nside32_synfast.fits");
 
 
-
     //loadingDialog->hide();
     //loadingDialog->show();
 

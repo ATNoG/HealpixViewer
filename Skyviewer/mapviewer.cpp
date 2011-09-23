@@ -808,8 +808,12 @@ mapInfo* MapViewer::getMapInfo()
     info->nvalues = nside2npix(64);
     info->currentField = mapType;
     info->availableFields = healpixMap->getAvailableMaps();
-    info->min = 0;
-    info->max = 0;
+
+    float minTex, maxTex;
+    textureCache->getTextureMinMax(minTex, maxTex);
+
+    info->min = minTex;
+    info->max = maxTex;
 
     return info;
 }

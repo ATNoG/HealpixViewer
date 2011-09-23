@@ -42,6 +42,8 @@ private slots:
     void updateMap();
     /* connected to map field combobox */
     void changeMapField(int currentIdx);
+    /* unload viewports */
+    void unloadViewports();
 
 signals:
     void thresholdUpdated(QList<int> viewports, float min, float max);
@@ -64,6 +66,8 @@ private:
     /* called when a single map is selected */
     void setThresholds(float min, float max);
 
+    /* return list of checked viewports in treeview */
+    QList<int> getCheckedViewports();
     /* return list of selected viewports in treeview */
     QList<int> getSelectedViewports();
 

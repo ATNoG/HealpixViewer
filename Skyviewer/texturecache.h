@@ -46,6 +46,8 @@ public:
     void updateTextureThreshold(float min, float max);
     void changeMapField(HealpixMap::MapType field);
 
+    void getTextureMinMax(float &min, float &max);
+
 signals:
     void newFaceAvailable(Texture* face);
     void newFaceAvailable(bool cleanCache);
