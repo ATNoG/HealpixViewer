@@ -294,7 +294,7 @@ void MapViewer::wheelEvent(QWheelEvent *e, bool propagate)
     //qDebug("==================================");
     bool zoomChanged;
 
-    if(e->delta()<0)
+    if(e->delta()>0)
         zoomChanged = zoomIn();
     else
         zoomChanged = zoomOut();
