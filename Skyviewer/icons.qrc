@@ -10,5 +10,6 @@
         <file>images/icons/deselectall.gif</file>
         <file>images/icons/polvectors.gif</file>
         <file>images/icons/grid.gif</file>
+        <file>images/icons/trash.gif</file>
     </qresource>
 </RCC>
