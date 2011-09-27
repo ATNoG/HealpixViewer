@@ -30,7 +30,16 @@ SOURCES += main.cpp\
     facevertices.cpp \
     facecache.cpp \
     texture.cpp \
-    cache.cpp
+    texturecache.cpp \
+    maploader.cpp \
+    mapoverlay.cpp \
+    polarizationvectors.cpp \
+    overlaycache.cpp \
+    histogramviewer.cpp \
+    histogramwidget.cpp \
+    histogram.cpp \
+    grid.cpp \
+    viewportmanager.cpp
 
 HEADERS  += mainwindow.h \
     mapviewport.h \
@@ -49,13 +58,27 @@ HEADERS  += mainwindow.h \
     facecache.h \
     blockingqueue.h \
     texture.h \
-    cache.h
+    texturecache.h \
+    maploader.h \
+    mapoverlay.h \
+    polarizationvectors.h \
+    overlaycache.h \
+    histogramviewer.h \
+    histogramwidget.h \
+    histogram.h \
+    grid.h \
+    viewportmanager.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    histogramwidget.ui \
+    viewportmanager.ui
 
 RESOURCES += \
     icons.qrc
 
-CONFIG += DEBUG
-QMAKE_CXXFLAGS_DEBUG += -pg
-QMAKE_LFLAGS_DEBUG += -pg -v -da -Q
+# CONFIG += DEBUG
+
+DEFINES += STATIC
+CONFIG += static
+#QMAKE_CXXFLAGS_DEBUG += -pg
+#QMAKE_LFLAGS_DEBUG += -pg -v -da -Q
