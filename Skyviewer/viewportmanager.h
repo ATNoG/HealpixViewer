@@ -32,6 +32,7 @@ public slots:
     /* called when threshold updated in histogramWidget */
     void updateThresholds(float min, float max);
     //void updateColorTable()
+    void viewportSelectionChanged(int viewportId, bool selected);
 
 private slots:
     /* connected to map field combobox */

@@ -18,6 +18,8 @@ ViewportManager::ViewportManager(QWidget *parent) :
     QStringList headers;
     headers << "" << "" << "Viewport";
     ui->treeViewports->setHeaderLabels(headers);
+    ui->treeViewports->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    ui->treeViewports->setSelectionBehavior(QAbstractItemView::SelectRows);
 
     /* connect signals */
     connect(ui->treeViewports, SIGNAL(itemSelectionChanged(void)), this, SLOT(selectionChanged(void)));
@@ -141,6 +143,19 @@ void ViewportManager::updateThresholds(float min, float max)
 }
 
 
+void ViewportManager::viewportSelectionChanged(int viewportId, bool selected)
+{
+    /* viewport selection changed in workspace, so change the selection in treewidget */
+    QList<QTreeWidgetItem *> items = ui->treeViewports->findItems(QString("HealpixMap %1").arg(viewportId), Qt::MatchExactly, 2);
+    if(items.size()>0)
+    {
+        ui->treeViewports->blockSignals(true);
+        items[0]->setSelected(selected);
+        ui->treeViewports->blockSignals(false);
+    }
+}
+
+
 
 /* PRIVATE SLOTS */
 
@@ -221,6 +236,7 @@ void ViewportManager::openFiles(QStringList filenames)
                 /* connect signal to update values after mapfield changed */
                 connect(viewport, SIGNAL(mapFieldInfoChanged(int,mapInfo*)), this, SLOT(updateMapInfo(int,mapInfo*)));
                 connect(viewport, SIGNAL(closed(int)), this, SLOT(closeViewport(int)));
+                connect(viewport, SIGNAL(selectionChanged(int,bool)), this, SLOT(viewportSelectionChanged(int,bool)));
 
                 addViewportToList(viewportIdx, title, info);
 

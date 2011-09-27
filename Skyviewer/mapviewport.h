@@ -48,9 +48,10 @@ signals:
     void maximized(int viewportId);
     void restored();
     void closed(int viewportId);
+    void selectionChanged(int viewportId, bool selected);
 
 public slots:
-    void selectionChanged(bool selected);
+    void updateSelection(bool selected);
     void synchronizeView(QEvent* event, int type, MapViewer* source);
     void viewportUpdated(mapInfo *info);
 

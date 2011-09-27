@@ -16,7 +16,7 @@ MapViewport::MapViewport(QWidget *parent, QString title, int viewportId) :
     configureUI();
 
     /* connect events */
-    connect(checkbox, SIGNAL(toggled(bool)), this, SLOT(selectionChanged(bool)));
+    connect(checkbox, SIGNAL(toggled(bool)), this, SLOT(updateSelection(bool)));
     connect(mapviewer, SIGNAL(mapFieldChanged(mapInfo*)), this, SLOT(viewportUpdated(mapInfo*)));
 
     signalMapper = new QSignalMapper(this);
@@ -151,6 +151,8 @@ void MapViewport::selectViewport(bool changeCheckbox)
         /* change titlebar color */
         // TODO: dont rewrite all properties again
         titlewidget->setStyleSheet(QString("#TitleWidget {background-color: %1; border-top-right-radius: 9px; border-top-left-radius: 9px; }").arg(COLOR_SELECTED));
+
+        emit(selectionChanged(viewportId, true));
     }
 }
 
@@ -165,6 +167,8 @@ void MapViewport::deselectViewport(bool changeCheckbox)
     /* change titlebar color */
     // TODO: dont rewrite all properties again
     titlewidget->setStyleSheet(QString("#TitleWidget {background-color: %1; border-top-right-radius: 9px; border-top-left-radius: 9px; }").arg(COLOR_INACTIVE));
+
+    emit(selectionChanged(viewportId, false));
 }
 
 void MapViewport::changeToMollview()
@@ -225,7 +229,7 @@ void MapViewport::closeMap()
 
 
 /* Slots */
-void MapViewport::selectionChanged(bool selected)
+void MapViewport::updateSelection(bool selected)
 {
     if(selected)
         selectViewport(false);
