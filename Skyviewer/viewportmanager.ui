@@ -116,7 +116,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normalon>:/images/icons/trash.gif</normalon>
+         <normalon>:/trash.gif</normalon>
         </iconset>
        </property>
       </widget>
