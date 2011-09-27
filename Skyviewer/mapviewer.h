@@ -113,6 +113,7 @@ private:
     int zoomToNside(int zoomLevel);
     bool faceIsInside(float ax, float ay, float bx, float by, float width, float height);
     void preloadFaces();
+    void checkNside();
 
     void mousePressEvent(QMouseEvent* e, bool propagate);
     void mouseReleaseEvent(QMouseEvent* e, bool propagate);

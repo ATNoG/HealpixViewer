@@ -36,10 +36,7 @@ void MapViewer::draw()
         // Draw an axis using the QGLViewer static function
         //drawAxis(2.0);
 
-        // TODO: select what to draw
         tesselation->draw();
-        //glColor3f(1.0, 0, 0);
-        //polVectors->draw();
 
         // Restore the original (world) coordinate system
         glPopMatrix();
@@ -54,11 +51,6 @@ bool MapViewer::loadMap(QString fitsfile)
 
     if(!initialized)
     {
-        /*
-        progressDialog->setValue(10);
-        progressDialog->show();
-        */
-
         /* open fits file */
         healpixMap = new HealpixMap(fitsfile, MIN_NSIDE);
 
@@ -101,11 +93,6 @@ bool MapViewer::loadMap(QString fitsfile)
         preloadFaces();
 
         initialized = true;
-
-        //loadingDialog->hide();
-
-        //progressDialog->setValue(18);
-        //progressDialog->hide();
 
         return true;
     }
@@ -314,7 +301,13 @@ void MapViewer::wheelEvent(QWheelEvent *e, bool propagate)
 void MapViewer::resizeGL(int width, int height)
 {
     QGLViewer::resizeGL(width, height);
-    checkVisibility();
+
+    if(initialized)
+    {
+        checkVisibility();
+        qDebug() << "ResizeGL: " << width << "," << height;
+        checkNside();
+    }
 }
 
 
@@ -493,7 +486,7 @@ bool MapViewer::zoomIn()
         camera()->setPosition(Vec(cameraPosition, 0.0, 0.0));
 
         currentZoomLevel++;
-        int nextNside = zoomToNside(currentZoomLevel);
+        //int nextNside = zoomToNside(currentZoomLevel);
         //qDebug() << "current zoom level = " << currentZoomLevel;
         //qDebug() << "current nside = " << currentNside;
         //qDebug() << "next nside = " << nextNside;
@@ -501,12 +494,18 @@ bool MapViewer::zoomIn()
         /* check visibilty (after apply the zoom, some face can be no longer visible */
         checkVisibility();
 
+        checkNside();
+
         /* check if need to update nside */
+
+        /*
         if(nextNside!=currentNside && nextNside<=maxNside)
         {
             currentNside = nextNside;
             tesselation->updateNside(currentNside);
         }
+        */
+
 
         /* refresh the view */
         updateGL();
@@ -529,7 +528,7 @@ bool MapViewer::zoomOut()
         camera()->setPosition(Vec(cameraPosition, 0.0, 0.0));
 
         currentZoomLevel--;
-        int nextNside = zoomToNside(currentZoomLevel);
+        //int nextNside = zoomToNside(currentZoomLevel);
         //qDebug() << "current zoom level = " << currentZoomLevel;
         //qDebug() << "current nside = " << currentNside;
         //qDebug() << "next nside = " << nextNside;
@@ -537,11 +536,16 @@ bool MapViewer::zoomOut()
         /* check visibilty (after apply the zoom, some face can be no longer visible */
         checkVisibility();
 
+        checkNside();
+
+        /*
         if(nextNside!=currentNside)
         {
             currentNside = nextNside;
             tesselation->updateNside(currentNside);
         }
+        */
+
 
         /* refresh the view */
         updateGL();
@@ -558,18 +562,30 @@ bool MapViewer::zoomOut()
 /* calculate the nside based on zoom level */
 int MapViewer::zoomToNside(int zoomLevel)
 {
+    long pixelsDisplayed = width()*height();
+    long pixelsToDisplay;
+
+    for(int auxNside=MIN_NSIDE; auxNside<maxNside; auxNside*=2)
+    {
+        pixelsToDisplay = visibleFaces.size() * nside2npix(auxNside)/12;
+        if(pixelsToDisplay>pixelsDisplayed)
+            return auxNside;
+    }
+
+    return maxNside;
+
     /* calculate the needed zoom (when changing zoomLevel, baseZoomLevel may not change */
-    int baseZoomLevel = floor(zoomLevel / ZOOM_LEVEL); // /2
+    //int baseZoomLevel = floor(zoomLevel / ZOOM_LEVEL); // /2
 
     //qDebug() << "  zoomToNside: basezoomlevel=" << baseZoomLevel;
 
     // TODO: calculate exp based on MIN_NSIDE
-    int nside = pow(2, EXP_NSIDE+baseZoomLevel);
+    //int nside = pow(2, EXP_NSIDE+baseZoomLevel);
 
-    if(nside<64)
-        nside = 64;
+    //if(nside<64)
+        //nside = 64;
 
-    return nside;
+    //return nside;
 }
 
 
@@ -833,4 +849,30 @@ void MapViewer::showGrid(bool show)
     tesselation->showGrid(show);
     /* force draw */
     updateGL();
+}
+
+
+void MapViewer::checkNside()
+{
+    long pixelsToDisplay;
+    long pixelsDisplayed = width()*height();
+
+    int nextNside = maxNside;
+    for(int auxNside=MIN_NSIDE; auxNside<=8096; auxNside*=2)
+    {
+        pixelsToDisplay = visibleFaces.size()*nside2npix(auxNside)/12;//-currentZoomLevel*;
+        if(pixelsToDisplay > pixelsDisplayed)
+        {
+            nextNside = max(MIN_NSIDE, auxNside);
+            break;
+        }
+    }
+
+    qDebug() << "Changing to nside " << nextNside;
+
+    if(nextNside!=currentNside && nextNside<=maxNside)
+    {
+        currentNside = nextNside;
+        tesselation->updateNside(currentNside);
+    }
 }
