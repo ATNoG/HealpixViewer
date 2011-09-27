@@ -38,6 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionPolarizationVectors, SIGNAL(triggered(bool)), workspace, SLOT(showPolarizationVectors(bool)));
     connect(ui->actionColors, SIGNAL(triggered(bool)), this, SLOT(showHistogram(bool)));
     connect(ui->actionShowGrid, SIGNAL(triggered(bool)), workspace, SLOT(showGrid(bool)));
+    connect(ui->actionExit, SIGNAL(triggered()), this, SLOT(close()));
 
 
     ui->actionColors->setChecked(true);
