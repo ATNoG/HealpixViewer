@@ -4,9 +4,9 @@
 #include <QMainWindow>
 #include <QFileDialog>
 #include "workspace.h"
+#include "viewportmanager.h"
+#include "histogramwidget.h"
 
-// TODO: default number of viewports
-#define DEFAULT_VIEWPORTS 1
 #define SIDEPANE_WIDTH 300
 
 #define DEBUG 1
@@ -22,9 +22,6 @@ class MainWindow : public QMainWindow
 public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
-
-public slots:
-    void openFiles();
 
 private slots:
     void showHistogram(bool show=true);

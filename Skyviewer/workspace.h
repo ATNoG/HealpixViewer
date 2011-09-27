@@ -2,31 +2,31 @@
 #define WORKSPACE_H
 
 #include <QWidget>
-#include <QGridLayout>
 #include <QDebug>
-#include <QList>
-#include <QString>
-#include <QStringList>
+#include <QMap>
 #include "mapviewport.h"
 
-#define MAX_VIEWPORTS 9
+#define MAX_WORKSPACE_VIEWPORTS 16
+
+
+struct viewportPosition
+{
+    int row;
+    int col;
+    int cspan;
+};
 
 
 class WorkSpace : public QWidget
 {
     Q_OBJECT
 public:
-    explicit WorkSpace(int numberViewports=1, QWidget *parent = 0);
-    void openFiles(QStringList filenames);
+    explicit WorkSpace(QWidget *parent = 0);
 
 signals:
     void syncNeeded(QEvent* e, int type, MapViewer* source);
-    void mapOpened(int viewportId, QString title, mapInfo *info);
-    void mapClosed(int viewportId);
-    void mapFieldChanged(int viewportId, float* values, int nValues);
 
 public slots:
-    void configureWorkspace(int numberViewports);
     void changeToMollview();
     void changeTo3D();
     void changeSynchronization(bool on);
@@ -37,19 +37,29 @@ public slots:
 
     void showPolarizationVectors(bool show);
     void showGrid(bool show);
-    void updateMapField(int viewportId, HealpixMap::MapType field);
-    void updateThreshold(QList<int> viewports, float min, float max);
-// TODO: updateColorTable
+
+    void addViewport(int viewportId, MapViewport *viewport);
+    void removeViewport(int viewportId);
+
+    void maximize(int viewportId);
+    void restore();
+
 
 private:
     int numberViewports;
-    int usedViewports;
-    QGridLayout *gridlayout;
-    QList<MapViewport*> viewports;
-
-    void drawViewports(int oldnviewports, int newnviewports);
-
+    QGridLayout *layout;
+    QMap<int, MapViewport*> viewports;
+    QMap<int, viewportPosition*> viewportPositions;
     bool synchronize;
+
+    //void addWidgetToLayout(QWidget* widget);
+    //void removeWidgetFromLayout(QWidget* widget);
+
+    void reorganizeLayout();
+
+    void calculateViewportPositions(int totalViewports);
+
+    int mmc(int a, int b);
 };
 
 #endif // WORKSPACE_H

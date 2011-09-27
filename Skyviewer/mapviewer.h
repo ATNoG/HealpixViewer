@@ -74,7 +74,7 @@ public:
 
 signals:
     void cameraChanged(QEvent* e, int type, MapViewer* viewer);
-    void mapFieldChanged(float* values, int nValues);
+    void mapFieldChanged(mapInfo *info);
 
 protected:
     virtual void init(void);
@@ -84,6 +84,7 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent* e);
     virtual void wheelEvent(QWheelEvent* e);
     virtual void postSelection(const QPoint &point);
+    virtual void resizeGL(int width, int height);
 
 
 public slots:

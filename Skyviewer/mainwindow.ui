@@ -21,7 +21,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="icons.qrc">
-    <normaloff>:/images/icons/3dview.gif</normaloff>:/images/icons/3dview.gif</iconset>
+    <normaloff>:/3dview.gif</normaloff>:/3dview.gif</iconset>
   </property>
   <widget class="QWidget" name="centralWidget">
    <property name="sizePolicy">
@@ -110,6 +110,16 @@
            <layout class="QVBoxLayout" name="verticalLayout_4"/>
           </widget>
          </item>
+         <item>
+          <widget class="ViewportManager" name="viewportManager" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
        <widget class="QWidget" name="valuesTab">
@@ -191,11 +201,9 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionOpen"/>
-   <addaction name="actionSave"/>
    <addaction name="actionReset"/>
    <addaction name="action3Dview"/>
    <addaction name="actionMollview"/>
-   <addaction name="actionViewports"/>
    <addaction name="actionSynchronize"/>
    <addaction name="actionColors"/>
    <addaction name="actionExtract"/>
@@ -228,14 +236,6 @@
     <string>&amp;Open Map</string>
    </property>
   </action>
-  <action name="actionSave">
-   <property name="text">
-    <string>Save</string>
-   </property>
-   <property name="toolTip">
-    <string>&amp;Save</string>
-   </property>
-  </action>
   <action name="actionReset">
    <property name="text">
     <string>Reset</string>
@@ -247,7 +247,7 @@
   <action name="action3Dview">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/images/icons/3dview.gif</normaloff>:/images/icons/3dview.gif</iconset>
+     <normaloff>:/3dview.gif</normaloff>:/3dview.gif</iconset>
    </property>
    <property name="text">
     <string>3D view</string>
@@ -259,7 +259,7 @@
   <action name="actionMollview">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/images/icons/mollview.gif</normaloff>:/images/icons/mollview.gif</iconset>
+     <normaloff>:/mollview.gif</normaloff>:/mollview.gif</iconset>
    </property>
    <property name="text">
     <string>Mollview</string>
@@ -268,25 +268,13 @@
     <string>&amp;Switch to Mollview</string>
    </property>
   </action>
-  <action name="actionViewports">
-   <property name="icon">
-    <iconset resource="icons.qrc">
-     <normaloff>:/images/icons/viewports.gif</normaloff>:/images/icons/viewports.gif</iconset>
-   </property>
-   <property name="text">
-    <string>Viewports</string>
-   </property>
-   <property name="toolTip">
-    <string>&amp;Choose Viewports</string>
-   </property>
-  </action>
   <action name="actionSynchronize">
    <property name="checkable">
     <bool>true</bool>
    </property>
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/images/icons/sync.gif</normaloff>:/images/icons/sync.gif</iconset>
+     <normaloff>:/sync.gif</normaloff>:/sync.gif</iconset>
    </property>
    <property name="text">
     <string>Synchronize views</string>
@@ -301,7 +289,7 @@
    </property>
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/images/icons/colormap.gif</normaloff>:/images/icons/colormap.gif</iconset>
+     <normaloff>:/colormap.gif</normaloff>:/colormap.gif</iconset>
    </property>
    <property name="text">
     <string>Colors</string>
@@ -313,7 +301,7 @@
   <action name="actionExtract">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/images/icons/extract.gif</normaloff>:/images/icons/extract.gif</iconset>
+     <normaloff>:/extract.gif</normaloff>:/extract.gif</iconset>
    </property>
    <property name="text">
     <string>Extract</string>
@@ -325,7 +313,7 @@
   <action name="actionSelectAll">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/images/icons/selectall.gif</normaloff>:/images/icons/selectall.gif</iconset>
+     <normaloff>:/select-all.gif</normaloff>:/select-all.gif</iconset>
    </property>
    <property name="text">
     <string>Select All</string>
@@ -337,7 +325,7 @@
   <action name="actionDeselectAll">
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/images/icons/deselectall.gif</normaloff>:/images/icons/deselectall.gif</iconset>
+     <normaloff>:/deselect-all.gif</normaloff>:/deselect-all.gif</iconset>
    </property>
    <property name="text">
     <string>Deselect All</string>
@@ -352,7 +340,7 @@
    </property>
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/images/icons/polvectors.gif</normaloff>:/images/icons/polvectors.gif</iconset>
+     <normaloff>:/pol-vectors.gif</normaloff>:/pol-vectors.gif</iconset>
    </property>
    <property name="text">
     <string>Polarization Vectors</string>
@@ -367,7 +355,7 @@
    </property>
    <property name="icon">
     <iconset resource="icons.qrc">
-     <normaloff>:/images/icons/grid.gif</normaloff>:/images/icons/grid.gif</iconset>
+     <normaloff>:/grid.gif</normaloff>:/grid.gif</iconset>
    </property>
    <property name="text">
     <string>Grid</string>
@@ -383,6 +371,12 @@
    <class>HistogramWidget</class>
    <extends>QWidget</extends>
    <header>histogramwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ViewportManager</class>
+   <extends>QWidget</extends>
+   <header>viewportmanager.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

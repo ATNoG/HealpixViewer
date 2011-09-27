@@ -24,7 +24,8 @@ class MapViewport : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MapViewport(QWidget *parent, QString title, WorkSpace* _workspace, int viewportId);
+    explicit MapViewport(QWidget *parent, QString title, int viewportId);
+    ~MapViewport();
 
     bool isSelected();
     void changeToMollview();
@@ -33,24 +34,37 @@ public:
     void closeMap();
     void selectViewport(bool changeCheckbox);
     void deselectViewport(bool changeCheckbox);
-    void resetViewport();
-    bool inUse();
-    void showHistogram();
-    void showPolarizationVectors(bool show);
-    void showGrid(bool show);
+
     void updateThreshold(float min, float max);
-    void changeMapField(HealpixMap::MapType field);
+    void setWorkspace(WorkSpace *workspace);
 
     mapInfo* getMapInfo();
 
+    void disconnectFromWorkspace();
+
 
 signals:
-    void mapFieldChanged(int viewportId, float* values, int nValues);
+    void mapFieldInfoChanged(int viewportId, mapInfo *info);
+    void maximized(int viewportId);
+    void restored();
+    void closed(int viewportId);
 
 public slots:
     void selectionChanged(bool selected);
     void synchronizeView(QEvent* event, int type, MapViewer* source);
-    void viewportUpdated(float* values, int nValues);
+    void viewportUpdated(mapInfo *info);
+
+    void showGrid(bool show);
+    void showPolarizationVectors(bool show);
+    void resetViewport();
+    void changeMapField(HealpixMap::MapType field);
+    void changeMapField(int);
+    void enableSynchronization(bool on);
+
+private slots:
+    void maximize();
+    void restore();
+    void close();
 
 private:
     QString title;
@@ -61,6 +75,13 @@ private:
     QCheckBox* checkbox;
     MapViewer* mapviewer;
     WorkSpace* workspace;
+    QMenu* fieldMenu;
+    QMap<HealpixMap::MapType, QAction*> mapFieldsActions;
+    QSignalMapper* signalMapper;
+    QAction *actionMaximize, *actionRestore, *actionSync;
+
+    void fillMapField();
+    void updateMapField(HealpixMap::MapType field);
 
     bool loaded;
     bool selected;

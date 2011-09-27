@@ -49,6 +49,7 @@ void MapViewer::draw()
 
 bool MapViewer::loadMap(QString fitsfile)
 {
+    currentNside = MIN_NSIDE;
     qDebug() << "Loading on mapviewer: " << fitsfile;
 
     if(!initialized)
@@ -307,6 +308,13 @@ void MapViewer::wheelEvent(QWheelEvent *e, bool propagate)
             emit(cameraChanged(e, MOUSEWHEEL, this));
         //updateGL();
     }
+}
+
+
+void MapViewer::resizeGL(int width, int height)
+{
+    QGLViewer::resizeGL(width, height);
+    checkVisibility();
 }
 
 
@@ -797,15 +805,16 @@ void MapViewer::changeMapField(HealpixMap::MapType field)
     mapviewport->viewportUpdated(healpixMap->getFullMap(MIN_NSIDE), nside2npix(MIN_NSIDE));
     */
 
-    emit(mapFieldChanged(healpixMap->getFullMap(MIN_NSIDE), nside2npix(MIN_NSIDE)));
+    mapInfo *info = getMapInfo();
+    emit(mapFieldChanged(info));
 }
 
 
 mapInfo* MapViewer::getMapInfo()
 {
     mapInfo *info = new mapInfo;
-    info->values = healpixMap->getFullMap(64);
-    info->nvalues = nside2npix(64);
+    info->values = healpixMap->getFullMap(MIN_NSIDE);
+    info->nvalues = nside2npix(MIN_NSIDE);
     info->currentField = mapType;
     info->availableFields = healpixMap->getAvailableMaps();
 
