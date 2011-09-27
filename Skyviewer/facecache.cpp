@@ -13,6 +13,8 @@ FaceCache::FaceCache(int minNside, int maxNside, int maxTiles)
     marginTilesSpace = CACHE_MARGIN;
 
     //supportedNsides << 64 << 128 << 256 << 512 << 1024 << 2048;
+
+    generateBaseFaces();
 }
 
 
@@ -21,6 +23,7 @@ FaceCache::FaceCache(int minNside, int maxNside, int maxTiles)
 /* get the face with faceNumber and for the given nside */
 Face* FaceCache::getFace(int faceNumber, int nside)
 {
+    //qDebug() << "Getting face " << faceNumber << "(" << nside << ") from faceCache";
     Face* face;
 
     bool locked = true;
@@ -57,7 +60,7 @@ Face* FaceCache::getFace(int faceNumber, int nside)
             /* face already requested ? */
             if(!requestedFaces.contains(faceId))
             {
-                //REMOVE qDebug() << "Face " << faceNumber << " (" << nside << ") -> Miss";
+                //qDebug() << "Face " << faceNumber << " (" << nside << ") -> Miss";
 
                 requestedFaces.insert(faceId);
 
@@ -94,7 +97,7 @@ Face* FaceCache::getFace(int faceNumber, int nside)
 /* calculate the new face */
 Face* FaceCache::loadFace(int faceNumber, int nside)
 {
-    //REMOVE qDebug()<< "Face " << faceNumber << "(" << nside << ") - Loading";
+    //qDebug()<< "Face " << faceNumber << "(" << nside << ") - Loading";
 
     Face* face = new Face(faceNumber);
 
@@ -174,7 +177,8 @@ bool FaceCache::cleanCache(int minSpace)
 
 void FaceCache::preloadFace(int faceNumber, int nside)
 {
-    //REMOVE qDebug() << "Preload face " << faceNumber << "(" << nside << ")";
+    return;
+    qDebug() << "Preload face " << faceNumber << "(" << nside << ")";
 
     /* request access to cache */
     cacheAccess.lock();
@@ -254,12 +258,12 @@ bool FaceCache::storeFace(int faceNumber, int nside, Face* face)
     //qDebug() << "face stored " << faceNumber << " (" << nside << ")";
 
 
-    QMutexLocker locker(&cacheAccess);
-
     if(availableTiles>=neededTiles)
     {
         /* insert face on cache */
         FaceCacheEntry* faceEntry;
+
+        cacheAccess.lock();
 
         if(faceCache.contains(nside))
             faceEntry = faceCache[nside];
@@ -271,6 +275,8 @@ bool FaceCache::storeFace(int faceNumber, int nside, Face* face)
 
         /* change number of tiles available */
         availableTiles -= neededTiles;
+
+        cacheAccess.unlock();
 
         /* insert new face in queue */
         /*
@@ -285,6 +291,7 @@ bool FaceCache::storeFace(int faceNumber, int nside, Face* face)
         qDebug("no space left on face cache");
         //return false;
     }
+
 
     if(availableTiles<marginTilesSpace)
         return true;
@@ -385,4 +392,11 @@ void FaceCache::printCache()
         cout << endl;
     }
     qDebug("==========================================");
+}
+
+
+void FaceCache::generateBaseFaces()
+{
+    for(int i=0; i<12; i++)
+        loadFace(i, MIN_NSIDE);
 }

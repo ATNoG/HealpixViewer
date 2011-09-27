@@ -66,6 +66,8 @@ private:
     /* get best face available in cache */
     Face* getBestFaceFromCache(int faceNumber, int nside);
 
+    void generateBaseFaces();
+
     int MIN_NSIDE;
     int MAX_NSIDE;
 

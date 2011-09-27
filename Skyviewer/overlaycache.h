@@ -73,6 +73,8 @@ private:
 
     void printCache();
 
+    void generateBaseOverlays();
+
     OverlayCacheTable overlayCache;         /* structure to store cache overlays */
     int maxTiles;                           /* max vertices to store in cache */
     int availableTiles;                     /* free space in cache */

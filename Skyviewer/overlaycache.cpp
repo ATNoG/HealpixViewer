@@ -13,6 +13,8 @@ OverlayCache::OverlayCache(HealpixMap* map, int minNside, int maxNside, int maxT
 
     /* open healpix map */
     healpixMap = map;
+
+    generateBaseOverlays();
 }
 
 
@@ -49,7 +51,6 @@ MapOverlay* OverlayCache::getFace(int faceNumber, int nside, MapOverlay::Overlay
     {
         /* initial nside, so wait for overlay to load */
         if(nside==MIN_NSIDE)
-        //if(true)
         {
             /* release accesss to cache */
             cacheAccess.unlock();
@@ -63,7 +64,7 @@ MapOverlay* OverlayCache::getFace(int faceNumber, int nside, MapOverlay::Overlay
             /* face already requested ? */
             if(!requestedFaces.contains(faceId))
             {
-                //REMOVE qDebug() << "Overlay " << faceNumber << " (" << nside << ") -> Miss";
+                qDebug() << "Overlay " << faceNumber << " (" << nside << ") -> Miss";
 
                 requestedFaces.insert(faceId);
 
@@ -398,4 +399,10 @@ int OverlayCache::getCacheIndex(MapOverlay::OverlayType type, int nside)
 long OverlayCache::calculateFaceId(int faceNumber, int nside, MapOverlay::OverlayType type)
 {
     return (faceNumber+1)*1000000 + nside*100 + type;
+}
+
+void OverlayCache::generateBaseOverlays()
+{
+    for(int i=0; i<12; i++)
+        loadFace(i, MIN_NSIDE, MapOverlay::POLARIZATION_VECTORS);
 }

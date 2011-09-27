@@ -15,6 +15,8 @@ TextureCache::TextureCache(HealpixMap* map, int minNside, int maxNside, int maxT
     healpixMap = map;
 
     healpixMap->getMinMax(minTex, maxTex);
+
+    generateBaseTextures();
 }
 
 
@@ -455,4 +457,10 @@ void TextureCache::getTextureMinMax(float &min, float &max)
 {
     min = minTex;
     max = maxTex;
+}
+
+void TextureCache::generateBaseTextures()
+{
+    for(int i=0; i<12; i++)
+        loadFace(i, MIN_NSIDE);
 }

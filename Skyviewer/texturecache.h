@@ -66,6 +66,7 @@ private:
     /* get best face available in cache */
     Texture* getBestFaceFromCache(int faceNumber, int nside);
 
+    void generateBaseTextures();
     void invalidateCache();
 
     int MIN_NSIDE;
