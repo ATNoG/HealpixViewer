@@ -9,6 +9,7 @@ class Grid
 {
 public:
     Grid(int lines);
+    ~Grid();
 
     void setNumberLines(int lines);
     void draw();

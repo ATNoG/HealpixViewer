@@ -4,8 +4,7 @@
 #include <QWidget>
 #include <QSignalMapper>
 #include "mapviewport.h"
-
-#define MAXVIEWPORTS 20
+#include "configs.h"
 
 namespace Ui {
     class ViewportManager;

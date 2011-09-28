@@ -1,9 +1,6 @@
 #ifndef TESSELATION_H
 #define TESSELATION_H
 
-#define DISPLAY_TEXTURE true
-#define GRID_LINES 6
-
 #include <QVector>
 #include <QFuture>
 #include <QtConcurrentRun>
@@ -18,6 +15,7 @@
 #include "polarizationvectors.h"
 #include "healpixmap.h"
 #include "grid.h"
+#include "configs.h"
 
 class Tesselation
 {
@@ -30,6 +28,7 @@ struct faceInfo
 
 public:
     Tesselation(int nside, bool mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache);
+    ~Tesselation();
     void draw();
     void drawAllFaces();
 

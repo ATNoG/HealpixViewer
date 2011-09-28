@@ -5,6 +5,11 @@ Grid::Grid(int lines)
     this->lines = lines;
 }
 
+Grid::~Grid()
+{
+    qDebug() << "Calling Grid destructor";
+}
+
 void Grid::setNumberLines(int lines)
 {
     this->lines = lines;

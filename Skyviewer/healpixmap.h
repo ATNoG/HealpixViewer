@@ -17,8 +17,7 @@
 #include <healpixutil.h>
 #include <QGLViewer/vec.h>
 #include <math.h>
-
-#define CACHE_DIR "cache"
+#include "configs.h"
 
 using namespace std;
 using namespace qglviewer;
@@ -32,7 +31,8 @@ class HealpixMap
 {
 public:
     /* load a fits file into a skymap */
-    HealpixMap(QString path, int MIN_NSIDE);
+    HealpixMap(QString path, int minNside);
+    ~HealpixMap();
 
     enum Ordering {NESTED, RING};
     enum Coordsys {CELESTIAL, ECLIPTIC, GALACTIC};
@@ -106,7 +106,7 @@ private:
 
     float min, max;
 
-    int MIN_NSIDE;
+    int minNSide;
 
     QString getMapType(MapType type);
 

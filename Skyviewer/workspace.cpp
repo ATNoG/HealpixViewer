@@ -22,6 +22,16 @@ WorkSpace::WorkSpace(QWidget *parent) :
 }
 
 
+WorkSpace::~WorkSpace()
+{
+    qDebug() << "Calling Workspace destructor";
+
+    /* remove all parents from mapviewports to dont get deleted in this step */
+    for(int i=0; i<viewports.size(); i++)
+        viewports[i]->setParent(0);
+}
+
+
 /* Slots */
 
 /* add viewport to workspace */

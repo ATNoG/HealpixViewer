@@ -27,7 +27,7 @@ char  DEFFORM[]   = "1024E";
 HealpixMap::HealpixMap(QString _path, int minNside)
 {
     path = _path;
-    MIN_NSIDE = minNside;
+    this->minNSide = minNside;
 
     /* get name of file */
     QFileInfo pathInfo(path);
@@ -66,9 +66,16 @@ HealpixMap::HealpixMap(QString _path, int minNside)
 
     loadingDialog->setValue(loadingDialog->maximum());
 
+    delete loadingDialog;
+
     changeCurrentMap(I);
 }
 
+
+HealpixMap::~HealpixMap()
+{
+    qDebug() << "Calling HealpixMap destructor";
+}
 
 void HealpixMap::processFile(QString path, bool generateMaps)
 {
@@ -227,8 +234,12 @@ void HealpixMap::processFile(QString path, bool generateMaps)
             FieldMap *fieldMap = new FieldMap(values, maxNside, isOrderNested());
 
             // TODO: define minNside in some place...
-            fieldMap->generateDowngrades(cachePath, prefix, MIN_NSIDE);
+            //if(maptype!=NObs)
+                fieldMap->generateDowngrades(cachePath, prefix, minNSide);
+            //else
+                //fieldMap->generateDowngrades(cachePath, prefix, 8);
 
+            delete fieldMap;
             //qDebug() << "Map saved";
         }
 
@@ -236,7 +247,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
         if(hasPolarization())
         {
             /* create polarization map for each nside */
-            for(int nside=maxNside; nside>=MIN_NSIDE; nside=nside/2)
+            for(int nside=maxNside; nside>=8; nside=nside/2)
             {
                 //qDebug() << "Generating polarization for " << nside;
 
@@ -295,6 +306,9 @@ void HealpixMap::processFile(QString path, bool generateMaps)
                 file.write((const char*)polarizationAng, totalPixels*sizeof(float));
                 file.write((const char*)polarizationMag, totalPixels*sizeof(float));
                 file.close();
+
+                delete polarizationAng;
+                delete polarizationMag;
             }
         }
     }
@@ -586,8 +600,12 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, long &total
             npixels--;
     }
 
+    int spacing = 4;
+
     /* allocate space (each vector will have 2 endpoints, of 3 coordinates each */
-    float* polVectors = new float[npixels*3*2];
+    float* polVectors = new float[npixels*3*2/spacing];
+
+    //qDebug() << "Polarization vector for face " << faceNumber << "(" << nside << ") allocated at " << polVectors;
 
     // TODO: what is this pixsize ?
     double pixsize = (sqrt(M_PI/3.) / nside) / 2.;
@@ -598,7 +616,7 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, long &total
     /* get max polarization magnitude */
 
 
-    for(long i=0; i<npixels; i++)
+    for(long i=0; i<npixels; i+=spacing)
     {
         if(nobs[i]>0)
         {
@@ -610,11 +628,15 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, long &total
                 polVectors[pointer] = vector[j];
                 pointer++;
             }
-            delete vector;
+            delete[] vector;
         }
     }
 
-    totalVectors = npixels;
+    delete[] nobs;
+    delete[] polAngles;
+    delete[] polMagnitudes;
+
+    totalVectors = npixels/spacing;
 
     return polVectors;
 }
@@ -694,6 +716,8 @@ float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, i
         length = nside2npix(nside);
 
     float *values = new float[length];
+
+    //qDebug() << "Reading file " << path;
 
     /* read content */
     QFile f(path);
@@ -865,10 +889,11 @@ void HealpixMap::changeCurrentMap(MapType type)
     currentMapType = type;
 
     /* regenerate min and max values */
-    float* values = getFullMap(MIN_NSIDE);
-    Histogram *histo = new Histogram(values, nside2npix(MIN_NSIDE));
+    float* values = getFullMap(minNSide);
+    Histogram *histo = new Histogram(values, nside2npix(minNSide));
     histo->getMinMax(min, max);
 
+    delete[] values;
     delete histo;
 }
 

@@ -11,6 +11,8 @@ MapViewport::MapViewport(QWidget *parent, QString title, int viewportId) :
     this->mollview = !DEFAULT_VIEW_3D;
     this->loaded = false;
     this->viewportId = viewportId;
+    this->fieldsActionGroup = NULL;
+    this->info = NULL;
 
     /* configure the user interface */
     configureUI();
@@ -25,7 +27,15 @@ MapViewport::MapViewport(QWidget *parent, QString title, int viewportId) :
 
 MapViewport::~MapViewport()
 {
-    closeMap();
+    qDebug() << "Calling MapVieweport destructor";
+    if(fieldsActionGroup!=NULL)
+        delete fieldsActionGroup;
+    if(info!=NULL)
+    {
+        delete[] info->values;
+        delete info;
+    }
+    delete fieldMenu;
 }
 
 
@@ -75,7 +85,7 @@ void MapViewport::configureUI()
     QAction *actionReset = new QAction(QIcon::fromTheme("edit-undo"), "Reset view", toolbar);
     actionMaximize = new QAction(QIcon::fromTheme("view-fullscreen"), "Fullscreen", toolbar);
     actionRestore = new QAction(QIcon::fromTheme("view-restore"), "Restore window", toolbar);
-    QAction *actionField = new QAction(QIcon(":/field.gif"), "Map Field", toolbar);
+    QAction *actionField = new QAction(QIcon(":/mollview.gif"), "Map Field", toolbar);
     QAction *actionGrid = new QAction(QIcon(":/grid.gif"), "Show Grid", toolbar);
     QAction *actionPvectors = new QAction(QIcon(":/pol-vectors.gif"), "Show Polarization Vectors", toolbar);
     actionSync = new QAction(QIcon(":/sync.gif"), "Sync", toolbar);
@@ -219,15 +229,6 @@ bool MapViewport::openMap(QString fitsfile)
 }
 
 
-void MapViewport::closeMap()
-{
-    // TODO: ask if really wanna close, etc...
-    // TODO: mapviewer should be deleted, or just load the file into the current mapview ?
-    if(mapviewer!=NULL)
-        delete mapviewer;
-}
-
-
 /* Slots */
 void MapViewport::updateSelection(bool selected)
 {
@@ -263,7 +264,9 @@ void MapViewport::updateThreshold(float min, float max)
 
 mapInfo* MapViewport::getMapInfo()
 {
-    return mapviewer->getMapInfo();
+    if(info==NULL)
+        info = mapviewer->getMapInfo();
+    return info;
 }
 
 
@@ -297,7 +300,7 @@ void MapViewport::showGrid(bool show)
 
 void MapViewport::fillMapField()
 {
-    QActionGroup* fieldsActionGroup = new QActionGroup(fieldMenu);
+    fieldsActionGroup = new QActionGroup(fieldMenu);
 
     mapInfo *info = getMapInfo();
     QList<HealpixMap::MapType> availableFields = info->availableFields;
@@ -321,7 +324,6 @@ void MapViewport::fillMapField()
     fieldsActionGroup->setExclusive(true);
 
     updateMapField(info->currentField);
-
 
     connect(signalMapper, SIGNAL(mapped(int)), this, SLOT(changeMapField(int)));
 }

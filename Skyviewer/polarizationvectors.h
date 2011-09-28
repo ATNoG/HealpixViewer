@@ -5,8 +5,7 @@
 #include "mapoverlay.h"
 #include <healpixutil.h>
 #include <math.h>
-
-#define BUFFER_OFFSET(i) ((GLbyte *)NULL + (i))
+#include "configs.h"
 
 
 class PolarizationVectors : public MapOverlay

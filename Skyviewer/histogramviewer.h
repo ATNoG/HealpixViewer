@@ -16,6 +16,7 @@ class HistogramViewer : public QWidget
 
 public:
     explicit HistogramViewer(QWidget *parent = 0);
+    ~HistogramViewer();
 
     void setHistogram(Histogram *histogram);
 

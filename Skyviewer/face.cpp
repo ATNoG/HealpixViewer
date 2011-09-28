@@ -19,6 +19,8 @@ Face::Face(int _faceNumber)
 
 Face::~Face()
 {
+    //qDebug() << "Calling Face destructor";
+
     //qDebug("Destroying face");
     if(vertexBuffer!=NULL)
     {
@@ -43,7 +45,7 @@ void Face::draw()
     //QTime time1;
     //time1.start();
 
-    /*
+
     if(!DISPLAY_TEXTURE)
     {
         if(!COLOR_PER_NSIDE)
@@ -113,7 +115,7 @@ void Face::draw()
             }
         }
     }
-    */
+
 
 
     //glPolygonMode(GL_FRONT, GL_FILL);
@@ -217,8 +219,8 @@ void Face::createBuffer()
     textureBuffer->allocate(textureCoords, 2*totalVertices*sizeof(GLfloat));
     textureBuffer->release();
 
-    delete vertexs;
-    delete textureCoords;
+    delete[] vertexs;
+    delete[] textureCoords;
 
     bufferInitialized = true;
 

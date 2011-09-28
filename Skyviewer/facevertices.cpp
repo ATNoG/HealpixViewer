@@ -8,6 +8,12 @@ FaceVertices::FaceVertices()
 }
 
 
+FaceVertices::~FaceVertices()
+{
+    qDebug() << "Calling FaceVertices destructor";
+}
+
+
 QVector<Strip> FaceVertices::getFaceVertices(int faceNumber, int nside, double radius)
 {
     // TODO: costhetats podem ser guardados por nside
@@ -15,7 +21,7 @@ QVector<Strip> FaceVertices::getFaceVertices(int faceNumber, int nside, double r
     getRingLatitudes(nside, &costhetas_np, &costhetas_eq, &costhetas_sp);
 
     if( faceNumber < 4)
-        return this->getRigging_NP(faceNumber, nside, &costhetas_np, radius);
+        return getRigging_NP(faceNumber, nside, &costhetas_np, radius);
     else if( faceNumber > 7)
         return getRigging_SP(faceNumber, nside, &costhetas_sp, radius);
     else

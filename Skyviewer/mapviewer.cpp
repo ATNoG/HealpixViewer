@@ -15,11 +15,34 @@ MapViewer::MapViewer(QWidget *parent) :
 
     maxNside = MAX_NSIDE;
 
+    this->textureCache = NULL;
+    this->tesselation = NULL;
+    this->faceCache = NULL;
+    this->overlayCache = NULL;
+    this->healpixMap = NULL;
+
     /*
     progressDialog = new QProgressDialog("Processing Map", "Cancel", 0, 20, this);
     progressDialog->setWindowModality(Qt::WindowModal);
     progressDialog->hide();
     */
+}
+
+MapViewer::~MapViewer()
+{
+    qDebug() << "Calling MapViewer destructor";
+    delete currentManipulatedFrame;
+    if(tesselation!=NULL)
+        delete tesselation;
+    if(textureCache!=NULL)
+        delete textureCache;
+    if(faceCache!=NULL)
+        delete faceCache;
+    if(overlayCache!=NULL)
+        delete overlayCache;
+    if(healpixMap!=NULL)
+        delete healpixMap;
+
 }
 
 /* create the gl model for the map */
@@ -63,6 +86,8 @@ bool MapViewer::loadMap(QString fitsfile)
         {
             mapType = mapLoader->getSelectedMapType();
         }
+
+        delete mapLoader;
 
 #if DEBUG > 0
         qDebug() << "Opening map with type: " << HealpixMap::mapTypeToString(mapType);
@@ -305,8 +330,8 @@ void MapViewer::resizeGL(int width, int height)
     if(initialized)
     {
         checkVisibility();
-        qDebug() << "ResizeGL: " << width << "," << height;
-        checkNside();
+        //qDebug() << "ResizeGL: " << width << "," << height;
+        //checkNside();
     }
 }
 
@@ -315,7 +340,7 @@ void MapViewer::checkVisibility()
 {
     visibleFaces.clear();
 
-    //REMOVE qDebug("--------------");
+    //qDebug("\n\n-------------------------");
 
     /*
     Vec a,b;
@@ -411,7 +436,7 @@ void MapViewer::checkVisibility()
 
         if(!hidden)
         {
-            //REMOVE qDebug() << "Face " << face << " visible";
+            //qDebug() << "Face " << face << " visible";
             visibleFaces.append(face);
         }
     }
@@ -486,7 +511,7 @@ bool MapViewer::zoomIn()
         camera()->setPosition(Vec(cameraPosition, 0.0, 0.0));
 
         currentZoomLevel++;
-        //int nextNside = zoomToNside(currentZoomLevel);
+        int nextNside = zoomToNside(currentZoomLevel);
         //qDebug() << "current zoom level = " << currentZoomLevel;
         //qDebug() << "current nside = " << currentNside;
         //qDebug() << "next nside = " << nextNside;
@@ -494,17 +519,17 @@ bool MapViewer::zoomIn()
         /* check visibilty (after apply the zoom, some face can be no longer visible */
         checkVisibility();
 
-        checkNside();
+        //checkNside();
 
         /* check if need to update nside */
 
-        /*
+
         if(nextNside!=currentNside && nextNside<=maxNside)
         {
             currentNside = nextNside;
             tesselation->updateNside(currentNside);
         }
-        */
+
 
 
         /* refresh the view */
@@ -528,7 +553,7 @@ bool MapViewer::zoomOut()
         camera()->setPosition(Vec(cameraPosition, 0.0, 0.0));
 
         currentZoomLevel--;
-        //int nextNside = zoomToNside(currentZoomLevel);
+        int nextNside = zoomToNside(currentZoomLevel);
         //qDebug() << "current zoom level = " << currentZoomLevel;
         //qDebug() << "current nside = " << currentNside;
         //qDebug() << "next nside = " << nextNside;
@@ -536,15 +561,15 @@ bool MapViewer::zoomOut()
         /* check visibilty (after apply the zoom, some face can be no longer visible */
         checkVisibility();
 
-        checkNside();
+        //checkNside();
 
-        /*
+
         if(nextNside!=currentNside)
         {
             currentNside = nextNside;
             tesselation->updateNside(currentNside);
         }
-        */
+
 
 
         /* refresh the view */
@@ -562,6 +587,7 @@ bool MapViewer::zoomOut()
 /* calculate the nside based on zoom level */
 int MapViewer::zoomToNside(int zoomLevel)
 {
+    /*
     long pixelsDisplayed = width()*height();
     long pixelsToDisplay;
 
@@ -573,19 +599,20 @@ int MapViewer::zoomToNside(int zoomLevel)
     }
 
     return maxNside;
+    */
 
     /* calculate the needed zoom (when changing zoomLevel, baseZoomLevel may not change */
-    //int baseZoomLevel = floor(zoomLevel / ZOOM_LEVEL); // /2
+    int baseZoomLevel = floor(zoomLevel / ZOOM_LEVEL); // /2
 
     //qDebug() << "  zoomToNside: basezoomlevel=" << baseZoomLevel;
 
     // TODO: calculate exp based on MIN_NSIDE
-    //int nside = pow(2, EXP_NSIDE+baseZoomLevel);
+    int nside = pow(2, EXP_NSIDE+baseZoomLevel);
 
-    //if(nside<64)
-        //nside = 64;
+    if(nside<64)
+       nside = 64;
 
-    //return nside;
+    return nside;
 }
 
 

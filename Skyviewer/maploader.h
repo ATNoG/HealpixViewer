@@ -15,11 +15,15 @@ class MapLoader : public QDialog
 
 public:
     explicit MapLoader(QWidget *parent, QString filename, QList<HealpixMap::MapType> availableMaps);
+    ~MapLoader();
     HealpixMap::MapType getSelectedMapType();
 
 private:
     QList<HealpixMap::MapType> availableMaps;
     QComboBox* comboBox;
+    QVBoxLayout* vboxlayout;
+    QLabel* lbltitle;
+    QPushButton* openButton;
 };
 
 #endif // MAPLOADER_H

@@ -53,10 +53,11 @@ Histogram::Histogram(QList<float*> valuesList, QList<int> nValues)
 
 Histogram::~Histogram()
 {
+    qDebug() << "Calling Histogram destructor";
     if(histogram!=NULL)
-        delete histogram;
+        delete[] histogram;
     if(composite && values!=NULL)
-        delete values;
+        delete[] values;
 }
 
 
@@ -162,7 +163,7 @@ void Histogram::setupHistogram(float* values, int totalValues)
     /* delete old histogram */
     if(histogram!=NULL)
     {
-        delete histogram;
+        delete[] histogram;
         histogram = NULL;
     }
 

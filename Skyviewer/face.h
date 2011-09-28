@@ -7,10 +7,7 @@
 #include <chealpix.h>
 #include "vertice.h"
 #include "facevertices.h"
-
-#define BUFFER_OFFSET(i) ((GLbyte *)NULL + (i))
-#define COLOR_PER_NSIDE false
-#define DISPLAY_TEXTURE true
+#include "configs.h"
 
 using namespace std;
 

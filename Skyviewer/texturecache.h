@@ -28,6 +28,7 @@ class TextureCache : public QObject
 
 public:
     TextureCache(HealpixMap* map, int minNside, int maxNside, int maxTiles = MAX_TILES);
+    ~TextureCache();
 
     /* inform cache about the faces that are visible and the nside used, so cache can preview the next faces to preload */
     //void updateStatus(QVector<int> visibleFaces, int nside);
@@ -69,8 +70,8 @@ private:
     void generateBaseTextures();
     void invalidateCache();
 
-    int MIN_NSIDE;
-    int MAX_NSIDE;
+    int Min_Nside;
+    int Max_Nside;
 
     /* return the number of tiles necessary for display the face with nside */
     int calculateFaceTiles(int nside);

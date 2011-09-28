@@ -2,22 +2,28 @@
 
 PolarizationVectors::PolarizationVectors(int faceNumber, int nside, HealpixMap* map)
 {
+    //qDebug() << "Const. PolVects with nside " << nside;
     this->faceNumber = faceNumber;
     this->nside = nside;
     this->map = map;
 
     bufferCreated = false;
     vectorsBuffer = NULL;
+    vectors = NULL;
 }
 
 PolarizationVectors::~ PolarizationVectors()
 {
+    //qDebug() << "Calling PolarizationVectors destructor";
+
     if(vectorsBuffer!=NULL)
     {
         vectorsBuffer->release();
         vectorsBuffer->destroy();
         delete vectorsBuffer;
     }
+    if(vectors!=NULL)
+        delete[] vectors;
 }
 
 void PolarizationVectors::draw()
@@ -42,20 +48,7 @@ void PolarizationVectors::draw()
 void PolarizationVectors::build()
 {
     vectors = map->getPolarizationVectors(faceNumber, nside, totalVectors);
-    /*
-    vectors[0] = -0.5;
-    vectors[1] = 0;
-    vectors[2] = 0;
-    vectors[3] = 0.5;
-    vectors[4] = 0;
-    vectors[5] = 0;
-    vectors[6] = 0;
-    vectors[7] = 0.7;
-    vectors[8] = 0.1;
-    vectors[9] = 0.5;
-    vectors[10] = -0.2;
-    vectors[11] = 0.4;
-    totalVectors = 2;*/
+    // qDebug() << "Building pol vectors (" << nside << ") total=" << totalVectors;
 
     valuesLoaded = true;
 }
@@ -76,7 +69,9 @@ void PolarizationVectors::createBuffer()
 
         bufferCreated = true;
 
-        delete vectors;
+        qDebug() << "Delete Polarization vector " << faceNumber << "(" << nside << ") allocated at " << vectors;
+        delete[] vectors;
+        vectors = NULL;
     }
     else
     {

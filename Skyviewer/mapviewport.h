@@ -31,7 +31,6 @@ public:
     void changeToMollview();
     void changeTo3D();
     bool openMap(QString fitsfile);
-    void closeMap();
     void selectViewport(bool changeCheckbox);
     void deselectViewport(bool changeCheckbox);
 
@@ -80,6 +79,8 @@ private:
     QMap<HealpixMap::MapType, QAction*> mapFieldsActions;
     QSignalMapper* signalMapper;
     QAction *actionMaximize, *actionRestore, *actionSync;
+    QActionGroup* fieldsActionGroup;
+    mapInfo* info;
 
     void fillMapField();
     void updateMapField(HealpixMap::MapType field);

@@ -5,8 +5,7 @@
 #include <QDebug>
 #include <QMap>
 #include "mapviewport.h"
-
-#define MAX_WORKSPACE_VIEWPORTS 16
+#include "configs.h"
 
 
 struct viewportPosition
@@ -22,6 +21,7 @@ class WorkSpace : public QWidget
     Q_OBJECT
 public:
     explicit WorkSpace(QWidget *parent = 0);
+    ~WorkSpace();
 
 signals:
     void syncNeeded(QEvent* e, int type, MapViewer* source);

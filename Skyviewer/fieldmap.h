@@ -17,6 +17,7 @@ class FieldMap
 
 public:
     FieldMap(float* map, int nside, bool nest);
+    ~FieldMap();
     float* getFaceValues(int faceNumber);
     float* downgradeMap(int newNside);
     void generateDowngrades(QString path, QString prefix, int minNside);

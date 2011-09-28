@@ -20,6 +20,11 @@ Tesselation::Tesselation(int _nside, bool _mollview, FaceCache* faceCache, Textu
     grid = new Grid(GRID_LINES);
 }
 
+Tesselation::~Tesselation()
+{
+    qDebug() << "Calling Tesselation destructor";
+    delete grid;
+}
 
 void Tesselation::createInitialTesselation()
 {
@@ -94,6 +99,7 @@ void Tesselation::draw()
         if(DISPLAY_TEXTURE)
         {
             texture = textureCache->getFace(facesv[i], nside);
+            //qDebug() << "Trying to draw texture (" << facesv[i] << "," << nside << ")  " << texture;
             texture->draw();
         }
 

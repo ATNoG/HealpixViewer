@@ -4,6 +4,7 @@ Texture::Texture(int faceNumber, int nside)
 {
     this->faceNumber = faceNumber;
     this->nside = nside;
+    this->texture = NULL;
 
     created = false;
 }
@@ -11,7 +12,13 @@ Texture::Texture(int faceNumber, int nside)
 
 Texture::~Texture()
 {
+    //qDebug() << "Calling Texture destructor (" << faceNumber << "," << nside << ")";
 
+    if(texture!=NULL)
+    {
+        //qDebug() << "Texture deleted in destructor():  (" << faceNumber << "," << nside << ")" << texture;
+        delete[] texture;
+    }
 }
 
 
@@ -44,6 +51,9 @@ void Texture::buildTexture(float* data, float minv, float maxv)
         texture[texk++] = color.blue();
         //texture[texk++] = 255;
     }
+
+    delete[] data;
+    delete ct;
 }
 
 
@@ -53,48 +63,20 @@ void Texture::create()
     glBindTexture(GL_TEXTURE_2D, textureId);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    //qDebug() << "Face " << faceNumber << " with texture " << textureId;
-
-    /*
-    QString name;
-
-    if(faceNumber<4)
-        name = "/home/zeux/Pictures/Vietnam-Halong_Bay-New7Wonders_of_Nature-original.jpg";
-    else if(faceNumber<8)
-        name = "/home/zeux/Pictures/IMG_0068.JPG";
-    else
-        name = "/home/zeux/Pictures/IMG_0083.JPG";
-
-    QImage img(name);
-    QImage glImg = QGLWidget::convertToGLFormat(img);  // flipped 32bit RGBA
-
-    // Bind the img texture...
-    glTexImage2D(GL_TEXTURE_2D, 0, 4, glImg.width(), glImg.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImg.bits());
-    */
-
-
-    /*
-    QColor color;
-    texture = new unsigned char[nside*nside*3];
-    for(int i=0; i<nside*nside; i++)
-    {
-        int pos = 3*i;
-        //color.setHsv((int)(360*((int)(i/nside))/nside), 255, 255);
-        if(i<2*nside)
-            color.setRgb(255, 0, 0);
-        else
-            color.setRgb(0, 0, 255);
-        texture[pos++] = color.red();
-        texture[pos++] = color.green();
-        texture[pos++] = color.blue();
-    }
-    */
-
     glTexImage2D(GL_TEXTURE_2D, 0, 3, nside, nside, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
     glBindTexture(GL_TEXTURE_2D, NULL);
 
     created = true;
+
+    if(texture!=NULL)
+    {
+        //qDebug() << "Deleting texture in create(): (" << faceNumber << "," << nside << ")" << texture;
+        delete[] texture;
+        texture = NULL;
+        //qDebug() << "Texture deleted in create(): (" << faceNumber << "," << nside << ")" << texture;
+    }
+    else
+        qDebug("ERROR in TExture: texture is NULL");
 }
 
 

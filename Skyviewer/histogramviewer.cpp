@@ -8,6 +8,12 @@ HistogramViewer::HistogramViewer(QWidget *parent) :
 }
 
 
+HistogramViewer::~HistogramViewer()
+{
+    delete ct;
+}
+
+
 void HistogramViewer::setHistogram(Histogram *histogram)
 {
     this->histogram = histogram;

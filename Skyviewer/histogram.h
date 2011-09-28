@@ -3,8 +3,7 @@
 
 #include <QList>
 #include <QDebug>
-
-#define NUMBER_BINS 2094
+#include "configs.h"
 
 class Histogram
 {

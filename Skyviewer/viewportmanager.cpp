@@ -35,6 +35,22 @@ ViewportManager::ViewportManager(QWidget *parent) :
 
 ViewportManager::~ViewportManager()
 {
+    qDebug() << "Calling ViewportManager destructor";
+
+    // TODO: Invalid read of size 4
+    for(int i=0; i<viewports.size(); i++)
+    {
+        qDebug() << "Viewport " << viewports[i];
+        delete viewports[i];
+    }
+    /*
+    for(int i=0; i<mapsInformation.size(); i++)
+    {
+        delete[] mapsInformation[i]->values;
+        delete mapsInformation[i];
+    }
+    */
+
     delete ui;
 }
 
@@ -197,7 +213,7 @@ void ViewportManager::updateMapInfo(int viewportId, mapInfo *info)
 {
     if(viewports.contains(viewportId))
     {
-        delete mapsInformation[viewportId]->values;
+        delete[] mapsInformation[viewportId]->values;
         delete mapsInformation[viewportId];
 
         mapsInformation[viewportId] = info;
@@ -378,8 +394,8 @@ void ViewportManager::closeViewport(int viewportId)
 
     /* delete viewport */
     delete viewports[viewportId];
-    delete mapsInformation[viewportId]->values;
-    delete mapsInformation[viewportId];
+    //delete[] mapsInformation[viewportId]->values;
+    //delete mapsInformation[viewportId];
 
     /* deallocate map info */
     viewports.remove(viewportId);
@@ -399,7 +415,7 @@ void ViewportManager::addViewportToList(int viewportId, QString title, mapInfo *
     item->setCheckState(0, Qt::Unchecked);
     ui->treeViewports->addTopLevelItem(item);
 
-    QCheckBox *viewCheck = new QCheckBox();
+    QCheckBox *viewCheck = new QCheckBox;
     viewCheck->setStyleSheet("QCheckBox::indicator {width: 16px;height: 16px;} QCheckBox::indicator:checked { image: url(images/icons/view.gif);} QCheckBox::indicator:unchecked { image: url(images/icons/noview.gif);} ");
     ui->treeViewports->setItemWidget(item, 1, viewCheck);
 

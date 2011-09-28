@@ -15,21 +15,7 @@
 #include "tesselation.h"
 #include "facevertices.h"
 #include "maploader.h"
-
-#define MIN_NSIDE 64
-#define MAX_NSIDE 2048
-#define EXP_NSIDE 6
-#define MIN_ZOOM 0
-#define MAX_ZOOM 10
-#define ZOOM_LEVEL 2
-#define INVISIBLE_X 0.37//0.25
-#define CAMERA_ZOOM_INC 0.16
-#define PRELOAD_FACES false
-#define INITIAL_CAMERA_POSITION 2.8
-
-#define DISPLAY_TEXTURE true
-
-#define BUFFER_OFFSET(i) ((GLbyte *)NULL + (i))
+#include "configs.h"
 
 
 using namespace qglviewer;
@@ -53,6 +39,7 @@ class MapViewer : public QGLViewer
 
 public:
     explicit MapViewer(QWidget *parent = 0);
+    ~MapViewer();
     void changeToMollview();
     void changeTo3D();
     //void loadMap(HealpixMap* map);

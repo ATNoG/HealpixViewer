@@ -2,8 +2,8 @@
 
 OverlayCache::OverlayCache(HealpixMap* map, int minNside, int maxNside, int maxTiles)
 {
-    this->MIN_NSIDE = minNside;
-    this->MAX_NSIDE = maxNside;
+    this->Min_Nside = minNside;
+    this->Max_Nside = maxNside;
     this->maxTiles = maxTiles;
     this->availableTiles = maxTiles;
 
@@ -18,6 +18,25 @@ OverlayCache::OverlayCache(HealpixMap* map, int minNside, int maxNside, int maxT
 }
 
 
+OverlayCache::~OverlayCache()
+{
+    qDebug() << "Calling OverlayCache destructor";
+
+    QList<int> nsides = overlayCache.keys();
+    foreach(int nside, nsides)
+    {
+        OverlayCacheEntry* entry = overlayCache.value(nside);
+        QList<int> faces = entry->keys();
+        foreach(int faceNumber, faces)
+        {
+            PolarizationVectors *polvectors = (PolarizationVectors*)entry->value(faceNumber);
+            delete polvectors;
+        }
+        delete entry;
+    }
+}
+
+
 /* PUBLIC INTERFACE */
 
 /* get the overlay for faceNumber and for the given nside */
@@ -27,8 +46,8 @@ MapOverlay* OverlayCache::getFace(int faceNumber, int nside, MapOverlay::Overlay
 
     /* verify the maximum nside available */
     // TODO: throw exception ?
-    if(nside>MAX_NSIDE)
-        nside = MAX_NSIDE;
+    if(nside>Max_Nside)
+        nside = Max_Nside;
 
     bool locked = true;
     long faceId = calculateFaceId(faceNumber, nside, type);
@@ -37,7 +56,7 @@ MapOverlay* OverlayCache::getFace(int faceNumber, int nside, MapOverlay::Overlay
     cacheAccess.lock();
 
     /* nside BASE_NSIDE face are not inserted into lru list to never get deleted */
-    if(nside>MIN_NSIDE)
+    if(nside>Min_Nside)
     {
         /* update lru info */
         cacheControl.removeAll(faceId);
@@ -50,7 +69,7 @@ MapOverlay* OverlayCache::getFace(int faceNumber, int nside, MapOverlay::Overlay
     if(!checkFaceAvailable(faceNumber, nside, type))
     {
         /* initial nside, so wait for overlay to load */
-        if(nside==MIN_NSIDE)
+        if(nside==Min_Nside)
         {
             /* release accesss to cache */
             cacheAccess.unlock();
@@ -130,7 +149,7 @@ MapOverlay* OverlayCache::loadFace(int faceNumber, int nside, MapOverlay::Overla
     long faceId = calculateFaceId(faceNumber, nside, type);
     requestedFaces.remove(faceId);
 
-    if(nside>MIN_NSIDE)
+    if(nside>Min_Nside)
         emit(newFaceAvailable(clean));
         //emit(newFaceAvailable(face));
 
@@ -191,8 +210,8 @@ void OverlayCache::preloadFace(int faceNumber, int nside, MapOverlay::OverlayTyp
     //qDebug() << "Preload overlay " << faceNumber << "(" << nside << ") - waiting";
 
     // TODO: throw exception ?
-    if(nside>MAX_NSIDE)
-        nside = MAX_NSIDE;
+    if(nside>Max_Nside)
+        nside = Max_Nside;
 
     /* request access to cache */
     cacheAccess.lock();
@@ -370,7 +389,7 @@ MapOverlay* OverlayCache::getBestFaceFromCache(int faceNumber, int nside, MapOve
         faceAvailable = checkFaceAvailable(faceNumber, nside, type);
         if(!faceAvailable)
         {
-            if(nside > MIN_NSIDE)
+            if(nside > Min_Nside)
                 nside = nside/2;
             /* search for downgraded nside */
             //int pos = supportedNsides.indexOf(nside);
@@ -388,7 +407,7 @@ MapOverlay* OverlayCache::getBestFaceFromCache(int faceNumber, int nside, MapOve
 /* return the number of tiles (tiles of nside64) necessary for display the face with nside */
 int OverlayCache::calculateFaceTiles(int nside)
 {
-    return pow(nside/MIN_NSIDE, 2);
+    return pow(nside/Min_Nside, 2);
 }
 
 int OverlayCache::getCacheIndex(MapOverlay::OverlayType type, int nside)
@@ -404,5 +423,5 @@ long OverlayCache::calculateFaceId(int faceNumber, int nside, MapOverlay::Overla
 void OverlayCache::generateBaseOverlays()
 {
     for(int i=0; i<12; i++)
-        loadFace(i, MIN_NSIDE, MapOverlay::POLARIZATION_VECTORS);
+        loadFace(i, Min_Nside, MapOverlay::POLARIZATION_VECTORS);
 }

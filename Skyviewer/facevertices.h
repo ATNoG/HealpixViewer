@@ -16,6 +16,7 @@ class FaceVertices
 
 public:
     FaceVertices();
+    ~FaceVertices();
 
     static FaceVertices *instance()
     {

@@ -2,8 +2,8 @@
 
 TextureCache::TextureCache(HealpixMap* map, int minNside, int maxNside, int maxTiles)
 {
-    this->MIN_NSIDE = minNside;
-    this->MAX_NSIDE = maxNside;
+    this->Min_Nside = minNside;
+    this->Max_Nside = maxNside;
     this->maxTiles = maxTiles;
     this->availableTiles = maxTiles;
 
@@ -20,6 +20,25 @@ TextureCache::TextureCache(HealpixMap* map, int minNside, int maxNside, int maxT
 }
 
 
+TextureCache::~TextureCache()
+{
+    qDebug() << "Calling TextureCache destructor";
+
+    QList<int> nsides = textureCache.keys();
+    foreach(int nside, nsides)
+    {
+        TextureCacheEntry* entry = textureCache.value(nside);
+        QList<int> faces = entry->keys();
+        foreach(int faceNumber, faces)
+        {
+            Texture *texture = entry->value(faceNumber);
+            delete texture;
+        }
+        delete entry;
+    }
+}
+
+
 /* PUBLIC INTERFACE */
 
 /* get the face with faceNumber and for the given nside */
@@ -29,8 +48,8 @@ Texture* TextureCache::getFace(int faceNumber, int nside)
 
     /* verify the maximum nside available */
     // TODO: throw exception ?
-    if(nside>MAX_NSIDE)
-        nside = MAX_NSIDE;
+    if(nside>Max_Nside)
+        nside = Max_Nside;
 
     bool locked = true;
     int faceId = (faceNumber+1)*10000 + nside;
@@ -38,8 +57,8 @@ Texture* TextureCache::getFace(int faceNumber, int nside)
     /* request access to cache */
     cacheAccess.lock();
 
-    /* nside MIN_NSIDE face are not inserted into lru list to never get deleted */
-    if(nside>MIN_NSIDE)
+    /* nside Min_Nside face are not inserted into lru list to never get deleted */
+    if(nside>Min_Nside)
     {
         /* update lru info */
         cacheControl.removeAll(faceId);
@@ -52,7 +71,7 @@ Texture* TextureCache::getFace(int faceNumber, int nside)
     if(!checkFaceAvailable(faceNumber, nside))
     {
         /* initial nside, so wait for texture to load */
-        if(nside==MIN_NSIDE)
+        if(nside==Min_Nside)
         //if(true)
         {
             /* release accesss to cache */
@@ -124,7 +143,7 @@ Texture* TextureCache::loadFace(int faceNumber, int nside)
     int faceId = (faceNumber+1)*10000 + nside;
     requestedFaces.remove(faceId);
 
-    if(nside>MIN_NSIDE)
+    if(nside>Min_Nside)
         emit(newFaceAvailable(clean));
         //emit(newFaceAvailable(face));
 
@@ -181,8 +200,8 @@ void TextureCache::preloadFace(int faceNumber, int nside)
     //qDebug() << "Preload face " << faceNumber << "(" << nside << ") - waiting";
 
     // TODO: throw exception ?
-    if(nside>MAX_NSIDE)
-        nside = MAX_NSIDE;
+    if(nside>Max_Nside)
+        nside = Max_Nside;
 
     /* request access to cache */
     cacheAccess.lock();
@@ -289,6 +308,8 @@ bool TextureCache::storeFace(int faceNumber, int nside, Texture* face)
             newFaces.enqueue(face);
             */
 
+        //qDebug() << "Texture (" << faceNumber << "," << nside << ") stored  - " << face;
+
         //return true;
     }
     else
@@ -355,7 +376,7 @@ Texture* TextureCache::getBestFaceFromCache(int faceNumber, int nside)
         faceAvailable = checkFaceAvailable(faceNumber, nside);
         if(!faceAvailable)
         {
-            if(nside > MIN_NSIDE)
+            if(nside > Min_Nside)
                 nside = nside/2;
             /* search for downgraded nside */
             //int pos = supportedNsides.indexOf(nside);
@@ -373,7 +394,7 @@ Texture* TextureCache::getBestFaceFromCache(int faceNumber, int nside)
 /* return the number of tiles (tiles of nside64) necessary for display the face with nside */
 int TextureCache::calculateFaceTiles(int nside)
 {
-    return pow(nside/MIN_NSIDE, 2);
+    return pow(nside/Min_Nside, 2);
 }
 
 
@@ -386,7 +407,7 @@ void TextureCache::updateTextureThreshold(float min, float max)
         minTex = min;
         maxTex = max;
 
-        qDebug("Regenerating texture for new threshold");
+        //qDebug("\n\n=============Regenerating texture for new threshold==================");
 
         invalidateCache();
     }
@@ -409,7 +430,7 @@ void TextureCache::invalidateCache()
 
     /* generate baseNside textures */
     for(int i=0; i<12; i++)
-        loadFace(i, MIN_NSIDE);
+        loadFace(i, Min_Nside);
 
     /* invalidate current textures */
     QMap<int, QList<int> > facesToDelete;
@@ -418,7 +439,7 @@ void TextureCache::invalidateCache()
     QList<int> nsides = textureCache.keys();
     for(int i=0; i<nsides.size(); i++)
     {
-        if(nsides[i]>MIN_NSIDE)
+        if(nsides[i]>Min_Nside)
         {
             QList<int> faces = textureCache[nsides[i]]->keys();
             for(int j=0; j<faces.size(); j++)
@@ -445,8 +466,16 @@ void TextureCache::invalidateCache()
         int fn = (faceId/10000)-1;
         int ns = faceId-(fn+1)*10000;
 
-        if(ns>MIN_NSIDE)
+        if(ns>Min_Nside)
         {
+            //qDebug() << "Invalidate Cache - loading texture (" << fn << "," << ns << ")";
+            /* add to requested faces */
+            int faceId = (fn+1)*10000 + ns;
+
+            cacheAccess.lock();
+            requestedFaces.insert(faceId);
+            cacheAccess.unlock();
+
             /* load texture in thread */
             QtConcurrent::run(this, &TextureCache::loadFace, fn, ns);
         }
@@ -462,5 +491,5 @@ void TextureCache::getTextureMinMax(float &min, float &max)
 void TextureCache::generateBaseTextures()
 {
     for(int i=0; i<12; i++)
-        loadFace(i, MIN_NSIDE);
+        loadFace(i, Min_Nside);
 }

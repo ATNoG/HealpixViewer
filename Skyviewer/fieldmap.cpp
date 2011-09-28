@@ -15,6 +15,11 @@ FieldMap::FieldMap(float* map, int nside, bool nest)
 }
 
 
+FieldMap::~FieldMap()
+{
+    qDebug() << "Calling FieldMap destructor";
+}
+
 void FieldMap::convertToNest()
 {
     qDebug("Converting to nest");
@@ -30,7 +35,7 @@ void FieldMap::convertToNest()
     }
 
     /* release memory used for ring map */
-    delete map;
+    delete[] map;
 
     /* map points now to a nested map */
     map = nestedMap;
@@ -80,7 +85,7 @@ float* FieldMap::downgradeMap(int newNside)
         newMap[i] = newMap[i]/count[i];
     }
 
-    delete count;
+    delete[] count;
 
     return newMap;
 }
@@ -288,7 +293,7 @@ void FieldMap::generateDowngrades(QString path, QString prefix, int minNside)
             values = downgradeMap(nside);
 
             /* delete previous map */
-            delete map;
+            delete[] map;
             currentNside = nside;
             /* work with the downgraded map, so new downgrades are faster */
             map = values;
@@ -312,13 +317,13 @@ void FieldMap::generateDowngrades(QString path, QString prefix, int minNside)
             for(int i=0; i<20; i++)
                     qDebug() << orderedValues[i];*/
 
-        delete orderedValues;
+        delete[] orderedValues;
 
         /* calculate next nside */
         nside = nside/2;
     }
 
-    delete map;
+    delete[] map;
 }
 
 void FieldMap::saveFieldMap(QString filepath, float* values, int nvalues)

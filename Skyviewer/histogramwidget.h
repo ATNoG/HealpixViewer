@@ -43,6 +43,7 @@ signals:
 
 private:
     Ui::HistogramWidget *ui;
+    Histogram *histogram;
 
     float min, max;
 

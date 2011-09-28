@@ -6,10 +6,9 @@
 #include "workspace.h"
 #include "viewportmanager.h"
 #include "histogramwidget.h"
+#include "configs.h"
 
 #define SIDEPANE_WIDTH 300
-
-#define DEBUG 1
 
 namespace Ui {
     class MainWindow;

@@ -7,6 +7,8 @@ HistogramWidget::HistogramWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    histogram = NULL;
+
     /* connect spinboxs and apply button */
     connect(ui->lowerThreshold, SIGNAL(valueChanged(double)), this, SLOT(updateLowerThreshold(double)));
     connect(ui->higherThreshold, SIGNAL(valueChanged(double)), this, SLOT(updateHigherThreshold(double)));
@@ -16,7 +18,11 @@ HistogramWidget::HistogramWidget(QWidget *parent) :
 
 HistogramWidget::~HistogramWidget()
 {
+    qDebug() << "Calling HistogramWidget destructor";
     delete ui;
+
+    if(histogram!=NULL)
+        delete histogram;
 }
 
 
@@ -79,7 +85,10 @@ void HistogramWidget::updateHistogram()
             totalValues.append(info->nvalues);
         }
 
-        Histogram *histogram = new Histogram(values, totalValues);
+        //if(histogram!=NULL)
+            //delete histogram;
+
+        histogram = new Histogram(values, totalValues);
         ui->histogram->setHistogram(histogram);
 
         /* if more then 1 viewports, select min and max

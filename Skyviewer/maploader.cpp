@@ -9,10 +9,10 @@ MapLoader::MapLoader(QWidget *parent, QString filename, QList<HealpixMap::MapTyp
     setWindowModality(Qt::WindowModal);
 
     /* create the layout */
-    QVBoxLayout* vboxlayout = new QVBoxLayout;
+    vboxlayout = new QVBoxLayout;
 
     /* create title label */
-    QLabel* lbltitle = new QLabel();
+    lbltitle = new QLabel();
     lbltitle->setText("Opening " + filename + "\nSelect the wanted map");
 
     /* create combobox with available maps */
@@ -23,7 +23,7 @@ MapLoader::MapLoader(QWidget *parent, QString filename, QList<HealpixMap::MapTyp
     }
 
     /* create button */
-    QPushButton* openButton = new QPushButton("Open");
+    openButton = new QPushButton("Open");
 
     /* add widget to layout */
     vboxlayout->addWidget(lbltitle);
@@ -33,7 +33,11 @@ MapLoader::MapLoader(QWidget *parent, QString filename, QList<HealpixMap::MapTyp
 
     /* connect button */
     connect(openButton, SIGNAL(clicked()), this, SLOT(accept()));
+}
 
+MapLoader::~MapLoader()
+{
+    qDebug() << "Calling MapLoader destructor";
 }
 
 HealpixMap::MapType MapLoader::getSelectedMapType()
