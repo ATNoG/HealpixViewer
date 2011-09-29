@@ -22,12 +22,6 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     this->healpixMap = NULL;
     this->displayCurrentNside = true;
     this->constraint = NULL;
-
-    /*
-    progressDialog = new QProgressDialog("Processing Map", "Cancel", 0, 20, this);
-    progressDialog->setWindowModality(Qt::WindowModal);
-    progressDialog->hide();
-    */
 }
 
 MapViewer::~MapViewer()
@@ -229,8 +223,8 @@ void MapViewer::init()
 }
 
 void MapViewer::changeToMollview()
-{
-    qDebug() << "Changing to Mollweide";
+{    
+    resetView();
 
     if(constraint!=NULL)
         delete constraint;
@@ -241,10 +235,6 @@ void MapViewer::changeToMollview()
     constraint->setTranslationConstraintType(AxisPlaneConstraint::FREE);
     currentManipulatedFrame->setConstraint(constraint);
 
-    /* update map */
-    if(tesselation!=NULL)
-        delete tesselation;
-
     /* update tesselation */
     tesselation->changeToMollweide();
     updateGL();
@@ -252,7 +242,7 @@ void MapViewer::changeToMollview()
 
 void MapViewer::changeTo3D()
 {
-    qDebug() << "Changing to 3D";
+    resetView();
 
     if(constraint!=NULL)
         delete constraint;
@@ -382,112 +372,115 @@ void MapViewer::resizeGL(int width, int height)
 
 void MapViewer::checkVisibility()
 {
-    visibleFaces.clear();
-
-    //qDebug("\n\n-------------------------");
-
-    /*
-    Vec a,b;
-    qDebug() << "Viewport witdh: " << width();
-    qDebug() << "Viewport height: " << height();
-    a = manipulatedFrame()->inverseCoordinatesOf(Vec(0, 1.0, 0));
-    b = camera()->projectedCoordinatesOf(Vec(a.x, a.y, a.z));
-    qDebug() << "Top left corner: (" << b.x << "," << b.y << ")";
-    */
-
-    /* compute matrixs because camera could be changed */
-    camera()->computeModelViewMatrix();
-    camera()->computeProjectionMatrix();
-
-    for(int face=0; face<12; face++)
+    if(DISPLAY_ONLY_VISIBLE_FACES)
     {
-        bool hidden = false;
+        visibleFaces.clear();
 
-        Vec verticesCoords[4];
-        verticesCoords[0] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][0].x, faceBoundaries[face][0].y, faceBoundaries[face][0].z));
-        verticesCoords[1] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][1].x, faceBoundaries[face][1].y, faceBoundaries[face][1].z));
-        verticesCoords[2] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][2].x, faceBoundaries[face][2].y, faceBoundaries[face][2].z));
-        verticesCoords[3] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][3].x, faceBoundaries[face][3].y, faceBoundaries[face][3].z));
+        //qDebug("\n\n-------------------------");
 
-        Vec projectedVerticesVP[4];
-        projectedVerticesVP[0] = camera()->projectedCoordinatesOf(Vec(verticesCoords[0].x, verticesCoords[0].y, verticesCoords[0].z));
-        projectedVerticesVP[1] = camera()->projectedCoordinatesOf(Vec(verticesCoords[1].x, verticesCoords[1].y, verticesCoords[1].z));
-        projectedVerticesVP[2] = camera()->projectedCoordinatesOf(Vec(verticesCoords[2].x, verticesCoords[2].y, verticesCoords[2].z));
-        projectedVerticesVP[3] = camera()->projectedCoordinatesOf(Vec(verticesCoords[3].x, verticesCoords[3].y, verticesCoords[3].z));
+        /*
+        Vec a,b;
+        qDebug() << "Viewport witdh: " << width();
+        qDebug() << "Viewport height: " << height();
+        a = manipulatedFrame()->inverseCoordinatesOf(Vec(0, 1.0, 0));
+        b = camera()->projectedCoordinatesOf(Vec(a.x, a.y, a.z));
+        qDebug() << "Top left corner: (" << b.x << "," << b.y << ")";
+        */
 
-        bool verticeHidden[4];
-        verticeHidden[0] = verticesCoords[0].x < INVISIBLE_X;
-        verticeHidden[1] = verticesCoords[1].x < INVISIBLE_X;
-        verticeHidden[2] = verticesCoords[2].x < INVISIBLE_X;
-        verticeHidden[3] = verticesCoords[3].x < INVISIBLE_X;
+        /* compute matrixs because camera could be changed */
+        camera()->computeModelViewMatrix();
+        camera()->computeProjectionMatrix();
 
-        QList<Vec> outOfViewport;
-        int totalBack = 0;
-        int totalOut  = 0;
-
-
-        for(int v=0; v<4; v++)
+        for(int face=0; face<12; face++)
         {
-            //if(face==4 && v==1)
-                //qDebug() << "Pos on viewport (cam) = " << projectedVerticesVP[v].x << ", " << projectedVerticesVP[v].y;
-            if(!verticeHidden[v])
+            bool hidden = false;
+
+            Vec verticesCoords[4];
+            verticesCoords[0] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][0].x, faceBoundaries[face][0].y, faceBoundaries[face][0].z));
+            verticesCoords[1] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][1].x, faceBoundaries[face][1].y, faceBoundaries[face][1].z));
+            verticesCoords[2] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][2].x, faceBoundaries[face][2].y, faceBoundaries[face][2].z));
+            verticesCoords[3] = manipulatedFrame()->inverseCoordinatesOf(Vec(faceBoundaries[face][3].x, faceBoundaries[face][3].y, faceBoundaries[face][3].z));
+
+            Vec projectedVerticesVP[4];
+            projectedVerticesVP[0] = camera()->projectedCoordinatesOf(Vec(verticesCoords[0].x, verticesCoords[0].y, verticesCoords[0].z));
+            projectedVerticesVP[1] = camera()->projectedCoordinatesOf(Vec(verticesCoords[1].x, verticesCoords[1].y, verticesCoords[1].z));
+            projectedVerticesVP[2] = camera()->projectedCoordinatesOf(Vec(verticesCoords[2].x, verticesCoords[2].y, verticesCoords[2].z));
+            projectedVerticesVP[3] = camera()->projectedCoordinatesOf(Vec(verticesCoords[3].x, verticesCoords[3].y, verticesCoords[3].z));
+
+            bool verticeHidden[4];
+            verticeHidden[0] = verticesCoords[0].x < INVISIBLE_X;
+            verticeHidden[1] = verticesCoords[1].x < INVISIBLE_X;
+            verticeHidden[2] = verticesCoords[2].x < INVISIBLE_X;
+            verticeHidden[3] = verticesCoords[3].x < INVISIBLE_X;
+
+            QList<Vec> outOfViewport;
+            int totalBack = 0;
+            int totalOut  = 0;
+
+
+            for(int v=0; v<4; v++)
             {
-                /* vertice is not on backface */
-                /* check if vertice is inside viewport */
-                if(!(projectedVerticesVP[v].x>0 && projectedVerticesVP[v].x<width() && projectedVerticesVP[v].y>0 && projectedVerticesVP[v].y<height()))
+                //if(face==4 && v==1)
+                    //qDebug() << "Pos on viewport (cam) = " << projectedVerticesVP[v].x << ", " << projectedVerticesVP[v].y;
+                if(!verticeHidden[v])
                 {
-                    totalOut++;
-                    outOfViewport.push_front(projectedVerticesVP[v]);
+                    /* vertice is not on backface */
+                    /* check if vertice is inside viewport */
+                    if(!(projectedVerticesVP[v].x>0 && projectedVerticesVP[v].x<width() && projectedVerticesVP[v].y>0 && projectedVerticesVP[v].y<height()))
+                    {
+                        totalOut++;
+                        outOfViewport.push_front(projectedVerticesVP[v]);
+                    }
                 }
+                else
+                    totalBack++;
             }
-            else
-                totalBack++;
-        }
 
-        //qDebug() << "Face " << face << " - Vertice on back: " << totalBack << ", not in back but out of viewport: " << totalOut;
+            //qDebug() << "Face " << face << " - Vertice on back: " << totalBack << ", not in back but out of viewport: " << totalOut;
 
-        /* out only count number of vertices out that are not on backface */
+            /* out only count number of vertices out that are not on backface */
 
-        if(totalBack==4)
-            hidden = true;
-        else if(totalBack==3 && totalOut>=1)
-            hidden = true;
-        else if(totalBack>=2 && totalOut>=2)
-        {
-            //qDebug() << "Face " << face << " - check inside";
-            if(outOfViewport[0].x<outOfViewport[1].x)
+            if(totalBack==4)
+                hidden = true;
+            else if(totalBack==3 && totalOut>=1)
+                hidden = true;
+            else if(totalBack>=2 && totalOut>=2)
             {
-                hidden = !faceIsInside(outOfViewport[0].x, outOfViewport[0].y, outOfViewport[1].x, outOfViewport[1].y, width(), height());
-                //qDebug() << "Face " << face << " - Check if inside (" << outOfViewport[0].x << "," << outOfViewport[0].y << ") (" << outOfViewport[1].x << "," << outOfViewport[1].y << ")";
+                //qDebug() << "Face " << face << " - check inside";
+                if(outOfViewport[0].x<outOfViewport[1].x)
+                {
+                    hidden = !faceIsInside(outOfViewport[0].x, outOfViewport[0].y, outOfViewport[1].x, outOfViewport[1].y, width(), height());
+                    //qDebug() << "Face " << face << " - Check if inside (" << outOfViewport[0].x << "," << outOfViewport[0].y << ") (" << outOfViewport[1].x << "," << outOfViewport[1].y << ")";
+                }
+                else
+                {
+                    hidden = !faceIsInside(outOfViewport[1].x, outOfViewport[1].y, outOfViewport[0].x, outOfViewport[0].y, width(), height());
+                    //qDebug() << "Face " << face << " - Check if inside (" << outOfViewport[1].x << "," << outOfViewport[1].y << ") (" << outOfViewport[0].x << "," << outOfViewport[0].y << ")";
+                }
+                /*
+                float dx = fabs(outOfViewport[0].x-outOfViewport[1].x)/2;
+                float dy = fabs(outOfViewport[0].y-outOfViewport[1].y)/2;
+
+                //if(dx>dy)
+                    if(outOfViewport[0].x < -dx || outOfViewport[1].x < -dx || outOfViewport[0].x > width()+dx || outOfViewport[1].x > width()+dx)
+                        if(outOfViewport[0].y < -dy || outOfViewport[1].y < -dy || outOfViewport[0].y > height()+dy || outOfViewport[1].y > height()+dy)
+                            hidden = true;
+                        //hidden = true;
+                */
+
             }
-            else
+
+            // TODO: UNCOMMENT !!!!!!!
+            if(!hidden)
             {
-                hidden = !faceIsInside(outOfViewport[1].x, outOfViewport[1].y, outOfViewport[0].x, outOfViewport[0].y, width(), height());
-                //qDebug() << "Face " << face << " - Check if inside (" << outOfViewport[1].x << "," << outOfViewport[1].y << ") (" << outOfViewport[0].x << "," << outOfViewport[0].y << ")";
+                //qDebug() << "Face " << face << " visible";
+                visibleFaces.append(face);
             }
-            /*
-            float dx = fabs(outOfViewport[0].x-outOfViewport[1].x)/2;
-            float dy = fabs(outOfViewport[0].y-outOfViewport[1].y)/2;
-
-            //if(dx>dy)
-                if(outOfViewport[0].x < -dx || outOfViewport[1].x < -dx || outOfViewport[0].x > width()+dx || outOfViewport[1].x > width()+dx)
-                    if(outOfViewport[0].y < -dy || outOfViewport[1].y < -dy || outOfViewport[0].y > height()+dy || outOfViewport[1].y > height()+dy)
-                        hidden = true;
-                    //hidden = true;
-            */
-
         }
 
-        // TODO: UNCOMMENT !!!!!!!
-        if(!hidden)
-        {
-            //qDebug() << "Face " << face << " visible";
-            visibleFaces.append(face);
-        }
+        /* update tesselation with visible faces */
+        tesselation->updateVisibleFaces(visibleFaces);
     }
-
-    /* update tesselation with visible faces */
-    tesselation->updateVisibleFaces(visibleFaces);
 }
 
 
