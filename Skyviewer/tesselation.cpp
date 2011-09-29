@@ -52,13 +52,11 @@ void Tesselation::updateVisibleFaces(QVector<int> faces)
     this->facesv = faces;
 
     /* tell cache which faces are visible */
-    /*
-    faceCache->updateStatus(faces, nside);
+    faceCache->updateStatus(faces, nside, mollview);
     if(DISPLAY_TEXTURE)
         textureCache->updateStatus(faces, nside);
     if(displayPolarizationVectors)
-        overlayCache->updateStatus(faces, nside);
-        */
+        overlayCache->updateStatus(faces, nside, mollview, MapOverlay::POLARIZATION_VECTORS);
 }
 
 
@@ -67,11 +65,11 @@ void Tesselation::preloadFaces(QVector<int> faces, int nside)
 {
     for(int i=0; i<faces.size(); i++)
     {
-        faceCache->preloadFace(faces[i], nside);
+        faceCache->preloadFace(faces[i], nside, mollview);
         if(DISPLAY_TEXTURE)
             textureCache->preloadFace(faces[i], nside);
         if(displayPolarizationVectors)
-            overlayCache->preloadFace(faces[i], nside, MapOverlay::POLARIZATION_VECTORS);
+            overlayCache->preloadFace(faces[i], nside, mollview, MapOverlay::POLARIZATION_VECTORS);
     }
 }
 
@@ -92,13 +90,12 @@ void Tesselation::draw()
     /* get faces */
     for(int i=0; i<totalFaces; i++)
     {
-        face = faceCache->getFace(facesv[i], nside);
+        face = faceCache->getFace(facesv[i], 128, mollview);
 
         /* display texture */
         if(DISPLAY_TEXTURE)
         {
             texture = textureCache->getFace(facesv[i], nside);
-            //qDebug() << "Trying to draw texture (" << facesv[i] << "," << nside << ")  " << texture;
             texture->draw();
         }
 
@@ -112,8 +109,7 @@ void Tesselation::draw()
         /* display polarization vectors */
         if(displayPolarizationVectors)
         {
-            //qDebug() << "Displaying polarization vectors";
-            polVectors = (PolarizationVectors*)overlayCache->getFace(facesv[i], nside, MapOverlay::POLARIZATION_VECTORS);
+            polVectors = (PolarizationVectors*)overlayCache->getFace(facesv[i], nside, mollview, MapOverlay::POLARIZATION_VECTORS);
             polVectors->draw();
         }
 
@@ -159,19 +155,11 @@ void Tesselation::showGrid(bool show)
 void Tesselation::changeTo3D()
 {
     if(mollview)
-    {
         mollview = false;
-
-        /* update faceCache and overlayCache */
-    }
 }
 
 void Tesselation::changeToMollweide()
 {
     if(!mollview)
-    {
         mollview = true;
-
-        /* update faceCache and overlayCache */
-    }
 }
