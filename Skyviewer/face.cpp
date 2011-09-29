@@ -179,11 +179,6 @@ void Face::createVertexs()
             textureCoords[j] = verticesIT->s;
             textureCoords[j+1] = verticesIT->t;
             j+=2;
-            if(faceNumber==4 && nside==1)
-            {
-                qDebug() << "Pixel " << i/3-1 << " vertex: " << verticesIT->x << "," << verticesIT->y << "," << verticesIT->z;
-                qDebug() << "Pixel " << i/3-1 << " textCoord: " << verticesIT->s << "," << verticesIT->t;
-            }
         }
     }
 
@@ -237,16 +232,11 @@ void Face::freeVertices()
 
 void Face::setRigging(int nside, bool mollview, double radius)
 {
-    if(!mollview)
-        strips = FaceVertices::instance()->getFaceVertices(faceNumber, nside, radius);
+    strips = FaceVertices::instance()->getFaceVertices(faceNumber, nside, radius);
 
     /* 2*(nside+1) per each strip */
     totalVertices = 2*(nside+1)*nside;
     this->nside = nside;
-
-    QVector<Strip>::iterator stripIT;
-    QVector<Vertice>::iterator verticeIT;
-
 
     /* texture coordinates */
     /*
@@ -293,8 +283,8 @@ void Face::toMollweide(double rad)
         }
     }
 
-    if(faceNumber == 6)
-        toMollweideBackfaceSplit();
+    //if(faceNumber == 6)
+    //    toMollweideBackfaceSplit();
 }
 
 
