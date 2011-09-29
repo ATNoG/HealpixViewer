@@ -336,7 +336,7 @@ void MapViewer::mouseMoveEvent(QMouseEvent* e, bool propagate)
     if(propagate)
         emit(cameraChanged(e, MOUSEMOVE, this));
 
-    //checkVisibility();
+    checkVisibility();
 }
 
 
@@ -357,8 +357,9 @@ void MapViewer::wheelEvent(QWheelEvent *e, bool propagate)
 
     if(zoomChanged)
     {
-        //updateGL();
-        //checkVisibility();
+        // TODO: should be enabled or commented ?
+        updateGL();
+        checkVisibility();
         if(propagate)
             emit(cameraChanged(e, MOUSEWHEEL, this));
         //updateGL();
@@ -478,11 +479,11 @@ void MapViewer::checkVisibility()
         }
 
         // TODO: UNCOMMENT !!!!!!!
-        //if(!hidden)
-        //{
+        if(!hidden)
+        {
             //qDebug() << "Face " << face << " visible";
             visibleFaces.append(face);
-        //}
+        }
     }
 
     /* update tesselation with visible faces */
