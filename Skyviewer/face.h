@@ -15,9 +15,9 @@ class Face
 {
 public:
     Face();
-    Face(int faceNumber);
+    Face(int faceNumber, int nside, bool mollweide);
     ~Face();
-    void setRigging(int nside, bool mollview, double rad = 1.);
+    void setRigging(double rad = 1.);
     void createVertexs();
     void createDisplayList();
     void createBuffer();
@@ -27,21 +27,22 @@ public:
 private:
     int faceNumber;
     int nside;
+    bool mollweide;
     int totalVertices;
     QVector<Strip> strips;
     bool bufferInitialized;
     bool vertexsCalculated;
 
-
     void toMollweide(double rad);
     double toMollweide(const double phi, const double lambda, double &x, double &y);
     void toMollweideBackfaceSplit();
-    void freeVertices();
 
     GLfloat* vertexs;
     GLfloat* textureCoords;
     QGLBuffer* vertexBuffer;
     QGLBuffer* textureBuffer;
+
+    QList<int> numberVertices;
 };
 
 #endif // FACE_H

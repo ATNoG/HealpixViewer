@@ -7,9 +7,11 @@ Face::Face()
 }
 
 
-Face::Face(int _faceNumber)
+Face::Face(int faceNumber, int nside, bool mollweide)
 {
-    faceNumber = _faceNumber;
+    this->faceNumber = faceNumber;
+    this->nside = nside;
+    this->mollweide = mollweide;
     vertexsCalculated = false;
     bufferInitialized = false;
     vertexBuffer = NULL;
@@ -39,8 +41,10 @@ Face::~Face()
 
 void Face::draw()
 {
-    if(!bufferInitialized)
-        createBuffer();
+
+    if(GPU_BUFFER)
+        if(!bufferInitialized)
+            createBuffer();
 
     //QTime time1;
     //time1.start();
@@ -122,25 +126,57 @@ void Face::draw()
     //glPolygonMode(GL_FRONT, GL_LINE);
     //glPolygonMode(GL_BACK, GL_NONE);
 
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-    vertexBuffer->bind();
-    glVertexPointer(3, GL_FLOAT, 0, BUFFER_OFFSET(0));
-
-    textureBuffer->bind();
-    glTexCoordPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
-
-    for(int i=0; i<nside; i++)
+    if(GPU_BUFFER)
     {
-        glDrawArrays(GL_QUAD_STRIP, 2*(nside+1)*i, 2*(nside+1));
+        glEnableClientState(GL_VERTEX_ARRAY);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+        vertexBuffer->bind();
+        glVertexPointer(3, GL_FLOAT, 0, BUFFER_OFFSET(0));
+
+        textureBuffer->bind();
+        glTexCoordPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
+
+        if(!(mollweide && faceNumber==6))
+        {
+            for(int i=0; i<nside; i++)
+            {
+                glDrawArrays(GL_QUAD_STRIP, 2*(nside+1)*i, 2*(nside+1));
+            }
+        }
+        else
+        {
+            long pos = 0;
+            for(int i=0; i<numberVertices.size(); i++)
+            {
+                glDrawArrays(GL_QUAD_STRIP, pos, numberVertices[i]);
+                pos+= numberVertices[i];
+            }
+        }
+
+        vertexBuffer->release();
+        textureBuffer->release();
+
+        glDisableClientState(GL_VERTEX_ARRAY);
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     }
+    else
+    {
+        /* use normal draw - very slow!! */
+        QVector<Strip>::iterator stripIT;
+        QVector<Vertice>::iterator verticesIT;
 
-    vertexBuffer->release();
-    textureBuffer->release();
-
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        for(stripIT=strips.begin(); stripIT!=strips.end(); ++stripIT)
+        {
+            glBegin(GL_QUAD_STRIP);
+            for(verticesIT=stripIT->begin(); verticesIT!=stripIT->end(); verticesIT++)
+            {
+                verticesIT->draw();
+            }
+            glEnd();
+        }
+    }
 
     //int ms = time1.elapsed();
     //qDebug() << "Time drawbuffer (nside " << nside << "): " << ms;
@@ -224,13 +260,7 @@ void Face::createBuffer()
 }
 
 
-void Face::freeVertices()
-{
-    strips.clear();
-}
-
-
-void Face::setRigging(int nside, bool mollview, double radius)
+void Face::setRigging(double radius)
 {
     strips = FaceVertices::instance()->getFaceVertices(faceNumber, nside, radius);
 
@@ -238,24 +268,21 @@ void Face::setRigging(int nside, bool mollview, double radius)
     totalVertices = 2*(nside+1)*nside;
     this->nside = nside;
 
-    /* texture coordinates */
-    /*
-    stripIT = strips.begin();
-    int j=0;
-    for(int i = 0; i < nside; i++)
-    {
-        for(verticeIT=stripIT->begin(); verticeIT!=stripIT->end(); ++verticeIT)
-        {
-            verticeIT->s = 0.25*verticeIT->s + 0.25*(faceNumber % 4);
-            verticeIT->t = 0.25*verticeIT->t + 0.25*(faceNumber / 4);
-            j++;
-        }
-        stripIT++;
-    }
-    */
-
-    if(mollview)
+    if(mollweide)
         toMollweide(radius);
+
+    if(faceNumber==6 && mollweide)
+    {
+        QVector<Strip>::iterator stripIT;
+        long tot = 0;
+        for(stripIT=strips.begin(); stripIT!=strips.end(); ++stripIT)
+        {
+            tot+= stripIT->size();
+            numberVertices.append(stripIT->size());
+        }
+
+        totalVertices = tot;
+    }
 }
 
 
@@ -283,16 +310,13 @@ void Face::toMollweide(double rad)
         }
     }
 
-    //if(faceNumber == 6)
-    //    toMollweideBackfaceSplit();
+    if(faceNumber == 6)
+        toMollweideBackfaceSplit();
 }
 
 
 void Face::toMollweideBackfaceSplit()
 {
-    if(faceNumber!=6)
-        return;
-
     // copy the current list to temp storage
     QVector<Strip> oldstrips;
     oldstrips.resize(strips.size());
@@ -311,7 +335,6 @@ void Face::toMollweideBackfaceSplit()
     }
 
     // Now refill it, making the break along the back as needed
-    srcqli = oldstrips.begin();
     strips.resize(0);
     uint i = 0;
     for(srcqli = oldstrips.begin(); srcqli != oldstrips.end(); ++srcqli)
