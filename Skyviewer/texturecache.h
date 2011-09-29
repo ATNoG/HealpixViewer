@@ -13,8 +13,6 @@
 #include "texture.h"
 #include "healpixmap.h"
 
-
-#define MAX_TILES 12500//59//10000//12500
 #define CACHE_MARGIN 5200//0//3000//12498
 
 
@@ -27,7 +25,7 @@ class TextureCache : public QObject
     Q_OBJECT
 
 public:
-    TextureCache(HealpixMap* map, int minNside, int maxNside, int maxTiles = MAX_TILES);
+    TextureCache(HealpixMap* map, int minNside, int maxNside, int maxTiles = TEXTURECACHE_MAX_TILES);
     ~TextureCache();
 
     /* inform cache about the faces that are visible and the nside used, so cache can preview the next faces to preload */
