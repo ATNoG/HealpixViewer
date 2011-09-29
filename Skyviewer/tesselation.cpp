@@ -52,9 +52,13 @@ void Tesselation::updateVisibleFaces(QVector<int> faces)
     this->facesv = faces;
 
     /* tell cache which faces are visible */
+    /*
     faceCache->updateStatus(faces, nside);
     if(DISPLAY_TEXTURE)
         textureCache->updateStatus(faces, nside);
+    if(displayPolarizationVectors)
+        overlayCache->updateStatus(faces, nside);
+        */
 }
 
 
@@ -66,16 +70,11 @@ void Tesselation::preloadFaces(QVector<int> faces, int nside)
         faceCache->preloadFace(faces[i], nside);
         if(DISPLAY_TEXTURE)
             textureCache->preloadFace(faces[i], nside);
+        if(displayPolarizationVectors)
+            overlayCache->preloadFace(faces[i], nside, MapOverlay::POLARIZATION_VECTORS);
     }
 }
 
-/*
-void Tesselation::getFace(int faceNumber)
-{
-    Face* face = faceCache->getFace(faceNumber, nside);
-    visibleFaces.append(face);
-}
-*/
 
 void Tesselation::setMap(HealpixMap* map)
 {
@@ -130,7 +129,8 @@ void Tesselation::draw()
 /* enable polarization vectors */
 void Tesselation::showPolarizationVectors(bool show)
 {
-    displayPolarizationVectors = show;
+    if(healpixmap->hasPolarization())
+        displayPolarizationVectors = show;
 }
 
 
@@ -148,5 +148,30 @@ void Tesselation::changeMapField(HealpixMap::MapType field)
 
 void Tesselation::showGrid(bool show)
 {
-    displayGrid = show;
+    if(!mollview)
+        displayGrid = show;
+    else
+        displayGrid = false;
+
+    // TODO: grid should be shown in mollweide ?
+}
+
+void Tesselation::changeTo3D()
+{
+    if(mollview)
+    {
+        mollview = false;
+
+        /* update faceCache and overlayCache */
+    }
+}
+
+void Tesselation::changeToMollweide()
+{
+    if(!mollview)
+    {
+        mollview = true;
+
+        /* update faceCache and overlayCache */
+    }
 }

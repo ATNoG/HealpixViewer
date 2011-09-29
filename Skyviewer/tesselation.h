@@ -49,6 +49,9 @@ public:
     void updateTextureThreshold(float min, float max);
     void changeMapField(HealpixMap::MapType field);
 
+    void changeTo3D();
+    void changeToMollweide();
+
 private:
     int nside;
     //QMap<int, Face*> availableFaces;

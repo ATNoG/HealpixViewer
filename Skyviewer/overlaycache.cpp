@@ -14,7 +14,8 @@ OverlayCache::OverlayCache(HealpixMap* map, int minNside, int maxNside, int maxT
     /* open healpix map */
     healpixMap = map;
 
-    generateBaseOverlays();
+    if(map->hasPolarization())
+        generateBaseOverlays();
 }
 
 
