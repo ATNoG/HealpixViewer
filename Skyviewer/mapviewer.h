@@ -72,6 +72,7 @@ protected:
     virtual void wheelEvent(QWheelEvent* e);
     virtual void postSelection(const QPoint &point);
     virtual void resizeGL(int width, int height);
+    virtual void keyPressEvent(QKeyEvent *);
 
 
 public slots:
@@ -85,14 +86,14 @@ private:
     int currentZoomLevel;
     float cameraPosition;
     bool initialized;
+    bool displayCurrentNside;
     int maxNside;
     HealpixMap *healpixMap;
     HealpixMap::MapType mapType;
 
     QProgressDialog *progressDialog;
 
-    QGLBuffer* buffer;
-    GLfloat* vertexs;
+    CameraConstraint *constraint;
 
     Camera* predictCamera;
     ManipulatedFrame* currentManipulatedFrame;

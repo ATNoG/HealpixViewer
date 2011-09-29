@@ -20,6 +20,8 @@ MapViewer::MapViewer(QWidget *parent) :
     this->faceCache = NULL;
     this->overlayCache = NULL;
     this->healpixMap = NULL;
+    this->displayCurrentNside = true;
+    this->constraint = NULL;
 
     /*
     progressDialog = new QProgressDialog("Processing Map", "Cancel", 0, 20, this);
@@ -63,6 +65,9 @@ void MapViewer::draw()
 
         // Restore the original (world) coordinate system
         glPopMatrix();
+
+        if(displayCurrentNside)
+            drawText(10, 12, QString("Nside: %1").arg(currentNside), QFont("Arial", 9));
     }
 }
 
@@ -176,11 +181,6 @@ void MapViewer::init()
     camera()->lookAt( Vec(0,0,0) );
     camera()->setUpVector(Vec(0,0,1));
 
-    /*qglviewer::CameraConstraint *constraint;
-    constraint = new CameraConstraint(camera());
-    constraint->setRotationConstraintType(AxisPlaneConstraint::FREE);
-    camera()->frame()->setConstraint(constraint);*/
-
     currentManipulatedFrame = new ManipulatedFrame();
     setManipulatedFrame(currentManipulatedFrame);
 
@@ -225,16 +225,61 @@ void MapViewer::init()
         }
         i++;
     }
+
+
+    //changeToMollview();
 }
 
 void MapViewer::changeToMollview()
 {
+    qDebug() << "Changing to Mollweide";
 
+    if(constraint!=NULL)
+        delete constraint;
+
+    /* set camera constraints: translation enabled, rotation disabled */
+    constraint = new CameraConstraint(camera());
+    constraint->setRotationConstraintType(AxisPlaneConstraint::FORBIDDEN);
+    constraint->setTranslationConstraintType(AxisPlaneConstraint::FREE);
+    currentManipulatedFrame->setConstraint(constraint);
+
+    /* update map */
+    if(tesselation!=NULL)
+        delete tesselation;
+
+    /* update tesselation */
+    tesselation->changeToMollweide();
+    updateGL();
 }
 
 void MapViewer::changeTo3D()
 {
+    qDebug() << "Changing to 3D";
 
+    if(constraint!=NULL)
+        delete constraint;
+
+    /* set camera constraints: translation disabled, rotation enabled */
+    constraint = new CameraConstraint(camera());
+    constraint->setRotationConstraintType(AxisPlaneConstraint::FREE);
+    constraint->setTranslationConstraintType(AxisPlaneConstraint::FORBIDDEN);
+    currentManipulatedFrame->setConstraint(constraint);
+
+    /* update tesselation */
+    tesselation->changeTo3D();
+    updateGL();
+}
+
+
+void MapViewer::keyPressEvent(QKeyEvent *e)
+{
+    switch(e->key())
+    {
+        case Qt::Key_N:
+            displayCurrentNside = !displayCurrentNside;
+            updateGL();
+            break;
+    }
 }
 
 
@@ -434,11 +479,12 @@ void MapViewer::checkVisibility()
 
         }
 
-        if(!hidden)
-        {
+        // TODO: UNCOMMENT !!!!!!!
+        //if(!hidden)
+        //{
             //qDebug() << "Face " << face << " visible";
             visibleFaces.append(face);
-        }
+        //}
     }
 
     /* update tesselation with visible faces */
