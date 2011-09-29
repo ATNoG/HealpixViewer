@@ -195,7 +195,6 @@ bool FaceCache::cleanCache(int minSpace)
 
 void FaceCache::preloadFace(int faceNumber, int nside)
 {
-    return;
     qDebug() << "Preload face " << faceNumber << "(" << nside << ")";
 
     /* request access to cache */
