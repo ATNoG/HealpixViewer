@@ -3,7 +3,7 @@
 #include <QAction>
 #include "workspace.h"
 
-MapViewport::MapViewport(QWidget *parent, QString title, int viewportId) :
+MapViewport::MapViewport(QWidget *parent, QString title, int viewportId, const QGLWidget* shareWidget) :
     QWidget(parent)
 {
     this->title = title;
@@ -13,6 +13,7 @@ MapViewport::MapViewport(QWidget *parent, QString title, int viewportId) :
     this->viewportId = viewportId;
     this->fieldsActionGroup = NULL;
     this->info = NULL;
+    this->shareWidget = shareWidget;
 
     /* configure the user interface */
     configureUI();
@@ -71,7 +72,7 @@ void MapViewport::configureUI()
     QLabel* lbltitle = new QLabel;
     lbltitle->setText(title);
 
-    mapviewer = new MapViewer(this);
+    mapviewer = new MapViewer(this, shareWidget);
     mapviewer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);   // allow viewer area to expand
 
     /* create toolbar */
@@ -183,22 +184,22 @@ void MapViewport::deselectViewport(bool changeCheckbox)
 
 void MapViewport::changeToMollview()
 {
-    if(!mollview)
-    {
+    //if(!mollview)
+    //{
         qDebug() << "Changing " << title << " to Mollview";
         mapviewer->changeToMollview();
         mollview = true;
-    }
+    //}
 }
 
 void MapViewport::changeTo3D()
 {
-    if(mollview)
-    {
+    //if(mollview)
+    //{
         qDebug() << "Changing " << title << " to 3D";
         mapviewer->changeTo3D();
         mollview = false;
-    }
+    //}
 }
 
 void MapViewport::resetViewport()

@@ -9,6 +9,7 @@ ViewportManager::ViewportManager(QWidget *parent) :
     defaultTitle = QString("HealpixMap %1");
     usedViewports = 0;
     viewportIdx = 0;
+    shareWidget = new QGLWidget();
 
     /* setup ui */
     QIcon openicon  = QIcon::fromTheme("document-open");
@@ -240,11 +241,14 @@ void ViewportManager::openFiles(QStringList filenames)
         if(usedViewports!=MAXVIEWPORTS)
         {
             QString title = defaultTitle.arg(viewportIdx);
-            MapViewport *viewport = new MapViewport(0, title, viewportIdx);
+
+
+            MapViewport *viewport = new MapViewport(0, title, viewportIdx, shareWidget);
             bool opened = viewport->openMap(fitsfile);
 
             if(opened)
             {
+                /* get map information */
                 mapInfo *info = viewport->getMapInfo();
                 viewports.insert(viewportIdx, viewport);
                 mapsInformation.insert(viewportIdx, info);

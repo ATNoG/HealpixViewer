@@ -126,7 +126,6 @@ Face* FaceCache::loadFace(int faceNumber, int nside)
 #endif
 
     face->setRigging(nside, false);
-    //face->createDisplayList();
     //face->createBuffer();
 
     /* store the face into the cache */

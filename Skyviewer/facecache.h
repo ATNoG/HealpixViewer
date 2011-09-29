@@ -41,7 +41,7 @@ public:
 
     static FaceCache *instance(int minNside, int maxNside)
     {
-        //if(!s_instance)
+        if(!s_instance)
             s_instance = new FaceCache(minNside, maxNside);
         return s_instance;
     }

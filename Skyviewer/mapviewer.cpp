@@ -6,8 +6,8 @@
 
 using namespace qglviewer;
 
-MapViewer::MapViewer(QWidget *parent) :
-    QGLViewer(parent)
+MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
+    QGLViewer(parent, shareWidget)
 {
     skymap = NULL;
     initialized = false;
@@ -38,8 +38,6 @@ MapViewer::~MapViewer()
         delete tesselation;
     if(textureCache!=NULL)
         delete textureCache;
-    if(faceCache!=NULL)
-        delete faceCache;
     if(overlayCache!=NULL)
         delete overlayCache;
     if(healpixMap!=NULL)
@@ -338,7 +336,7 @@ void MapViewer::mouseMoveEvent(QMouseEvent* e, bool propagate)
     if(propagate)
         emit(cameraChanged(e, MOUSEMOVE, this));
 
-    checkVisibility();
+    //checkVisibility();
 }
 
 
@@ -655,8 +653,10 @@ int MapViewer::zoomToNside(int zoomLevel)
     // TODO: calculate exp based on MIN_NSIDE
     int nside = pow(2, EXP_NSIDE+baseZoomLevel);
 
-    if(nside<64)
-       nside = 64;
+    if(nside<MIN_NSIDE)
+        nside = MIN_NSIDE;
+    if(nside>maxNside)
+        nside = maxNside;
 
     return nside;
 }

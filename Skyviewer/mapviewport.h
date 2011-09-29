@@ -24,7 +24,7 @@ class MapViewport : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MapViewport(QWidget *parent, QString title, int viewportId);
+    explicit MapViewport(QWidget *parent, QString title, int viewportId, const QGLWidget* shareWidget=NULL);
     ~MapViewport();
 
     bool isSelected();
@@ -81,6 +81,7 @@ private:
     QAction *actionMaximize, *actionRestore, *actionSync;
     QActionGroup* fieldsActionGroup;
     mapInfo* info;
+    const QGLWidget* shareWidget;
 
     void fillMapField();
     void updateMapField(HealpixMap::MapType field);

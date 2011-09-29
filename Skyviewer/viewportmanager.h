@@ -60,6 +60,7 @@ private:
     QSignalMapper *signalMapper;
     bool isInWorkspace(int viewportId);
     QSet<int> displayedViewports;
+    const QGLWidget* shareWidget;
 
     /* open files and create viewports */
     void openFiles(QStringList filenames);

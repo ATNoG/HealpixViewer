@@ -38,7 +38,7 @@ class MapViewer : public QGLViewer
     Q_OBJECT
 
 public:
-    explicit MapViewer(QWidget *parent = 0);
+    explicit MapViewer(QWidget *parent = 0, const QGLWidget* shareWidget=NULL);
     ~MapViewer();
     void changeToMollview();
     void changeTo3D();

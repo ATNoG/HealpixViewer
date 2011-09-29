@@ -71,6 +71,10 @@ MainWindow::~MainWindow()
 {
     delete ui;
     delete workspace;
+
+    /* delete faceCache */
+    FaceCache* faceCache = FaceCache::instance(MIN_NSIDE, MAX_NSIDE);
+    delete faceCache;
 }
 
 
