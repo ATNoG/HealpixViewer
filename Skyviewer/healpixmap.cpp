@@ -721,10 +721,13 @@ float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, i
 
     /* read content */
     QFile f(path);
+
+    cacheAccess.lock();
     f.open(QIODevice::ReadOnly);
     f.seek(firstPosition*sizeof(float));
     f.read((char*)values, length*sizeof(float));
     f.close();
+    cacheAccess.unlock();
 
     return values;
 }

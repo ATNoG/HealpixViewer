@@ -4,6 +4,7 @@
 #include <QString>
 #include <vector>
 #include <map>
+#include <QMutex>
 #include <QColor>
 #include <QFileInfo>
 #include <QDir>
@@ -101,6 +102,7 @@ private:
     void readMapInfo();
     bool checkMapCache();
 
+    QMutex cacheAccess;
 
     float* readMapCache(int nside, MapType mapType, int firstPosition=0, int length=0);
 
