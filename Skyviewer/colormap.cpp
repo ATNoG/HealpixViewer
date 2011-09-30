@@ -1,3 +1,11 @@
+#include <iostream>
+#include "colormap.h"
+#include "define_colortable.h"
+
+
+ColorMapManager* ColorMapManager::s_instance = 0;
+
+
 /* ============================================================================
 'colortable.cpp' defines a pair of classes used to maintain the color tables
 required by the application.
@@ -9,9 +17,7 @@ QT4 adaption and Black/White color table by Michael R. Greason, ADNET,
 /*
                         Fetch header files.
 */
-#include <iostream>
-#include "colortable.h"
-#include "define_colortable.h"
+
 
 using namespace std;
 /* ============================================================================
@@ -35,8 +41,9 @@ Arguments:
 
 Written by Michael R. Greason, ADNET, 27 August 2007.
 ---------------------------------------------------------------------------- */
-ColorTable::ColorTable()
+ColorMap::ColorMap()
 {
+    this->id = 0;
         name = default_ct_name;
         define_table(default_colortable);
         return;
@@ -52,8 +59,9 @@ Arguments:
 
 Written by Michael R. Greason, ADNET, 27 August 2007.
 ---------------------------------------------------------------------------- */
-ColorTable::ColorTable(int id)
+ColorMap::ColorMap(int id)
 {
+    this->id = id;
         switch (id)
         {
           case 1:
@@ -67,6 +75,13 @@ ColorTable::ColorTable(int id)
         }
         return;
 }
+
+
+int ColorMap::getId()
+{
+    return id;
+}
+
 /* ----------------------------------------------------------------------------
 'define_table' performs the work in defining a color table from
 'define_colortable.h'.  This routine does NOT define the name of the table.
@@ -79,7 +94,7 @@ Returned:
 
 Written by Michael R. Greason, ADNET, 27 August 2007.
 ---------------------------------------------------------------------------- */
-void ColorTable::define_table (float intab[][3])
+void ColorMap::define_table (float intab[][3])
 {
         for(ncols = 0; intab[ncols][0] != -1; ncols++);
         table.resize(ncols);
@@ -98,7 +113,7 @@ Returned:
 
 Written by Michael R. Greason, ADNET, 27 August 2007.
 ---------------------------------------------------------------------------- */
-QColor ColorTable::operator[](float v) const
+QColor ColorMap::operator[](float v) const
 {
         v = v < 0 ? 0 : v;
         v = v > 1 ? 1 : v;
@@ -119,62 +134,55 @@ Returned:
 
 Written by Michael R. Greason, ADNET, 27 August 2007.
 ---------------------------------------------------------------------------- */
-QPixmap ColorTable::getPixmap()
+QPixmap ColorMap::getPixmap()
 {
         cout << "ColorTable::getPixmap(): Not implemented yet!" << endl;
         return QPixmap();
 }
-/* ============================================================================
-'ColorTableList' maintains a vector of color tables.
-============================================================================ */
-/* ----------------------------------------------------------------------------
-'ColorTableList' is the default class constructor, defining all the color
-tables defined in 'define_colortable.h'.
 
-Arguments:
-        None.
-
-Written by Michael R. Greason, ADNET, 27 August 2007.
----------------------------------------------------------------------------- */
-ColorTableList::ColorTableList(void)
+QString ColorMap::getName()
 {
-        set();
+    return name;
 }
-/* ----------------------------------------------------------------------------
-'~ColorTableList' is class destructor, destroying the color tables before
-this instance is destroyed.
 
-Arguments:
-        None.
 
-Written by Michael R. Greason, ADNET, 27 August 2007.
----------------------------------------------------------------------------- */
-ColorTableList::~ColorTableList()
+
+
+
+
+
+ColorMapManager::ColorMapManager()
 {
-        for( iterator cti = begin(); cti != end(); ++cti){
-                delete *cti;
-        }
-        return;
+    readColorMaps();
 }
-/* ----------------------------------------------------------------------------
-'set' defines all the color tables defined in 'define_colortable.h'.
 
-Arguments:
-        None.
-
-Returned:
-        flg - true if successful.
-
-Written by Michael R. Greason, ADNET, 27 August 2007.
----------------------------------------------------------------------------- */
-bool ColorTableList::set()
+ColorMapManager::~ColorMapManager()
 {
-        ColorTable *ct;
-        clear();
-        for (int i = 0; i < colortable_count; i++)
-        {
-                ct = new ColorTable(i);
-                push_back(ct);
-        }
-        return true;
+    for(int i=0; i<colorMaps.size(); i++)
+        delete colorMaps[i];
+}
+
+QList<ColorMap*> ColorMapManager::getColorMaps()
+{
+    return colorMaps;
+}
+
+void ColorMapManager::readColorMaps()
+{
+    ColorMap *cm;
+    for (int i = 0; i < colortable_count; i++)
+    {
+        cm = new ColorMap(i);
+        colorMaps.append(cm);
+    }
+}
+
+ColorMap* ColorMapManager::getColorMap(int id)
+{
+    return colorMaps[id];
+}
+
+ColorMap* ColorMapManager::getDefaultColorMap()
+{
+    return colorMaps[0];
 }
