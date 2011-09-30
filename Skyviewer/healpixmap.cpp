@@ -7,15 +7,18 @@ const double boost = 0.001;
 
 
 /* keywords used to specify the columns */
-char  ICOLNAME[]  = "TEMPERATURE";
+char  ICOLNAME1[]  = "TEMPERATURE";
+char  ICOLNAME2[]  = "Intensity";
 char  QCOLNAME1[]  = "Q_POLARISATION";
 char  QCOLNAME2[] = "QPOLARISATION";
 char  QCOLNAME3[] = "Q_POLARIZATION";
 char  QCOLNAME4[] = "QPOLARIZATION";
+char  QCOLNAME5[] = "QStokesParameter";
 char  UCOLNAME1[]  = "U_POLARISATION";
 char  UCOLNAME2[] = "UPOLARISATION";
 char  UCOLNAME3[] = "U_POLARIZATION";
 char  UCOLNAME4[] = "UPOLARIZATION";
+char  UCOLNAME5[] = "UStokesParameter";
 char  NCOLNAME[]  = "N_OBS";
 
 char  DEFTABLE[]  = "Sky Maps";
@@ -82,7 +85,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
     // TODO: verify if file exists, etc..
 
     fitsfile *fptr;
-    int status=0, hducount, exttype, result, t, icol=0, ncol, qcol, ucol;
+    int status=0, hducount, exttype, result, t, icol=0, ncol=0, qcol=0, ucol=0;
     bool correctHDU;
     QByteArray pathByteArray = path.toLocal8Bit();
 
@@ -123,11 +126,13 @@ void HealpixMap::processFile(QString path, bool generateMaps)
 
         if(exttype==BINARY_TBL)
         {
-            fits_get_colnum(fptr, CASEINSEN, ICOLNAME, &t, &status);
-            if(status==0)
+            if (fits_get_colnum(fptr, CASEINSEN, ICOLNAME1, &t, &status) == 0) icol = t;
+            status = 0;
+            if ((icol == 0) && (fits_get_colnum(fptr, CASEINSEN, ICOLNAME2, &t, &status) == 0)) icol = t;
+
+            if(icol!=0)
             {
                 correctHDU = true;
-                icol = t;
             }
         }
     }
@@ -176,6 +181,8 @@ void HealpixMap::processFile(QString path, bool generateMaps)
     if ((qcol == 0) && (fits_get_colnum(fptr, CASEINSEN, QCOLNAME3, &t, &status) == 0)) qcol = t;
     status = 0;
     if ((qcol == 0) && (fits_get_colnum(fptr, CASEINSEN, QCOLNAME4, &t, &status) == 0)) qcol = t;
+    status = 0;
+    if ((qcol == 0) && (fits_get_colnum(fptr, CASEINSEN, QCOLNAME5, &t, &status) == 0)) qcol = t;
     /* add Q to available maps */
     if(qcol!=0)
         availableMaps.append(Q);
@@ -189,6 +196,8 @@ void HealpixMap::processFile(QString path, bool generateMaps)
     if ((ucol == 0) && (fits_get_colnum(fptr, CASEINSEN, UCOLNAME3, &t, &status) == 0)) ucol = t;
     status = 0;
     if ((ucol == 0) && (fits_get_colnum(fptr, CASEINSEN, UCOLNAME4, &t, &status) == 0)) ucol = t;
+    status = 0;
+    if ((ucol == 0) && (fits_get_colnum(fptr, CASEINSEN, UCOLNAME5, &t, &status) == 0)) ucol = t;
     /* add U to available maps */
     if(ucol!=0)
         availableMaps.append(U);
@@ -322,7 +331,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
 }
 
 
-void HealpixMap::readFITSPrimaryHeader(fitsfile *fptr)
+void HealpixMap::readFITSPrimaryHeader(fitsfile *)
 {
     /* TODO: just check if file conforms to FITS format */
     /* some FITS file declare Ordering here ?! */
@@ -471,14 +480,14 @@ void HealpixMap::writeFITS(char* filename, char* tabname, float* temperature, in
     fitsfile    *fptr;
     int          status = 0;
     int          ncol, col;
-    unsigned int i;
+    //unsigned int i;
     float       *tmp = NULL;
 
     /* Initialize */
     //if (strlen(tabname) <= 0) tabname = NULL;
     //if (tabname == NULL) tabname = DEFTABLE;
     ncol = 0;
-    ttype[ncol] = ICOLNAME; tform[ncol] = DEFFORM; tunit[ncol++] = DEFTUNIT;
+    ttype[ncol] = ICOLNAME1; tform[ncol] = DEFFORM; tunit[ncol++] = DEFTUNIT;
 
 
     /* Try to open and prepare the FITS file for writing. */
@@ -527,7 +536,7 @@ void HealpixMap::writeFITS(char* filename, char* tabname, float* temperature, in
 }
 
 
-void HealpixMap::writeFITSPrimaryHeader(fitsfile *fptr)
+void HealpixMap::writeFITSPrimaryHeader(fitsfile *)
 {
 
 }
@@ -589,23 +598,27 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, long &total
 
     float *polAngles = readMapCache(nside, P, startPixel, pixelsPerFace);
     float *polMagnitudes = readMapCache(nside, P, (12+faceNumber)*pixelsPerFace, pixelsPerFace);
-    float *nobs = readMapCache(nside, NObs, startPixel, pixelsPerFace);
+
+    float *nobs = NULL;
+    if(hasNObs())
+        nobs = readMapCache(nside, NObs, startPixel, pixelsPerFace);
 
     long npixels = pixelsPerFace;
 
     /* calculate number of pixels with observations */
-    for(long i=0; i<pixelsPerFace; i++)
+    if(hasNObs())
     {
-        if(nobs[i]==0)
-            npixels--;
+        for(long i=0; i<pixelsPerFace; i++)
+        {
+            if(nobs[i]==0)
+                npixels--;
+        }
     }
 
-    int spacing = 4;
+    int spacing = 1;
 
     /* allocate space (each vector will have 2 endpoints, of 3 coordinates each */
     float* polVectors = new float[npixels*3*2/spacing];
-
-    //qDebug() << "Polarization vector for face " << faceNumber << "(" << nside << ") allocated at " << polVectors;
 
     // TODO: what is this pixsize ?
     double pixsize = (sqrt(M_PI/3.) / nside) / 2.;
@@ -613,26 +626,26 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, long &total
     double theta, phi;
     long pointer = 0;
 
+
     /* get max polarization magnitude */
-
-
     for(long i=0; i<npixels; i+=spacing)
     {
-        if(nobs[i]>0)
-        {
-            pix2ang_nest(nside, i+startPixel, &theta, &phi);
-            float* vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, (double)(meanPolMagnitudes[nside]-devPolMagnitudes[nside]), (double)(meanPolMagnitudes[nside]+devPolMagnitudes[nside]));
+        if(hasNObs() && nobs[i]<=0)
+            break;
 
-            for(int j=0; j<6; j++)
-            {
-                polVectors[pointer] = vector[j];
-                pointer++;
-            }
-            delete[] vector;
+        pix2ang_nest(nside, i+startPixel, &theta, &phi);
+        float* vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, (double)(meanPolMagnitudes[nside]-devPolMagnitudes[nside]), (double)(meanPolMagnitudes[nside]+devPolMagnitudes[nside]),0.5);
+
+        for(int j=0; j<6; j++)
+        {
+            polVectors[pointer] = vector[j];
+            pointer++;
         }
+        delete[] vector;
     }
 
-    delete[] nobs;
+    if(nobs!=NULL)
+        delete[] nobs;
     delete[] polAngles;
     delete[] polMagnitudes;
 
@@ -642,15 +655,17 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, long &total
 }
 
 
-float* HealpixMap::calculatePolarizationVector(double theta, double phi, double angle, double mag, double pixsize, double minMag, double maxMag)
+float* HealpixMap::calculatePolarizationVector(double theta, double phi, double angle, double mag, double pixsize, double minMag, double maxMag,double magnification)
 {
+/*
     if(mag>maxMag)
         mag = maxMag;
     else if(mag<minMag)
         mag = minMag;
-
+*/
     //qDebug() << "Minmag " << minMag;
     double size = (mag-minMag) * ((pixsize/2)/(maxMag-minMag)) + pixsize/2;
+    size*=magnification;
     //qDebug() << "pixsize = " << pixsize;
     //qDebug() << "size = " << size;
     Vec v0(cos(phi)*sin(theta),sin(phi)*sin(theta),cos(theta));

@@ -10,7 +10,6 @@
 #include <QDir>
 #include <QTextOStream>
 #include <QProgressDialog>
-#include "colortable.h"
 #include "histogram.h"
 #include <QGLViewer/qglviewer.h>
 #include <chealpix.h>
@@ -95,7 +94,7 @@ private:
     void writeFITSPrimaryHeader(fitsfile *fptr);
     void writeFITSExtensionHeader(fitsfile *fptr, int newnside);
 
-    float* calculatePolarizationVector(double theta, double phi, double angle, double mag, double pixsize, double minMag, double maxMag);
+    float* calculatePolarizationVector(double theta, double phi, double angle, double mag, double pixsize, double minMag, double maxMag, double magnification);
     Vec spinVector(const Vec &v0, const Vec &vin, double psi);
 
     void writeMapInfo();
