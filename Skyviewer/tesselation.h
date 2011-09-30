@@ -35,6 +35,9 @@ public:
     /* update to new nside */
     void updateNside(int nside);
 
+    /* update vectors nside */
+    void updateVectorsNside(int nside);
+
     /* update viewport info */
     void updateVisibleFaces(QVector<int> facesv);
 
@@ -46,7 +49,7 @@ public:
     void showPolarizationVectors(bool show=true);
     void showGrid(bool show=true);
 
-    void updateTextureThreshold(float min, float max);
+    void updateTextureThreshold(ColorMap* colorMap, float min, float max);
     void changeMapField(HealpixMap::MapType field);
 
     void changeTo3D();
@@ -54,6 +57,7 @@ public:
 
 private:
     int nside;
+    int vectorsNside;
     //QMap<int, Face*> availableFaces;
 
     void createInitialTesselation();

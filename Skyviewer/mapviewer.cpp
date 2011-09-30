@@ -20,8 +20,10 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     this->faceCache = NULL;
     this->overlayCache = NULL;
     this->healpixMap = NULL;
-    this->displayCurrentNside = true;
+    this->displayInfo = true;
     this->constraint = NULL;
+    this->mollweide = !DEFAULT_VIEW_3D;
+    this->showPVectors = false;
 }
 
 MapViewer::~MapViewer()
@@ -50,23 +52,27 @@ void MapViewer::draw()
         // Multiply matrix to get in the frame coordinate system.
         glMultMatrixd(manipulatedFrame()->matrix());
 
-        // Draw an axis using the QGLViewer static function
-        //drawAxis(2.0);
-
         tesselation->draw();
 
         // Restore the original (world) coordinate system
         glPopMatrix();
 
-        if(displayCurrentNside)
+        int zoom = floor(fabs(cameraPosition-maxCameraX)*100);
+
+        if(displayInfo)
+        {
             drawText(10, 12, QString("Nside: %1").arg(currentNside), QFont("Arial", 9));
+            drawText(10, 22, QString("Zoom: %1").arg(zoom), QFont("Arial", 9));
+            if(showPVectors)
+                drawText(10, 32, QString("P.Vectors: %1").arg(currentVectorsNside), QFont("Arial", 9));
+        }
     }
 }
 
 
 bool MapViewer::loadMap(QString fitsfile)
 {
-    currentNside = MIN_NSIDE;
+    currentVectorsNside = currentNside = MIN_NSIDE;
     qDebug() << "Loading on mapviewer: " << fitsfile;
 
     if(!initialized)
@@ -106,10 +112,8 @@ bool MapViewer::loadMap(QString fitsfile)
         qDebug() << "Max nside for this map is " << healpixMap->getMaxNside();
 
         /* create the sphere tesselation */
-        tesselation = new Tesselation(currentNside, false, faceCache, textureCache, overlayCache);
+        tesselation = new Tesselation(currentNside, mollweide, faceCache, textureCache, overlayCache);
         tesselation->setMap(healpixMap);
-
-        //tesselation->showPolarizationVectors();
 
         /* preload next faces */
         preloadFaces();
@@ -162,9 +166,8 @@ void MapViewer::init()
 
     setHandlerKeyboardModifiers(QGLViewer::FRAME,  Qt::NoModifier);
 
-
     /* initial X position of the camera */
-    cameraPosition = INITIAL_CAMERA_POSITION;
+    cameraPosition = 2.8;
 
     /*
         Configure the camera.
@@ -172,27 +175,23 @@ void MapViewer::init()
     camera()->setPosition( Vec(cameraPosition,0,0) );
     camera()->lookAt( Vec(0,0,0) );
     camera()->setUpVector(Vec(0,0,1));
+    camera()->setSceneRadius(1.0);
 
     currentManipulatedFrame = new ManipulatedFrame();
     setManipulatedFrame(currentManipulatedFrame);
 
-/*
-    AxisPlaneConstraint* constraint = new LocalConstraint();
-    manipulatedFrame()->setConstraint(constraint);
-    Vec dir(0.0,0.0,1.0);
-    constraint->setRotationConstraintType(AxisPlaneConstraint::AXIS);
-    constraint->setRotationConstraintDirection(dir);*/
-
-
-    /*
-        Recover the state from a prior run.
-    */
-    //restoreStateFromFile();
-
-
     /* update initial state */
     currentNside = MIN_NSIDE;
-    currentZoomLevel = MIN_ZOOM;
+
+    /* change projection constraints */
+    changeProjectionConstraints();
+
+    /* compute max camera distance for the new viewport size */
+    computeMaxCameraDistance();
+
+    /* update camera position */
+    updateCameraPosition(maxCameraX);
+
 
     /* get face vertices for nside=1 to know the boundary vertices of face */
     // TODO: do this in tesselation ?
@@ -203,59 +202,95 @@ void MapViewer::init()
         QVector<Strip>::iterator stripIT;
         QVector<Vertice>::iterator verticeIT;
 
-        //qDebug() << "size of strips = " << strips.size();
-
         int i=0;
         for(stripIT=strips.begin(); stripIT!=strips.end(); stripIT++)
         {
-            //qDebug() << "  size of strip " << i << " = " << (*stripIT).size();
             for(verticeIT=(*stripIT).begin(); verticeIT!=(*stripIT).end(); verticeIT++)
-            {
-                //qDebug() << "   Vertice in position: " << (*verticeIT).x << ", " << (*verticeIT).y << ", " << (*verticeIT).z;
                 faceBoundaries[face].append(Vec((*verticeIT).x, (*verticeIT).y, (*verticeIT).z));
-            }
         }
         i++;
     }
 
-
-    //changeToMollview();
+    /* update scene */
+    sceneUpdated(false);
 }
+
+
+void MapViewer::updateCameraPosition(float pos)
+{
+    cameraPosition = pos;
+    camera()->setPosition(Vec(cameraPosition,0,0));
+}
+
+
+void MapViewer::changeProjectionConstraints()
+{
+    if(mollweide)
+    {
+        if(constraint!=NULL)
+            delete constraint;
+
+        /* set camera constraints: translation enabled, rotation disabled */
+        constraint = new CameraConstraint(camera());
+        constraint->setRotationConstraintType(AxisPlaneConstraint::FORBIDDEN);
+        constraint->setTranslationConstraintType(AxisPlaneConstraint::FREE);
+
+        /* set min camera X for mollweide */
+        minCameraX = CAMERA_MOLL_MAX_X;
+    }
+    else
+    {
+        if(constraint!=NULL)
+            delete constraint;
+
+        /* set camera constraints: translation disabled, rotation enabled */
+        constraint = new CameraConstraint(camera());
+        constraint->setRotationConstraintType(AxisPlaneConstraint::FREE);
+        constraint->setTranslationConstraintType(AxisPlaneConstraint::FORBIDDEN);
+
+        /* set min camera X for 3D */
+        minCameraX = CAMERA_3D_MAX_X;
+    }
+
+    /* calcula max zoom out */
+    computeMaxCameraDistance();
+}
+
 
 void MapViewer::changeToMollview()
 {    
-    resetView();
+    if(!mollweide)
+    {
+        mollweide = true;
 
-    if(constraint!=NULL)
-        delete constraint;
+        /* set constraints for mollview */
+        changeProjectionConstraints();
 
-    /* set camera constraints: translation enabled, rotation disabled */
-    constraint = new CameraConstraint(camera());
-    constraint->setRotationConstraintType(AxisPlaneConstraint::FORBIDDEN);
-    constraint->setTranslationConstraintType(AxisPlaneConstraint::FREE);
-    currentManipulatedFrame->setConstraint(constraint);
+        resetView();
 
-    /* update tesselation */
-    tesselation->changeToMollweide();
-    updateGL();
+        /* update tesselation */
+        tesselation->changeToMollweide();
+
+        sceneUpdated();
+    }
 }
 
 void MapViewer::changeTo3D()
 {
-    resetView();
+    if(mollweide)
+    {
+        mollweide = false;
 
-    if(constraint!=NULL)
-        delete constraint;
+        /* set constraints for 3D */
+        changeProjectionConstraints();
 
-    /* set camera constraints: translation disabled, rotation enabled */
-    constraint = new CameraConstraint(camera());
-    constraint->setRotationConstraintType(AxisPlaneConstraint::FREE);
-    constraint->setTranslationConstraintType(AxisPlaneConstraint::FORBIDDEN);
-    currentManipulatedFrame->setConstraint(constraint);
+        resetView();
 
-    /* update tesselation */
-    tesselation->changeTo3D();
-    updateGL();
+        /* update tesselation */
+        tesselation->changeTo3D();
+
+        sceneUpdated();
+    }
 }
 
 
@@ -263,9 +298,33 @@ void MapViewer::keyPressEvent(QKeyEvent *e)
 {
     switch(e->key())
     {
-        case Qt::Key_N:
-            displayCurrentNside = !displayCurrentNside;
+        case Qt::Key_I:
+            displayInfo = !displayInfo;
             updateGL();
+            break;
+        case Qt::Key_Plus:
+            updateNside(min(currentNside*2, maxNside));
+            break;
+        case Qt::Key_Minus:
+            updateNside(max(currentNside/2, MIN_NSIDE));
+            break;
+        case Qt::Key_Z:
+            updateVectorsNside(min(currentVectorsNside*2, maxNside));
+            break;
+        case Qt::Key_A:
+            updateVectorsNside(max(currentVectorsNside/2, MIN_NSIDE));
+            break;
+        case Qt::Key_D:
+            qDebug() << "Show entire scene";
+
+            computeMaxCameraDistance();
+            //camera()->showEntireScene();
+            //camera()->fitSphere(Vec(0,0,0), 1.0);
+            //updateGL();
+            //camera()->showEntireScene();
+            //qDebug() << "Scene width: " << camera()->screenWidth() << "," << camera()->screenHeight();
+            //qDebug() << width() << "," << height();
+            //computeMaxCameraDistance();
             break;
     }
 }
@@ -347,12 +406,8 @@ void MapViewer::wheelEvent(QWheelEvent *e, bool propagate)
 
     if(zoomChanged)
     {
-        // TODO: should be enabled or commented ?
-        updateGL();
-        checkVisibility();
         if(propagate)
             emit(cameraChanged(e, MOUSEWHEEL, this));
-        //updateGL();
     }
 }
 
@@ -361,12 +416,23 @@ void MapViewer::resizeGL(int width, int height)
 {
     QGLViewer::resizeGL(width, height);
 
-    if(initialized)
+    qDebug() << "Resized!";
+
+    /* compute max camera distance for the new viewport size */
+    computeMaxCameraDistance();
+
+    qDebug() << "New max cam distance = " << maxCameraX;
+
+    if(FIT_CONTENT_RESIZE)
     {
-        checkVisibility();
-        //qDebug() << "ResizeGL: " << width << "," << height;
-        //checkNside();
+        /* change camera to fit content */
+        updateCameraPosition(maxCameraX);
     }
+
+    updateGL();
+
+    /* update scene */
+    sceneUpdated();
 }
 
 
@@ -486,8 +552,6 @@ void MapViewer::checkVisibility()
 
 void MapViewer::resetView()
 {
-    /* reset zoom to inital position */
-    currentZoomLevel = MIN_ZOOM;
     currentNside = MIN_NSIDE;
 
     /* change to initial position */
@@ -495,25 +559,13 @@ void MapViewer::resetView()
     setManipulatedFrame(newManipulatedFrame);
     delete currentManipulatedFrame;
     currentManipulatedFrame = newManipulatedFrame;
+    currentManipulatedFrame->setConstraint(constraint);
 
     /* update camera position */
-    cameraPosition = INITIAL_CAMERA_POSITION;
-    camera()->setPosition(Vec(cameraPosition, 0.0, 0.0));
+    updateCameraPosition(maxCameraX);
     camera()->lookAt( Vec(0,0,0) );
 
-    int nextNside = zoomToNside(currentZoomLevel);
-
-    /* check visibilty (after apply the zoom, some face can be no longer visible */
-    checkVisibility();
-
-    currentNside = nextNside;
-    tesselation->updateNside(currentNside);
-
-    /* refresh the view */
-    updateGL();
-
-    /* calculate faces to preload */
-    preloadFaces();
+    sceneUpdated();
 }
 
 
@@ -540,119 +592,60 @@ void MapViewer::synchronize(QEvent *e, int type)
 }
 
 
+void MapViewer::sceneUpdated(bool update)
+{
+    /* check wich faces are now visible or not */
+    //checkVisibility();
+
+    /* refresh the view */
+    if(update)
+    {
+        /* check if nside needs to be updated */
+        if(AUTO_NSIDE)
+            checkNside();
+
+        updateGL();
+    }
+
+    /* calculate faces to preload */
+    //preloadFaces();
+}
+
+
 bool MapViewer::zoomIn()
 {
-    if(currentZoomLevel<MAX_ZOOM)
+    float cx = cameraPosition-CAMERA_ZOOM_INC;
+
+    if(cx >= minCameraX)
     {
         /* update camera position */
-        cameraPosition -= CAMERA_ZOOM_INC;
+        cameraPosition = cx;
         camera()->setPosition(Vec(cameraPosition, 0.0, 0.0));
 
-        currentZoomLevel++;
-        int nextNside = zoomToNside(currentZoomLevel);
-        //qDebug() << "current zoom level = " << currentZoomLevel;
-        //qDebug() << "current nside = " << currentNside;
-        //qDebug() << "next nside = " << nextNside;
+        //qDebug() << "Zooming in to " << cameraPosition;
 
-        /* check visibilty (after apply the zoom, some face can be no longer visible */
-        checkVisibility();
-
-        //checkNside();
-
-        /* check if need to update nside */
-
-
-        if(nextNside!=currentNside && nextNside<=maxNside)
-        {
-            currentNside = nextNside;
-            tesselation->updateNside(currentNside);
-        }
-
-
-
-        /* refresh the view */
-        updateGL();
-
-        /* calculate faces to preload */
-        preloadFaces();
-
+        sceneUpdated();
         return true;
     }
     return false;
-
 }
 
 bool MapViewer::zoomOut()
 {
-    if(currentZoomLevel>MIN_ZOOM)
+    float cx = cameraPosition+CAMERA_ZOOM_INC;
+
+    if(cx <= maxCameraX)
     {
         /* update camera position */
-        cameraPosition += CAMERA_ZOOM_INC;
+        cameraPosition = cx;
         camera()->setPosition(Vec(cameraPosition, 0.0, 0.0));
 
-        currentZoomLevel--;
-        int nextNside = zoomToNside(currentZoomLevel);
-        //qDebug() << "current zoom level = " << currentZoomLevel;
-        //qDebug() << "current nside = " << currentNside;
-        //qDebug() << "next nside = " << nextNside;
+        //qDebug() << "Zooming out to " << cameraPosition;
 
-        /* check visibilty (after apply the zoom, some face can be no longer visible */
-        checkVisibility();
-
-        //checkNside();
-
-
-        if(nextNside!=currentNside)
-        {
-            currentNside = nextNside;
-            tesselation->updateNside(currentNside);
-        }
-
-
-
-        /* refresh the view */
-        updateGL();
-
-        /* calculate faces to preload */
-        preloadFaces();
-
+        sceneUpdated();
         return true;
     }
     return false;
-}
-
-
-/* calculate the nside based on zoom level */
-int MapViewer::zoomToNside(int zoomLevel)
-{
-    /*
-    long pixelsDisplayed = width()*height();
-    long pixelsToDisplay;
-
-    for(int auxNside=MIN_NSIDE; auxNside<maxNside; auxNside*=2)
-    {
-        pixelsToDisplay = visibleFaces.size() * nside2npix(auxNside)/12;
-        if(pixelsToDisplay>pixelsDisplayed)
-            return auxNside;
-    }
-
-    return maxNside;
-    */
-
-    /* calculate the needed zoom (when changing zoomLevel, baseZoomLevel may not change */
-    int baseZoomLevel = floor(zoomLevel / ZOOM_LEVEL); // /2
-
-    //qDebug() << "  zoomToNside: basezoomlevel=" << baseZoomLevel;
-
-    // TODO: calculate exp based on MIN_NSIDE
-    int nside = pow(2, EXP_NSIDE+baseZoomLevel);
-
-    if(nside<MIN_NSIDE)
-        nside = MIN_NSIDE;
-    if(nside>maxNside)
-        nside = maxNside;
-
-    return nside;
 }
 
 
@@ -770,7 +763,7 @@ void MapViewer::preloadFaces()
     if(PRELOAD_FACES)
     {
         /* zoomlevel that changed nside */
-        if(currentZoomLevel % 2 == 0 && currentNside!=maxNside)
+        if(currentNside!=maxNside)
         {
             float camPosition = cameraPosition-2*CAMERA_ZOOM_INC;
             int nextNside = currentNside*2;
@@ -859,15 +852,16 @@ void MapViewer::preloadFaces()
 
 void MapViewer::showPolarizationVectors(bool show)
 {
+    showPVectors = show;
     tesselation->showPolarizationVectors(show);
     /* force redraw */
     updateGL();
 }
 
 
-void MapViewer::updateThreshold(float min, float max)
+void MapViewer::updateThreshold(ColorMap* colorMap, float min, float max)
 {
-    tesselation->updateTextureThreshold(min, max);
+    tesselation->updateTextureThreshold(colorMap, min, max);
 
     /* force redraw */
     updateGL();
@@ -900,6 +894,8 @@ mapInfo* MapViewer::getMapInfo()
     info->nvalues = nside2npix(MIN_NSIDE);
     info->currentField = mapType;
     info->availableFields = healpixMap->getAvailableMaps();
+    info->hasPolarization = healpixMap->hasPolarization();
+    info->colorMap = ColorMapManager::instance()->getDefaultColorMap();
 
     float minTex, maxTex;
     textureCache->getTextureMinMax(minTex, maxTex);
@@ -919,27 +915,136 @@ void MapViewer::showGrid(bool show)
 }
 
 
+/* check which is the best nside to use */
 void MapViewer::checkNside()
 {
+    qDebug() << "Checking best nside!";
+
     long pixelsToDisplay;
-    long pixelsDisplayed = width()*height();
+    long pixelsDisplayed;
+
+    float percentageVisible;
+    float sphereWidth, sphereHeight;
+
+    //if(!mollweide)
+    //{
+        camera()->computeModelViewMatrix();
+        camera()->computeProjectionMatrix();
+        Vec left, right, top, bottom;
+        left = camera()->projectedCoordinatesOf(Vec(0, -1, 0), manipulatedFrame());
+        right = camera()->projectedCoordinatesOf(Vec(0, 1, 0), manipulatedFrame());
+        top = camera()->projectedCoordinatesOf(Vec(0, 0, -1), manipulatedFrame());
+        bottom = camera()->projectedCoordinatesOf(Vec(0, 0, 1), manipulatedFrame());
+
+        sphereWidth = right.x - left.x;
+        sphereHeight = top.y - bottom.y;
+
+        percentageVisible = min(sphereHeight, (float)height()) * min(sphereWidth, (float)width()) / (sphereWidth*sphereHeight);
+
+        /* calculate pixels that will be displayed */
+        pixelsDisplayed = min(sphereHeight, (float)height()) * min(sphereWidth, (float)width());
+    //}
+    //else
+        //percentageVisible = 1;
 
     int nextNside = maxNside;
-    for(int auxNside=MIN_NSIDE; auxNside<=8096; auxNside*=2)
+
+    float radius = min(width(), height())/2;
+    //pixelsDisplayed = width()*height();//M_PI*pow(radius, 2);
+
+    /*
+    if(percentageVisible>=0.8)
     {
-        pixelsToDisplay = visibleFaces.size()*nside2npix(auxNside)/12;//-currentZoomLevel*;
-        if(pixelsToDisplay > pixelsDisplayed)
+        qDebug() << "Pixs displayed using circ area";
+        pixelsDisplayed = M_PI*pow(radius, 2);
+    }
+    else
+    {
+    */
+        qDebug() << "Pixs displayed using rect area";
+        //pixelsDisplayed = width()*height();
+        //pixelsDisplayed = sphereWidth*sphereHeight;
+    //}
+
+    qDebug() << "Viewport pixels = " << pixelsDisplayed;
+
+    long oldPixelsToDisplay = 0;
+
+    for(int auxNside=MIN_NSIDE; auxNside<=maxNside; auxNside*=2)
+    {
+        pixelsToDisplay = nside2npix(auxNside)*SPHERE_VISIBLE;
+
+        qDebug() << "Pixels to display (" << auxNside << "): " << pixelsToDisplay;
+
+        if(pixelsToDisplay>=pixelsDisplayed)
         {
             nextNside = max(MIN_NSIDE, auxNside);
             break;
         }
+        else
+        {
+            oldPixelsToDisplay = pixelsToDisplay;
+        }
     }
 
-    qDebug() << "Changing to nside " << nextNside;
+    float zoom = fabs(cameraPosition-maxCameraX);
+    float zoomFactor = 1+zoom/(maxCameraX-minCameraX);
 
-    if(nextNside!=currentNside && nextNside<=maxNside)
+    qDebug() << "Zoom factor: " << zoomFactor;
+
+    if(abs(oldPixelsToDisplay-pixelsDisplayed)*zoomFactor < abs(pixelsToDisplay-pixelsDisplayed))
     {
-        currentNside = nextNside;
-        tesselation->updateNside(currentNside);
+        /* previous nside closer */
+        nextNside = max(MIN_NSIDE, nextNside/2);
     }
+
+    qDebug() << "Best nside: " << nextNside;
+
+    updateNside(nextNside);
+}
+
+
+void MapViewer::updateNside(int nside)
+{
+    if(nside>=MIN_NSIDE && nside<=maxNside && nside!=currentNside)
+    {
+        currentNside = nside;
+        tesselation->updateNside(nside);
+
+        if(CHANGE_VECTORS_WITH_NSIDE)
+            updateVectorsNside(nside);
+
+        updateGL();
+    }
+}
+
+
+void MapViewer::updateVectorsNside(int nside)
+{
+    if(showPVectors)
+    {
+        if(nside>=MIN_NSIDE && nside<=maxNside && nside!=currentVectorsNside)
+        {
+            currentVectorsNside = nside;
+            tesselation->updateVectorsNside(nside);
+            updateGL();
+        }
+    }
+}
+
+
+/* calculate the max camera distance need to show all the object inside scene */
+void MapViewer::computeMaxCameraDistance()
+{
+    Camera* auxCamera = new Camera(*camera());
+
+    if(!mollweide)
+        auxCamera->fitSphere(Vec(0,0,0), 1.05);
+    else
+        auxCamera->fitSphere(Vec(0,0,0), 1.12);
+    float auxPosition = auxCamera->position().x;
+
+    //qDebug() << "computeMaxCameraDistance = " << auxPosition;
+
+    maxCameraX = auxPosition;
 }

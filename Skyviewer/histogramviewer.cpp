@@ -4,7 +4,7 @@ HistogramViewer::HistogramViewer(QWidget *parent) :
     QWidget(parent)
 {
     this->histogram = NULL;
-    ct = new ColorTable(2);
+    ct = ColorMapManager::instance()->getDefaultColorMap();
 }
 
 
@@ -76,5 +76,13 @@ void HistogramViewer::rebuildHistogram(float min, float max)
 {
     if(histogram!=NULL)
         histogram->configureThresholds(min, max);
+    update();
+}
+
+
+/* update histogram color map */
+void HistogramViewer::updateColorMap(ColorMap *colorMap)
+{
+    this->ct = colorMap;
     update();
 }

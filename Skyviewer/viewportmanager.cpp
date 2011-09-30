@@ -145,7 +145,7 @@ void ViewportManager::openFiles()
 
 
 /* update threshold for the selected maps */
-void ViewportManager::updateThresholds(float min, float max)
+void ViewportManager::updateThresholds(ColorMap* colorMap, float min, float max)
 {
     // TODO: if map is not in workspace update threshold too ?
 
@@ -155,7 +155,7 @@ void ViewportManager::updateThresholds(float min, float max)
         int viewportId = viewportIds[i];
         // check if it exists
         if(viewports.contains(viewportId))
-            viewports[viewportId]->updateThreshold(min, max);
+            viewports[viewportId]->updateThreshold(colorMap, min, max);
     }
 }
 
@@ -258,10 +258,21 @@ void ViewportManager::openFiles(QStringList filenames)
                 connect(viewport, SIGNAL(closed(int)), this, SLOT(closeViewport(int)));
                 connect(viewport, SIGNAL(selectionChanged(int,bool)), this, SLOT(viewportSelectionChanged(int,bool)));
 
-                addViewportToList(viewportIdx, title, info);
-
                 /* emit signal to update info in histogram */
                 emit(mapUpdated(viewportIdx, info));
+
+                addViewportToList(viewportIdx, title, info);
+
+                /*
+                if(viewports.size()==1)
+                {
+                    QList<int> vports;
+                    vports.append(viewportIdx);
+
+                    // emit signal to histogram update
+                    emit(histogramViewportsSelectedUpdated(vports));
+                }
+                */
 
                 viewportIdx++;
                 usedViewports++;
@@ -432,6 +443,9 @@ void ViewportManager::addViewportToList(int viewportId, QString title, mapInfo *
 
     /* add information to map */
     mapsInformation[viewportId] = info;
+
+    if(viewports.size()==1)
+        item->setCheckState(0, Qt::Checked);
 
     // TODO: load map info of current map ?
     /*if(getCheckedViewports().size()<=1)

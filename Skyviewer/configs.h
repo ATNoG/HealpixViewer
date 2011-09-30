@@ -11,6 +11,10 @@
 
 
 
+
+#define CAMERA_3D_MAX_X 1.05
+#define CAMERA_MOLL_MAX_X 0.2
+
 // mapviewer
 #define MIN_NSIDE 64
 #define MAX_NSIDE 2048
@@ -19,13 +23,25 @@
 //3D
 //#define MAX_ZOOM 10
 //Mollweide
-#define MAX_ZOOM 17
+#define MAX_ZOOM 30//17
 #define ZOOM_LEVEL 2
 #define INVISIBLE_X 0.10//0.37//0.25    // last 0.37
-#define CAMERA_ZOOM_INC 0.16
-#define INITIAL_CAMERA_POSITION 2.8
+#define CAMERA_ZOOM_INC 0.05//0.16
 #define PRELOAD_FACES false
 #define DISPLAY_ONLY_VISIBLE_FACES false
+
+#define SPHERE_VISIBLE 0.25
+#define SPHERE_PROPORTION 0.215
+#define CHANGE_VECTORS_WITH_NSIDE true
+
+#define AUTO_NSIDE true
+
+
+#define COLOR_SELECTED "#fa8252"
+#define COLOR_INACTIVE "#c3c3c3"
+#define DEFAULT_VIEW_3D true
+#define FIT_CONTENT_RESIZE true
+
 
 
 // viewportManager

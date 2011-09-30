@@ -13,6 +13,9 @@ HistogramWidget::HistogramWidget(QWidget *parent) :
     connect(ui->lowerThreshold, SIGNAL(valueChanged(double)), this, SLOT(updateLowerThreshold(double)));
     connect(ui->higherThreshold, SIGNAL(valueChanged(double)), this, SLOT(updateHigherThreshold(double)));
     connect(ui->applyHistogram, SIGNAL(released()), this, SLOT(updateMap()));
+    connect(ui->colorMapSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(colorMapUpdate(int)));
+
+    fillColorMaps();
 }
 
 
@@ -27,6 +30,13 @@ HistogramWidget::~HistogramWidget()
 
 
 /* PRIVATE SLOTS */
+
+void HistogramWidget::colorMapUpdate(int)
+{
+    currentColorMap = getSelectedColorMap();
+
+    updateColorMap(currentColorMap);
+}
 
 /* called when lower threshold spinbox changes */
 void HistogramWidget::updateLowerThreshold(double value)
@@ -44,7 +54,7 @@ void HistogramWidget::updateHigherThreshold(double value)
     updateHistogramThreshold();
 }
 
-/* called when apply button is pressed. Emits signal 'thresholdUpdated' */
+/* called when apply button is pressed. Emits signal 'histogramUpdated' */
 void HistogramWidget::updateMap()
 {
     /* update map informations */
@@ -52,10 +62,11 @@ void HistogramWidget::updateMap()
     {
         mapsInformation[selectedViewports[i]]->min = min;
         mapsInformation[selectedViewports[i]]->max = max;
+        mapsInformation[selectedViewports[i]]->colorMap = currentColorMap;
     }
 
     /* update threshold values for selected viewports */
-    emit(thresholdUpdated(min, max));
+    emit(histogramUpdated(currentColorMap, min, max));
 }
 
 
@@ -98,18 +109,31 @@ void HistogramWidget::updateHistogram()
         mapMinAbs = mapsInformation[selectedViewports[0]]->min;
         mapMaxAbs = mapsInformation[selectedViewports[0]]->max;
 
+        ColorMap *colorMapToUse = mapsInformation[selectedViewports[0]]->colorMap;
+        bool usingSameColorMap = true;
+
         /* get min and max for each map */
         for(int i=0; i<selectedViewports.size(); i++)
         {
-            mapMin = mapsInformation[selectedViewports[i]]->min;
-            mapMax = mapsInformation[selectedViewports[i]]->max;
+            mapInfo *info = mapsInformation[selectedViewports[i]];
+            mapMin = info->min;
+            mapMax = info->max;
 
             /* map has threshold defined, use them */
             if(mapMin<mapMinAbs)
                 mapMinAbs = mapMin;
             if(mapMax>mapMaxAbs)
                 mapMaxAbs = mapMax;
+
+            if(colorMapToUse!=info->colorMap)
+                usingSameColorMap = false;
         }
+
+        if(usingSameColorMap)
+            currentColorMap = colorMapToUse;
+        else
+            currentColorMap = ColorMapManager::instance()->getDefaultColorMap();
+        updateColorMap(currentColorMap);
 
         /* update thresholds */
         setThresholds(mapMinAbs, mapMaxAbs);
@@ -120,6 +144,7 @@ void HistogramWidget::updateHistogram()
         ui->lowerThreshold->setDisabled(true);
         ui->higherThreshold->setDisabled(true);
         ui->applyHistogram->setDisabled(true);
+        ui->colorMapSelector->setDisabled(true);
     }
 }
 
@@ -148,6 +173,13 @@ void HistogramWidget::unloadMapInfo(int viewportId)
 
 
 /* PRIVATE */
+
+
+ColorMap* HistogramWidget::getSelectedColorMap()
+{
+    int colorMapId = ui->colorMapSelector->itemData(ui->colorMapSelector->currentIndex()).toInt();
+    return ColorMapManager::instance()->getColorMap(colorMapId);
+}
 
 /* redrwa histogram using new threshold */
 void HistogramWidget::updateHistogramThreshold()
@@ -219,4 +251,45 @@ void HistogramWidget::setThresholds(float _min, float _max)
     ui->lowerThreshold->setEnabled(true);
     ui->higherThreshold->setEnabled(true);
     ui->applyHistogram->setEnabled(true);
+    ui->colorMapSelector->setEnabled(true);
+}
+
+
+void HistogramWidget::fillColorMaps()
+{
+    ui->colorMapSelector->blockSignals(true);
+
+    ColorMapManager *cmapManager = ColorMapManager::instance();
+    QList<ColorMap*> colorMaps = cmapManager->getColorMaps();
+    ColorMap *cm;
+
+    ui->colorMapSelector->clear();
+    for(int i=0; i<colorMaps.size(); i++)
+    {
+        cm = colorMaps[i];
+        /* add item to combobox */
+        ui->colorMapSelector->insertItem(i, cm->getName(), cm->getId());
+    }
+
+    /* change current item to default colormap */
+    ui->colorMapSelector->setCurrentIndex(0);
+    ui->colorMapSelector->blockSignals(false);
+}
+
+
+void HistogramWidget::updateColorMapSelector(ColorMap *colorMap)
+{
+    ui->colorMapSelector->blockSignals(true);
+    ui->colorMapSelector->setCurrentIndex(colorMap->getId());
+    ui->colorMapSelector->blockSignals(false);
+}
+
+
+void HistogramWidget::updateColorMap(ColorMap* cm)
+{
+    /* update histogramViewer to use current colormap */
+    ui->histogram->updateColorMap(cm);
+
+    /* update colormap selector */
+    updateColorMapSelector(cm);
 }

@@ -7,6 +7,7 @@
 #include "healpixmap.h"
 #include "histogramviewer.h"
 #include "mapviewer.h"
+#include "colormap.h"
 
 
 namespace Ui {
@@ -37,18 +38,27 @@ private slots:
     void updateHigherThreshold(double value);
     /* connected to apply button */
     void updateMap();
+    /* called when colormap selector changes */
+    void colorMapUpdate(int idx);
 
 signals:
-    void thresholdUpdated(float min, float max);
+    void histogramUpdated(ColorMap* colorMap, float min, float max);
 
 private:
     Ui::HistogramWidget *ui;
     Histogram *histogram;
+    ColorMap *currentColorMap;
 
     float min, max;
 
     /* rebuild histogram with new threshold */
     void updateHistogramThreshold();
+
+    void fillColorMaps();
+    void updateColorMap(ColorMap* cm);
+    void updateColorMapSelector(ColorMap *colorMap);
+
+    ColorMap* getSelectedColorMap();
 
     /* called when a single map is selected */
     void setThresholds(float min, float max);

@@ -107,7 +107,6 @@
            <property name="styleSheet">
             <string notr="true"/>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_4"/>
           </widget>
          </item>
          <item>

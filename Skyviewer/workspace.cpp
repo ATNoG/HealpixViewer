@@ -47,6 +47,12 @@ void WorkSpace::addViewport(int viewportId, MapViewport *viewport)
         numberViewports++;
 
         reorganizeLayout();
+
+        if(numberViewports==1)
+        {
+            /* select current viewport */
+            viewport->selectViewport(true);
+        }
     }
     else
     {

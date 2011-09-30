@@ -14,6 +14,7 @@ MapViewport::MapViewport(QWidget *parent, QString title, int viewportId, const Q
     this->fieldsActionGroup = NULL;
     this->info = NULL;
     this->shareWidget = shareWidget;
+    this->hasPolarization = false;
 
     /* configure the user interface */
     configureUI();
@@ -87,12 +88,16 @@ void MapViewport::configureUI()
     actionMaximize = new QAction(QIcon::fromTheme("view-fullscreen"), "Fullscreen", toolbar);
     actionRestore = new QAction(QIcon::fromTheme("view-restore"), "Restore window", toolbar);
     QAction *actionField = new QAction(QIcon(":/mollview.gif"), "Map Field", toolbar);
-    QAction *actionGrid = new QAction(QIcon(":/grid.gif"), "Show Grid", toolbar);
-    QAction *actionPvectors = new QAction(QIcon(":/pol-vectors.gif"), "Show Polarization Vectors", toolbar);
+    actionGrid = new QAction(QIcon(":/grid.gif"), "Show Grid", toolbar);
+    actionPvectors = new QAction(QIcon(":/pol-vectors.gif"), "Show Polarization Vectors", toolbar);
     actionSync = new QAction(QIcon(":/sync.gif"), "Sync", toolbar);
+    action3D = new QAction(QIcon(":/3dview.gif"), "3D", toolbar);
+    actionMollweide = new QAction(QIcon(":/mollview.gif"), "Mollweide", toolbar);
     actionGrid->setCheckable(true);
     actionPvectors->setCheckable(true);
     actionSync->setCheckable(true);
+
+    actionPvectors->setEnabled(false);
 
     /* connect actions to buttons */
     connect(actionGrid, SIGNAL(triggered(bool)), this, SLOT(showGrid(bool)));
@@ -102,11 +107,15 @@ void MapViewport::configureUI()
     connect(actionRestore, SIGNAL(triggered()), this, SLOT(restore()));
     connect(actionClose, SIGNAL(triggered()), this, SLOT(close()));
     connect(actionSync, SIGNAL(triggered(bool)), this, SLOT(enableSynchronization(bool)));
+    connect(action3D, SIGNAL(triggered()), this, SLOT(changeTo3D()));
+    connect(actionMollweide, SIGNAL(triggered()), this, SLOT(changeToMollview()));
 
     /* create field selector menu */
     fieldMenu = new QMenu;
 
     /* add actions to toolbars */
+    toolbar->addAction(action3D);
+    toolbar->addAction(actionMollweide);
     toolbar->addAction(actionGrid);
     toolbar->addAction(actionPvectors);
     toolbar->addAction(actionField);
@@ -118,6 +127,11 @@ void MapViewport::configureUI()
 
     /* hide restore from toolbar */
     actionRestore->setVisible(false);
+
+    if(mollview)
+        actionMollweide->setVisible(false);
+    else
+        action3D->setVisible(false);
 
     /* add actions to menu */
     actionField->setMenu(fieldMenu);
@@ -186,9 +200,10 @@ void MapViewport::changeToMollview()
 {
     //if(!mollview)
     //{
-        qDebug() << "Changing " << title << " to Mollview";
         mapviewer->changeToMollview();
         mollview = true;
+        actionMollweide->setVisible(false);
+        action3D->setVisible(true);
     //}
 }
 
@@ -199,6 +214,8 @@ void MapViewport::changeTo3D()
         qDebug() << "Changing " << title << " to 3D";
         mapviewer->changeTo3D();
         mollview = false;
+        actionMollweide->setVisible(true);
+        action3D->setVisible(false);
     //}
 }
 
@@ -224,6 +241,13 @@ bool MapViewport::openMap(QString fitsfile)
 
         /* fill map field with available fields */
         fillMapField();
+
+        mapInfo *info = getMapInfo();
+        if(info->hasPolarization)
+        {
+            hasPolarization = true;
+            actionPvectors->setEnabled(true);
+        }
     }
 
     return _loaded;
@@ -252,14 +276,18 @@ void MapViewport::synchronizeView(QEvent *event, int type, MapViewer* source)
 
 void MapViewport::showPolarizationVectors(bool show)
 {
-    mapviewer->showPolarizationVectors(show);
+    if(hasPolarization)
+    {
+        actionPvectors->setChecked(show);
+        mapviewer->showPolarizationVectors(show);
+    }
 }
 
 
-void MapViewport::updateThreshold(float min, float max)
+void MapViewport::updateThreshold(ColorMap* colorMap, float min, float max)
 {
     //qDebug() << "Updating threshold from " << title << " to " << min << "," << max;
-    mapviewer->updateThreshold(min, max);
+    mapviewer->updateThreshold(colorMap, min, max);
 }
 
 
@@ -293,6 +321,7 @@ void MapViewport::viewportUpdated(mapInfo *info)
 
 void MapViewport::showGrid(bool show)
 {
+    actionGrid->setChecked(show);
     mapviewer->showGrid(show);
 }
 

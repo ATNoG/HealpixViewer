@@ -11,10 +11,8 @@
 #include <QDebug>
 #include "mapviewer.h"
 #include "histogramwidget.h"
+#include "configs.h"
 
-#define COLOR_SELECTED "#fa8252"
-#define COLOR_INACTIVE "#c3c3c3"
-#define DEFAULT_VIEW_3D true
 
 
 /* forward declaration of WorkSpace class */
@@ -28,13 +26,11 @@ public:
     ~MapViewport();
 
     bool isSelected();
-    void changeToMollview();
-    void changeTo3D();
     bool openMap(QString fitsfile);
     void selectViewport(bool changeCheckbox);
     void deselectViewport(bool changeCheckbox);
 
-    void updateThreshold(float min, float max);
+    void updateThreshold(ColorMap* colorMap, float min, float max);
     void setWorkspace(WorkSpace *workspace);
 
     mapInfo* getMapInfo();
@@ -61,6 +57,9 @@ public slots:
     void changeMapField(int);
     void enableSynchronization(bool on);
 
+    void changeToMollview();
+    void changeTo3D();
+
 private slots:
     void maximize();
     void restore();
@@ -78,10 +77,11 @@ private:
     QMenu* fieldMenu;
     QMap<HealpixMap::MapType, QAction*> mapFieldsActions;
     QSignalMapper* signalMapper;
-    QAction *actionMaximize, *actionRestore, *actionSync;
+    QAction *actionMaximize, *actionRestore, *actionSync, *actionGrid, *actionPvectors, *action3D, *actionMollweide;
     QActionGroup* fieldsActionGroup;
     mapInfo* info;
     const QGLWidget* shareWidget;
+    bool hasPolarization;
 
     void fillMapField();
     void updateMapField(HealpixMap::MapType field);

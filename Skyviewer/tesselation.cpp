@@ -3,6 +3,7 @@
 Tesselation::Tesselation(int _nside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache)
 {
     nside = _nside;
+    vectorsNside = _nside;
     mollview = _mollview;
 
     /* by default dont show the polarization vectors neither grid */
@@ -42,8 +43,18 @@ void Tesselation::updateNside(int newNside)
     if(nside!=newNside)
     {
         this->nside = newNside;
+        qDebug() << "nside updated to " << newNside;
     }
-    qDebug() << "nside updated to " << newNside;
+}
+
+/* update vectors nside */
+void Tesselation::updateVectorsNside(int nside)
+{
+    if(nside!=vectorsNside)
+    {
+        vectorsNside = nside;
+        qDebug() << "nside of vectors updated to " << vectorsNside;
+    }
 }
 
 /* get visible faces */
@@ -109,7 +120,7 @@ void Tesselation::draw()
         /* display polarization vectors */
         if(displayPolarizationVectors)
         {
-            polVectors = (PolarizationVectors*)overlayCache->getFace(facesv[i], nside, mollview, MapOverlay::POLARIZATION_VECTORS);
+            polVectors = (PolarizationVectors*)overlayCache->getFace(facesv[i], vectorsNside, mollview, MapOverlay::POLARIZATION_VECTORS);
             polVectors->draw();
         }
 
@@ -130,9 +141,9 @@ void Tesselation::showPolarizationVectors(bool show)
 }
 
 
-void Tesselation::updateTextureThreshold(float min, float max)
+void Tesselation::updateTextureThreshold(ColorMap* colorMap, float min, float max)
 {
-    textureCache->updateTextureThreshold(min, max);
+    textureCache->updateTextureThreshold(colorMap, min, max);
 }
 
 

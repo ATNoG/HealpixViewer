@@ -42,7 +42,7 @@ public:
     /* discard old faces on cache */
     bool cleanCache(int minSpace=0);
 
-    void updateTextureThreshold(float min, float max);
+    void updateTextureThreshold(ColorMap* colorMap, float min, float max);
     void changeMapField(HealpixMap::MapType field);
 
     void getTextureMinMax(float &min, float &max);
@@ -89,6 +89,7 @@ private:
     QMutex cacheAccess;
 
     float minTex, maxTex;
+    ColorMap* colorMap;
 };
 
 #endif // TEXTURECACHE_H

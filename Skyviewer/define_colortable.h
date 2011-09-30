@@ -15,7 +15,7 @@ int colortable_count = 2;
 /* ----------------------------------------------------------------------------
                         The default colortable
 */
-char  default_ct_name[] = {"Default"};
+char  default_ct_name[] = {"Rainbow"};
 float default_colortable[][3] = {
     {        0,        0, 0.545098},
     {        0,        0, 0.560784},
@@ -275,7 +275,7 @@ float default_colortable[][3] = {
 /* ----------------------------------------------------------------------------
                         The black and white color table
 */
-char  blkwht_ct_name[] = {"Black/White"};
+char  blkwht_ct_name[] = {"Grayscale"};
 float blkwht_colortable[][3] = {
    { 0.000000,  0.000000,  0.000000},
    { 0.003922,  0.003922,  0.003922},

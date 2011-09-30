@@ -57,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(viewportManager, SIGNAL(viewportShowOff(int)), workspace, SLOT(removeViewport(int)));
 
     /* connect histogramWidget to viewportManager */
-    connect(histogramControl, SIGNAL(thresholdUpdated(float,float)), viewportManager, SLOT(updateThresholds(float,float)));
+    connect(histogramControl, SIGNAL(histogramUpdated(ColorMap*, float,float)), viewportManager, SLOT(updateThresholds(ColorMap*, float,float)));
 
     /* connect mainwindow to viewportManager */
     connect(ui->actionOpen, SIGNAL(triggered()), viewportManager, SLOT(openFiles()));

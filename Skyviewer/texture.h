@@ -3,7 +3,7 @@
 
 #include <QtOpenGL>
 #include <QDebug>
-#include "colortable.h"
+#include "colormap.h"
 
 using namespace std;
 
@@ -11,6 +11,7 @@ class Texture
 {
 public:
     Texture(int faceNumber, int nside);
+    Texture(int faceNumber, int nside, ColorMap* colorMap);
     ~Texture();
 
     void draw();
@@ -23,6 +24,7 @@ private:
 
     unsigned char* texture;
     GLuint textureId;
+    ColorMap *colorMap;
 
     bool created;
 

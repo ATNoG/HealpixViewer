@@ -29,7 +29,7 @@ public slots:
     /* called when open button pressed */
     void openFiles();
     /* called when threshold updated in histogramWidget */
-    void updateThresholds(float min, float max);
+    void updateThresholds(ColorMap* colorMap, float min, float max);
     //void updateColorTable()
     void viewportSelectionChanged(int viewportId, bool selected);
 

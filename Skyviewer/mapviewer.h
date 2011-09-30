@@ -29,6 +29,8 @@ struct mapInfo
     HealpixMap::MapType currentField;
     float min;
     float max;
+    bool hasPolarization;
+    ColorMap *colorMap;
 };
 
 class MapViewport;
@@ -52,7 +54,7 @@ public:
     void showPolarizationVectors(bool show=true);
     void showGrid(bool show=true);
 
-    void updateThreshold(float min, float max);
+    void updateThreshold(ColorMap* colorMap, float min, float max);
     void changeMapField(HealpixMap::MapType field);
 
     //void checkForUpdates();
@@ -83,25 +85,30 @@ private:
     HealpixMap* skymap;
     Tesselation* tesselation;
     int currentNside;
-    int currentZoomLevel;
+    int currentVectorsNside;
     float cameraPosition;
     bool initialized;
-    bool displayCurrentNside;
+    bool displayInfo;
     int maxNside;
     HealpixMap *healpixMap;
     HealpixMap::MapType mapType;
+    bool mollweide;
+    bool showPVectors;
 
-    QProgressDialog *progressDialog;
+    float maxCameraX;
+    float minCameraX;
 
     CameraConstraint *constraint;
 
     Camera* predictCamera;
     ManipulatedFrame* currentManipulatedFrame;
 
-    int zoomToNside(int zoomLevel);
     bool faceIsInside(float ax, float ay, float bx, float by, float width, float height);
     void preloadFaces();
     void checkNside();
+    void updateNside(int nside);
+    void updateVectorsNside(int nside);
+    void computeMaxCameraDistance();
 
     void mousePressEvent(QMouseEvent* e, bool propagate);
     void mouseReleaseEvent(QMouseEvent* e, bool propagate);
@@ -111,6 +118,9 @@ private:
     enum MouseEvent {MOUSEPRESS, MOUSEMOVE, MOUSEWHEEL, MOUSERELEASE};
 
     void checkVisibility();
+    void sceneUpdated(bool update=true);
+    void changeProjectionConstraints();
+    void updateCameraPosition(float pos);
 
     QMap<int, QVector<Vec> > faceBoundaries;
     QVector<int> visibleFaces;

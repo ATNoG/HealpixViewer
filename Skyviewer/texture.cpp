@@ -4,6 +4,18 @@ Texture::Texture(int faceNumber, int nside)
 {
     this->faceNumber = faceNumber;
     this->nside = nside;
+    this->colorMap = ColorMapManager::instance()->getDefaultColorMap();
+    this->texture = NULL;
+
+    created = false;
+}
+
+
+Texture::Texture(int faceNumber, int nside, ColorMap* colorMap)
+{
+    this->faceNumber = faceNumber;
+    this->nside = nside;
+    this->colorMap = colorMap;
     this->texture = NULL;
 
     created = false;
@@ -29,8 +41,6 @@ void Texture::buildTexture(float* data, float minv, float maxv)
     QColor color;
     texk = 0;
 
-    ColorTable *ct = new ColorTable(2);
-
     texture = new unsigned char[nside*nside*3];
 
     int npixels = nside*nside;
@@ -42,7 +52,7 @@ void Texture::buildTexture(float* data, float minv, float maxv)
         if (v < minv) v = minv;
         if (v > maxv) v = maxv;
         v = (v-minv)/(maxv-minv);
-        color = (*ct)(v);
+        color = (*colorMap)(v);
 
         texk = pix*3;
 
@@ -53,7 +63,6 @@ void Texture::buildTexture(float* data, float minv, float maxv)
     }
 
     delete[] data;
-    delete ct;
 }
 
 
