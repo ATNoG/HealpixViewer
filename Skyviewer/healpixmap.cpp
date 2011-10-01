@@ -627,13 +627,22 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, long &total
     long pointer = 0;
 
 
+    /* pixel number */
+    long pixNest;
+
+
+    long faceOffset = faceNumber*nside*nside;
+
     /* get max polarization magnitude */
-    for(long i=0; i<npixels; i+=spacing)
+    for(long i=0; i<pixelsPerFace; i+=spacing)
     {
         if(hasNObs() && nobs[i]<=0)
             break;
 
-        pix2ang_nest(nside, i+startPixel, &theta, &phi);
+        /* convert first from texture position to nest! */
+        pixNest = xy2pix(i%nside, i/nside) + faceOffset;
+
+        pix2ang_nest(nside, pixNest, &theta, &phi);
         float* vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, (double)(meanPolMagnitudes[nside]-devPolMagnitudes[nside]), (double)(meanPolMagnitudes[nside]+devPolMagnitudes[nside]),0.5);
 
         for(int j=0; j<6; j++)
