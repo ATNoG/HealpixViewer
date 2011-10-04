@@ -590,8 +590,9 @@ float* HealpixMap::getFaceValues(int faceNumber, int nside)
 }
 
 
-float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, long &totalVectors)
+float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, double minMag, double maxMag, double magnification, int spacing, long &totalVectors)
 {
+    //qDebug() << "Getting polarization vectors with magnification: " << magnification;
     int pixelsPerFace = nside2npix(nside)/12;
 
     long startPixel = faceNumber*pixelsPerFace;
@@ -613,12 +614,19 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, long &total
             if(nobs[i]==0)
                 npixels--;
         }
-    }
+    }    
 
-    int spacing = 1;
+    int spacingDivisor;
+
+    if(spacing==0)
+        spacingDivisor = 1;
+    else
+        spacingDivisor = spacing*spacing/2;
+
+    totalVectors = npixels/spacingDivisor;
 
     /* allocate space (each vector will have 2 endpoints, of 3 coordinates each */
-    float* polVectors = new float[npixels*3*2/spacing];
+    float* polVectors = new float[totalVectors*3*2];
 
     // TODO: what is this pixsize ?
     double pixsize = (sqrt(M_PI/3.) / nside) / 2.;
@@ -631,26 +639,52 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, long &total
     long pixNest;
 
 
+    if(minMag==-1 && maxMag==-1)
+    {
+        getMagMinMax(minMag, maxMag);
+    }
+
     long faceOffset = faceNumber*nside*nside;
 
     /* get max polarization magnitude */
-    for(long i=0; i<pixelsPerFace; i+=spacing)
+    for(long i=0; i<pixelsPerFace; i++)
     {
         if(hasNObs() && nobs[i]<=0)
             break;
 
-        /* convert first from texture position to nest! */
-        pixNest = xy2pix(i%nside, i/nside) + faceOffset;
+        int x = i%nside;
+        int y = i/nside;
 
-        pix2ang_nest(nside, pixNest, &theta, &phi);
-        float* vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, (double)(meanPolMagnitudes[nside]-devPolMagnitudes[nside]), (double)(meanPolMagnitudes[nside]+devPolMagnitudes[nside]),0.5);
+        bool usePixel = false;
 
-        for(int j=0; j<6; j++)
-        {
-            polVectors[pointer] = vector[j];
-            pointer++;
+        if(spacing==0)
+            usePixel = true;
+        else if((x%spacing==0 && y%spacing==0) || ((x+spacing/2)%spacing==0 && (y+spacing/2)%spacing==0))
+            usePixel = true;
+        /*
+
+                if((y%spacing==0 && x%spacing==0) || ((x+2)%4==0 && (y+2)%4==0))
+                    usePixel = true;
+                break;
         }
-        delete[] vector;
+        */
+
+        if(usePixel)
+        {
+            /* convert first from texture position to nest! */
+            pixNest = xy2pix(x,y) + faceOffset;
+
+            pix2ang_nest(nside, pixNest, &theta, &phi);
+            float* vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, minMag, maxMag, magnification);
+            //float* vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, (double)(meanPolMagnitudes[nside]-devPolMagnitudes[nside]), (double)(meanPolMagnitudes[nside]+devPolMagnitudes[nside]), magnification);
+
+            for(int j=0; j<6; j++)
+            {
+                polVectors[pointer] = vector[j];
+                pointer++;
+            }
+            delete[] vector;
+        }
     }
 
     if(nobs!=NULL)
@@ -658,20 +692,21 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, long &total
     delete[] polAngles;
     delete[] polMagnitudes;
 
-    totalVectors = npixels/spacing;
-
     return polVectors;
 }
 
 
-float* HealpixMap::calculatePolarizationVector(double theta, double phi, double angle, double mag, double pixsize, double minMag, double maxMag,double magnification)
+float* HealpixMap::calculatePolarizationVector(double theta, double phi, double angle, double mag, double pixsize, double minMag, double maxMag, double magnification)
 {
-/*
-    if(mag>maxMag)
-        mag = maxMag;
-    else if(mag<minMag)
-        mag = minMag;
-*/
+    //if()
+    //{
+        //qDebug() << "Using magnitude thresholds!";
+        if(mag>maxMag)
+            mag = maxMag;
+        else if(mag<minMag)
+            mag = minMag;
+    //}
+
     //qDebug() << "Minmag " << minMag;
     double size = (mag-minMag) * ((pixsize/2)/(maxMag-minMag)) + pixsize/2;
     size*=magnification;
@@ -935,4 +970,11 @@ void HealpixMap::getMinMax(float &_min, float &_max)
 {
     _min = min;
     _max = max;
+}
+
+
+void HealpixMap::getMagMinMax(double &min, double &max)
+{
+    min = (double)(meanPolMagnitudes[128]-devPolMagnitudes[128]);
+    max = (double)(meanPolMagnitudes[128]+devPolMagnitudes[128]);
 }

@@ -29,6 +29,8 @@ public:
     bool openMap(QString fitsfile);
     void selectViewport(bool changeCheckbox);
     void deselectViewport(bool changeCheckbox);
+    bool isSynchronized();
+    bool isMollweide();
 
     void updateThreshold(ColorMap* colorMap, float min, float max);
     void setWorkspace(WorkSpace *workspace);
@@ -37,6 +39,8 @@ public:
 
     void disconnectFromWorkspace();
 
+    void applyOptions(mapOptions *options);
+
 
 signals:
     void mapFieldInfoChanged(int viewportId, mapInfo *info);
@@ -44,10 +48,11 @@ signals:
     void restored();
     void closed(int viewportId);
     void selectionChanged(int viewportId, bool selected);
+    void textureNsideUpdated(int nside, int viewportId);
+    void vectorsNsideUpdated(int nside, int viewportId);
 
 public slots:
     void updateSelection(bool selected);
-    void synchronizeView(QEvent* event, int type, MapViewer* source);
     void viewportUpdated(mapInfo *info);
 
     void showGrid(bool show);
@@ -64,6 +69,14 @@ private slots:
     void maximize();
     void restore();
     void close();
+    void updateOptionTextureNside(int nside);
+    void updateOptionVectorsNside(int nside);
+
+    void updateCameraPosition(float position, MapViewer *viewer);
+    void updatePosition(Vec position, MapViewer *viewer);
+    void updateRotation(Quaternion rotation, MapViewer *viewer);
+    void updateKeyPress(QKeyEvent *e, MapViewer *viewer);
+
 
 private:
     QString title;
@@ -82,6 +95,7 @@ private:
     mapInfo* info;
     const QGLWidget* shareWidget;
     bool hasPolarization;
+    bool synchronized;
 
     void fillMapField();
     void updateMapField(HealpixMap::MapType field);

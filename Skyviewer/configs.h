@@ -11,9 +11,14 @@
 
 
 
+// min and max nside for tesselation
+#define TESSELATION_MIN_NSIDE 32
+#define TESSELATION_MAX_NSIDE 256
+#define TESSELATION_DEFAULT_NSIDE 64
 
-#define CAMERA_3D_MAX_X 1.05
-#define CAMERA_MOLL_MAX_X 0.2
+
+#define CAMERA_3D_MAX_X 1.02
+#define CAMERA_MOLL_MAX_X 0.02
 
 // mapviewer
 #define MIN_NSIDE 64
@@ -34,7 +39,15 @@
 #define SPHERE_PROPORTION 0.215
 #define CHANGE_VECTORS_WITH_NSIDE true
 
-#define AUTO_NSIDE true
+#define AUTO_TEXTURE_NSIDE true
+#define AUTO_PVECTORS_NSIDE true
+#define PVECTORS_NSIDE_FACTOR 1
+
+#define DEFAULT_VECTORS_SPACING 0
+#define MIN_VECTORS_SPACING 0
+#define MAX_VECTORS_SPACING 8
+
+#define MIN_MOUSE_SENSITIVITY 0.1
 
 
 #define COLOR_SELECTED "#fa8252"
@@ -65,6 +78,9 @@
 
 // face
 #define GPU_BUFFER true
+
+
+#define REALTIME_TEXTURES true
 
 
 #endif // CONFIGS_H

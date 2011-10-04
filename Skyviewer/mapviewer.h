@@ -21,14 +21,35 @@
 using namespace qglviewer;
 
 
+struct mapOptions
+{
+    int tesselationNside;
+    int textureNside;
+    int pVectorsNside;
+    int pVectorsThreshold;
+    float minPolThreshold;
+    float maxPolThreshold;
+    float originalMinPolThreshold;
+    float originalMaxPolThreshold;
+    float magnification;
+    int minNside, maxNside;
+    bool controlPolarization;
+    int vectorsSpacing;
+};
+
+
 struct mapInfo
 {
     float* values;
     int nvalues;
     QList<HealpixMap::MapType> availableFields;
     HealpixMap::MapType currentField;
+    int minNside;
+    int maxNside;
     float min;
     float max;
+    double minMag;
+    double maxMag;
     bool hasPolarization;
     ColorMap *colorMap;
 };
@@ -46,7 +67,6 @@ public:
     void changeTo3D();
     //void loadMap(HealpixMap* map);
     bool loadMap(QString fitsfile);
-    void synchronize(QEvent* e, int type);
     bool zoomIn();
     bool zoomOut();
     void resetView();
@@ -56,19 +76,33 @@ public:
 
     void updateThreshold(ColorMap* colorMap, float min, float max);
     void changeMapField(HealpixMap::MapType field);
+    void applyOptions(mapOptions *options);
+
+    /* sync */
+    void updateCameraPosition(float pos, bool signal=false, bool update=true);
+    void updatePosition(Vec position);
+    void updateRotation(Quaternion rotation);
+    void updateKeyPress(QKeyEvent *e);
 
     //void checkForUpdates();
 
     mapInfo* getMapInfo();
 
 signals:
-    void cameraChanged(QEvent* e, int type, MapViewer* viewer);
+    void signalZoomChanged(float camPosition, MapViewer *viewer);
+    void signalRotationChanged(Quaternion rotation, MapViewer *viewer);
+    void signalPositionChanged(Vec position, MapViewer *viewer);
+    void signalKeyPressed(QKeyEvent* e, MapViewer* viewer);
+
     void mapFieldChanged(mapInfo *info);
+    void textureNsideUpdated(int nside);
+    void vectorsNsideUpdated(int nside);
+
 
 protected:
     virtual void init(void);
     virtual void draw(void);
-    virtual void mousePressEvent(QMouseEvent* e);
+    //virtual void mousePressEvent(QMouseEvent* e);
     virtual void mouseReleaseEvent(QMouseEvent *);
     virtual void mouseMoveEvent(QMouseEvent* e);
     virtual void wheelEvent(QWheelEvent* e);
@@ -85,6 +119,7 @@ private:
     HealpixMap* skymap;
     Tesselation* tesselation;
     int currentNside;
+    int tesselationNside;
     int currentVectorsNside;
     float cameraPosition;
     bool initialized;
@@ -94,9 +129,14 @@ private:
     HealpixMap::MapType mapType;
     bool mollweide;
     bool showPVectors;
+    bool automaticTextureNside;
+    bool automaticPVectorsNside;
+    int pvectorsNsideFactor;
 
     float maxCameraX;
     float minCameraX;
+
+    QPoint prevPoint;
 
     CameraConstraint *constraint;
 
@@ -106,21 +146,14 @@ private:
     bool faceIsInside(float ax, float ay, float bx, float by, float width, float height);
     void preloadFaces();
     void checkNside();
-    void updateNside(int nside);
-    void updateVectorsNside(int nside);
+    void updateNside(int nside, bool signal=false);
+    void updateVectorsNside(int nside, bool signal=false);
     void computeMaxCameraDistance();
-
-    void mousePressEvent(QMouseEvent* e, bool propagate);
-    void mouseReleaseEvent(QMouseEvent* e, bool propagate);
-    void mouseMoveEvent(QMouseEvent* e, bool propagate);
-    void wheelEvent(QWheelEvent* e, bool propagate);
-
-    enum MouseEvent {MOUSEPRESS, MOUSEMOVE, MOUSEWHEEL, MOUSERELEASE};
 
     void checkVisibility();
     void sceneUpdated(bool update=true);
     void changeProjectionConstraints();
-    void updateCameraPosition(float pos);
+    void updateMouseSensitivity();
 
     QMap<int, QVector<Vec> > faceBoundaries;
     QVector<int> visibleFaces;

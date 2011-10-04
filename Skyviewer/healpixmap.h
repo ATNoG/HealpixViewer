@@ -54,7 +54,7 @@ public:
     long getNumberPixels();
 
     float* getFaceValues(int faceNumber, int nside);
-    float* getPolarizationVectors(int faceNumber, int nside, long &totalVectors);
+    float* getPolarizationVectors(int faceNumber, int nside, double minMag, double maxMag, double magnification, int spacing, long &totalVectors);
     float* getFullMap(int nside);
 
     int getMaxNside();
@@ -63,6 +63,7 @@ public:
     MapType getCurrentMapField();
 
     void getMinMax(float &min, float &max);
+    void getMagMinMax(double &min, double &max);
 
     static unsigned int NSide2Res  (unsigned int ns);
     static QString mapTypeToString(MapType type);

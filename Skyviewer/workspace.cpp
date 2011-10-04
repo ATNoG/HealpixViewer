@@ -13,7 +13,7 @@ WorkSpace::WorkSpace(QWidget *parent) :
     layout->setSpacing(0);
     layout->setMargin(0);
 
-    //this->setMinimumSize(350, 300);
+    setMinimumSize(350, 300);
 
     /* do not sync at begin */
     this->synchronize = false;
@@ -46,6 +46,10 @@ void WorkSpace::addViewport(int viewportId, MapViewport *viewport)
         viewports.insert(viewportId, viewport);
         numberViewports++;
 
+        /* connect signals */
+        connect(viewport, SIGNAL(textureNsideUpdated(int,int)), this, SIGNAL(textureNsideUpdated(int,int)));
+        connect(viewport, SIGNAL(vectorsNsideUpdated(int,int)), this, SIGNAL(vectorsNsideUpdated(int,int)));
+
         reorganizeLayout();
 
         if(numberViewports==1)
@@ -68,6 +72,10 @@ void WorkSpace::removeViewport(int viewportId)
     if(viewports.contains(viewportId))
     {
         qDebug() << "Remove viewport from workspace " << viewportId;
+
+        /* disconnect signals */
+        disconnect(viewports[viewportId], SIGNAL(textureNsideUpdated(int,int)), this, SIGNAL(textureNsideUpdated(int,int)));
+        disconnect(viewports[viewportId], SIGNAL(vectorsNsideUpdated(int,int)), this, SIGNAL(vectorsNsideUpdated(int,int)));
 
         viewports[viewportId]->disconnectFromWorkspace();
         viewports[viewportId]->setParent(0);
@@ -99,14 +107,25 @@ void WorkSpace::changeTo3D()
 }
 
 
-/* need to sync viewports */
-void WorkSpace::syncViewports(QEvent* e, int type, MapViewer* source)
+/* synchronize */
+void WorkSpace::syncZoom(float camPosition, MapViewer *viewer)
 {
-    //if(synchronize)
-    //{
-        /* synchronize is enable, so emit the signal to be catched by the viewports */
-        emit(syncNeeded(e, type, source));
-    //}
+    emit(signalSyncZoom(camPosition, viewer));
+}
+
+void WorkSpace::syncPosition(Vec position, MapViewer *viewer)
+{
+    emit(signalSyncPosition(position, viewer));
+}
+
+void WorkSpace::syncRotation(Quaternion rotation, MapViewer *viewer)
+{
+    emit(signalSyncRotation(rotation, viewer));
+}
+
+void WorkSpace::syncKeyPress(QKeyEvent *e, MapViewer *viewer)
+{
+    emit(signalSyncKeyPress(e, viewer));
 }
 
 
@@ -357,4 +376,22 @@ void WorkSpace::maximize(int viewportId)
 void WorkSpace::restore()
 {
     reorganizeLayout();
+}
+
+
+int WorkSpace::getProjectionToSyncTo()
+{
+    int result = 0;
+
+    MapViewport *viewport;
+    foreach(viewport, viewports.values())
+    {
+        if(viewport->isSelected() && viewport->isSynchronized())
+        {
+            result = viewport->isMollweide()?2:1;
+            break;
+        }
+    }
+
+    return result;
 }

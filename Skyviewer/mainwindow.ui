@@ -10,6 +10,12 @@
     <height>1000</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>2</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="minimumSize">
    <size>
     <width>0</width>
@@ -36,102 +42,151 @@
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
      <widget class="QSplitter" name="splitter">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>0</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="lineWidth">
-       <number>0</number>
-      </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <property name="opaqueResize">
-       <bool>true</bool>
-      </property>
-      <property name="childrenCollapsible">
-       <bool>true</bool>
-      </property>
-      <widget class="QTabWidget" name="tabWidget">
+      <widget class="WorkSpace" name="workspace" native="true">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
+         <horstretch>4</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <property name="minimumSize">
-        <size>
-         <width>200</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>300</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="currentIndex">
-        <number>0</number>
-       </property>
-       <widget class="QWidget" name="histogramTab">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <attribute name="title">
-         <string>Histogram</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_3">
-         <item>
-          <widget class="HistogramWidget" name="histogramControl" native="true">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
+      </widget>
+      <widget class="QWidget" name="layoutWidget">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
+        <item>
+         <widget class="QTabWidget" name="tabWidget">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>4</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>300</width>
+            <height>316</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>300</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="currentIndex">
+           <number>1</number>
+          </property>
+          <widget class="QWidget" name="histogramTab">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
+           <attribute name="title">
+            <string>Histogram</string>
+           </attribute>
+           <widget class="HistogramWidget" name="histogramControl" native="true">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="geometry">
+             <rect>
+              <x>9</x>
+              <y>9</y>
+              <width>278</width>
+              <height>884</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+           </widget>
           </widget>
-         </item>
-         <item>
-          <widget class="ViewportManager" name="viewportManager" native="true">
+          <widget class="QWidget" name="optionstab">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <attribute name="title">
+            <string>Options</string>
+           </attribute>
+           <widget class="MapOptions" name="mapOptions" native="true">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>10</y>
+              <width>280</width>
+              <height>391</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>280</width>
+              <height>0</height>
+             </size>
+            </property>
+           </widget>
           </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="valuesTab">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <attribute name="title">
-         <string>Values</string>
-        </attribute>
-       </widget>
+         </widget>
+        </item>
+        <item>
+         <widget class="QFrame" name="frame">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>300</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>300</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <item>
+            <widget class="ViewportManager" name="viewportManager" native="true">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
@@ -205,7 +260,6 @@
    <addaction name="actionMollview"/>
    <addaction name="actionSynchronize"/>
    <addaction name="actionColors"/>
-   <addaction name="actionExtract"/>
    <addaction name="actionPolarizationVectors"/>
    <addaction name="actionShowGrid"/>
    <addaction name="actionSelectAll"/>
@@ -283,9 +337,6 @@
    </property>
   </action>
   <action name="actionColors">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
    <property name="icon">
     <iconset resource="icons.qrc">
      <normaloff>:/colormap.gif</normaloff>:/colormap.gif</iconset>
@@ -376,6 +427,18 @@
    <class>ViewportManager</class>
    <extends>QWidget</extends>
    <header>viewportmanager.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MapOptions</class>
+   <extends>QWidget</extends>
+   <header>mapoptions.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>WorkSpace</class>
+   <extends>QWidget</extends>
+   <header>workspace.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

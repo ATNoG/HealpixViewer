@@ -7,6 +7,11 @@ OverlayCache::OverlayCache(HealpixMap* map, int minNside, int maxNside, int maxT
     this->maxTiles = maxTiles;
     this->availableTiles = maxTiles;
 
+    this->magnification = 1.0;
+    this->vectorsSpacing = DEFAULT_VECTORS_SPACING;
+
+    map->getMagMinMax(this->minMag, this->maxMag);
+
     marginTilesSpace = CACHE_MARGIN;
 
     //supportedNsides << 64 << 128 << 256 << 512 << 1024 << 2048;
@@ -97,7 +102,7 @@ MapOverlay* OverlayCache::getFace(int faceNumber, int nside, bool mollweide, Map
             /* face already requested ? */
             if(!requestedFaces.contains(faceId))
             {
-                qDebug() << "Overlay " << faceNumber << " (" << nside << ") -> Miss";
+                //qDebug() << "Overlay " << faceNumber << " (" << nside << ") -> Miss";
 
                 requestedFaces.insert(faceId);
 
@@ -138,7 +143,7 @@ MapOverlay* OverlayCache::loadFace(int faceNumber, int nside, bool mollweide, Ma
     switch(type)
     {
         case MapOverlay::POLARIZATION_VECTORS:
-            overlay = new PolarizationVectors(faceNumber, nside, mollweide, healpixMap);
+            overlay = new PolarizationVectors(faceNumber, nside, mollweide, healpixMap, minMag, maxMag, magnification, vectorsSpacing);
             break;
         default:
             // TODO: throw exception
@@ -356,29 +361,30 @@ void OverlayCache::discardFace(int faceNumber, int nside, bool mollweide, MapOve
     // TODO: do this in an atomic operation */
 
     OverlayCacheTable *cache = &overlayCache;
-    /*
-    if(!mollweide)
-        cache = &overlayCache;
-    else
-        cache = &overlayCacheMollweide;
-        */
 
 #if DEBUG > 0
     qDebug() << "Discarding overlay " << faceNumber << " with nside " << nside;
 #endif
 
-    /* free the allocated memory for face */
-    MapOverlay* overlay = getFaceFromCache(faceNumber, nside, mollweide, type);
-    delete overlay;
+    if(checkFaceAvailable(faceNumber, nside, mollweide, type))
+    {
+        /* free the allocated memory for face */
+        MapOverlay* overlay = getFaceFromCache(faceNumber, nside, mollweide, type);
 
-    int cacheIdx = getCacheIndex(type, nside, mollweide);
+        if(overlay!=NULL)
+        {
+            delete overlay;
 
-    /* remove the entry */
-    OverlayCacheEntry* entry = cache->value(cacheIdx);
-    entry->remove(faceNumber);
+            int cacheIdx = getCacheIndex(type, nside, mollweide);
 
-    /* update available tiles */
-    availableTiles += calculateFaceTiles(nside);
+            /* remove the entry */
+            OverlayCacheEntry* entry = cache->value(cacheIdx);
+            entry->remove(faceNumber);
+
+            /* update available tiles */
+            availableTiles += calculateFaceTiles(nside);
+        }
+    }
 }
 
 /* check if face is available on cache */
@@ -411,22 +417,26 @@ bool OverlayCache::checkFaceAvailable(int faceNumber, int nside, bool mollweide,
 MapOverlay* OverlayCache::getFaceFromCache(int faceNumber, int nside, bool mollweide, MapOverlay::OverlayType type)
 {
     int cacheIdx = getCacheIndex(type, nside, mollweide);
-
     OverlayCacheTable *cache = &overlayCache;
-    /*
-    if(!mollweide)
-        cache = &overlayCache;
-    else
-        cache = &overlayCacheMollweide;
-        */
 
-    OverlayCacheEntry* entry = cache->value(cacheIdx);
-    return entry->value(faceNumber);
+    MapOverlay *overlay = NULL;
+
+    if(cache->contains(cacheIdx))
+    {
+        OverlayCacheEntry* entry = cache->value(cacheIdx);
+
+        if(entry->contains(faceNumber))
+            overlay = entry->value(faceNumber);
+    }
+
+    return overlay;
 }
 
 
 MapOverlay* OverlayCache::getBestFaceFromCache(int faceNumber, int nside, bool mollweide, MapOverlay::OverlayType type)
 {
+    //qDebug() << "Getting best face from cache " << faceNumber << ", " << nside;
+
     bool faceAvailable;
     do
     {
@@ -443,6 +453,39 @@ MapOverlay* OverlayCache::getBestFaceFromCache(int faceNumber, int nside, bool m
     }while(!faceAvailable);
 
     return getFaceFromCache(faceNumber, nside, mollweide, type);
+}
+
+
+void OverlayCache::setPolarizationMagThreshold(double minMag, double maxMag)
+{
+    if(minMag!=this->minMag || maxMag!=this->maxMag)
+    {
+        //qDebug() << "==> Update mag threshold: " << minMag << "," << maxMag;
+        this->minMag = minMag;
+        this->maxMag = maxMag;
+        invalidateCache();
+    }
+}
+
+
+void OverlayCache::setPolarizationMagnification(double magnification)
+{
+    if(magnification!=this->magnification)
+    {
+        //qDebug() << "==> Update magnification";
+        this->magnification = magnification;
+        invalidateCache();
+    }
+}
+
+
+void OverlayCache::setVectorsSpacing(int spacing)
+{
+    if(spacing!=this->vectorsSpacing)
+    {
+        this->vectorsSpacing = spacing;
+        invalidateCache();
+    }
 }
 
 
@@ -484,4 +527,67 @@ void OverlayCache::generateBaseOverlays()
     /* Mollweide overlays */
     for(int i=0; i<12; i++)
         loadFace(i, Min_Nside, true, MapOverlay::POLARIZATION_VECTORS);
+}
+
+
+
+void OverlayCache::invalidateCache()
+{
+    //qDebug() << "Invalidating overlay cache";
+
+    /* generate base overlays */
+    generateBaseOverlays();
+
+    /* invalidate current overlays */
+    QMap<int, QList<int> > facesToDelete;
+
+    cacheAccess.lock();
+    QList<int> nsides = overlayCache.keys();
+
+    for(int i=0; i<nsides.size(); i++)
+    {
+        if((nsides[i]/1000)>Min_Nside)
+        {
+            QList<int> faces = overlayCache[nsides[i]]->keys();
+            for(int j=0; j<faces.size(); j++)
+            {
+                facesToDelete[nsides[i]].append(faces[j]);
+            }
+        }
+    }
+    cacheAccess.unlock();
+
+    nsides = facesToDelete.keys();
+    for(int i=0; i<nsides.size(); i++)
+    {
+        QList<int> faces = facesToDelete[nsides[i]];
+        for(int j=0; j<faces.size(); j++)
+        {
+            discardFace(faces[j], nsides[i]/1000, true, MapOverlay::POLARIZATION_VECTORS);
+            discardFace(faces[j], nsides[i]/1000, false, MapOverlay::POLARIZATION_VECTORS);
+        }
+    }
+
+    /* generate overlays in use */
+    QSetIterator<int> i(facesInUse);
+    while(i.hasNext())
+    {
+        int fn, ns;
+        bool moll;
+        MapOverlay::OverlayType type;
+
+        int faceId = i.next();
+        decodeFaceId(faceId, fn, ns, moll, type);
+
+        if(ns>Min_Nside)
+        {
+            // add to requested faces
+            cacheAccess.lock();
+            requestedFaces.insert(faceId);
+            cacheAccess.unlock();
+
+            // load texture in thread
+            QtConcurrent::run(this, &OverlayCache::loadFace, fn, ns, moll, type);
+        }
+    }
 }

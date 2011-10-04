@@ -43,6 +43,10 @@ public:
     /* discard old faces on cache */
     bool cleanCache(int minSpace=0);
 
+    void setPolarizationMagThreshold(double minMag, double maxMag);
+    void setPolarizationMagnification(double magnification);
+    void setVectorsSpacing(int spacing);
+
 signals:
     void newFaceAvailable(MapOverlay* face);
     void newFaceAvailable(bool cleanCache);
@@ -76,12 +80,16 @@ private:
     void printCache();
 
     void generateBaseOverlays();
+    void invalidateCache();
 
     OverlayCacheTable overlayCache;             /* structure to store cache overlays */
     //OverlayCacheTable overlayCacheMollweide;    /* structure to store mollweide cache overlays */
     int maxTiles;                           /* max vertices to store in cache */
     int availableTiles;                     /* free space in cache */
     int marginTilesSpace;                   /* margin of free space, after that start cleaning some old entries */
+
+    double minMag, maxMag, magnification;
+    int vectorsSpacing;
 
     HealpixMap* healpixMap;
 

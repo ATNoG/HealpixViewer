@@ -1,9 +1,10 @@
 #include "tesselation.h"
 
-Tesselation::Tesselation(int _nside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache)
+Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache)
 {
-    nside = _nside;
-    vectorsNside = _nside;
+    textureNside = _textureNside;
+    vectorsNside = _pVecNside;
+    tesselationNside = _tessNside;
     mollview = _mollview;
 
     /* by default dont show the polarization vectors neither grid */
@@ -38,12 +39,23 @@ void Tesselation::createInitialTesselation()
 
 
 /* Update nside used in tesselation */
-void Tesselation::updateNside(int newNside)
+void Tesselation::updateTesselationNside(int newNside)
 {
-    if(nside!=newNside)
+    if(tesselationNside!=newNside)
     {
-        this->nside = newNside;
-        qDebug() << "nside updated to " << newNside;
+        this->tesselationNside = newNside;
+        qDebug() << "tess nside updated to " << newNside;
+    }
+}
+
+
+/* Update nside used in textures */
+void Tesselation::updateTextureNside(int newNside)
+{
+    if(textureNside!=newNside)
+    {
+        this->textureNside = newNside;
+        //qDebug() << "texture nside updated to " << newNside;
     }
 }
 
@@ -53,7 +65,7 @@ void Tesselation::updateVectorsNside(int nside)
     if(nside!=vectorsNside)
     {
         vectorsNside = nside;
-        qDebug() << "nside of vectors updated to " << vectorsNside;
+        //qDebug() << "nside of vectors updated to " << vectorsNside;
     }
 }
 
@@ -63,11 +75,11 @@ void Tesselation::updateVisibleFaces(QVector<int> faces)
     this->facesv = faces;
 
     /* tell cache which faces are visible */
-    faceCache->updateStatus(faces, nside, mollview);
+    faceCache->updateStatus(faces, tesselationNside, mollview);
     if(DISPLAY_TEXTURE)
-        textureCache->updateStatus(faces, nside);
+        textureCache->updateStatus(faces, textureNside);
     if(displayPolarizationVectors)
-        overlayCache->updateStatus(faces, nside, mollview, MapOverlay::POLARIZATION_VECTORS);
+        overlayCache->updateStatus(faces, vectorsNside, mollview, MapOverlay::POLARIZATION_VECTORS);
 }
 
 
@@ -76,11 +88,11 @@ void Tesselation::preloadFaces(QVector<int> faces, int nside)
 {
     for(int i=0; i<faces.size(); i++)
     {
-        faceCache->preloadFace(faces[i], nside, mollview);
+        faceCache->preloadFace(faces[i], tesselationNside, mollview);
         if(DISPLAY_TEXTURE)
-            textureCache->preloadFace(faces[i], nside);
+            textureCache->preloadFace(faces[i], textureNside);
         if(displayPolarizationVectors)
-            overlayCache->preloadFace(faces[i], nside, mollview, MapOverlay::POLARIZATION_VECTORS);
+            overlayCache->preloadFace(faces[i], vectorsNside, mollview, MapOverlay::POLARIZATION_VECTORS);
     }
 }
 
@@ -101,12 +113,12 @@ void Tesselation::draw()
     /* get faces */
     for(int i=0; i<totalFaces; i++)
     {
-        face = faceCache->getFace(facesv[i], 128, mollview);
+        face = faceCache->getFace(facesv[i], tesselationNside, mollview);
 
         /* display texture */
         if(DISPLAY_TEXTURE)
         {
-            texture = textureCache->getFace(facesv[i], nside);
+            texture = textureCache->getFace(facesv[i], textureNside);
             texture->draw();
         }
 

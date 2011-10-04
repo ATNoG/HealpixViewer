@@ -92,6 +92,8 @@ void ViewportManager::selectionChanged(void)
                 viewports[viewportId]->deselectViewport(true);
         }
     }
+
+    emit(viewportsSelectionUpdated(selectedViewports));
 }
 
 
@@ -263,16 +265,15 @@ void ViewportManager::openFiles(QStringList filenames)
 
                 addViewportToList(viewportIdx, title, info);
 
-                /*
+
                 if(viewports.size()==1)
                 {
                     QList<int> vports;
                     vports.append(viewportIdx);
 
                     // emit signal to histogram update
-                    emit(histogramViewportsSelectedUpdated(vports));
+                    emit(viewportsSelectionUpdated(vports));
                 }
-                */
 
                 viewportIdx++;
                 usedViewports++;
@@ -445,7 +446,9 @@ void ViewportManager::addViewportToList(int viewportId, QString title, mapInfo *
     mapsInformation[viewportId] = info;
 
     if(viewports.size()==1)
+    {
         item->setCheckState(0, Qt::Checked);
+    }
 
     // TODO: load map info of current map ?
     /*if(getCheckedViewports().size()<=1)
@@ -458,8 +461,20 @@ void ViewportManager::addViewportToList(int viewportId, QString title, mapInfo *
 
 /* remove viewport from treeview */
 void ViewportManager::removeViewportFromList(int viewportId)
-{;
+{
     QList<QTreeWidgetItem *> items = ui->treeViewports->findItems(QString("HealpixMap %1").arg(viewportId), Qt::MatchExactly, 2);
     if(items.size()>0)
         delete items[0];
+}
+
+
+/* apply map options */
+void ViewportManager::applyMapOptions(mapOptions* options)
+{
+    QList<int> selectedViewports = getSelectedViewports();
+
+    foreach(int viewportId, selectedViewports)
+    {
+        viewports[viewportId]->applyOptions(options);
+    }
 }

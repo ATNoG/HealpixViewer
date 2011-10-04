@@ -15,6 +15,7 @@ MapViewport::MapViewport(QWidget *parent, QString title, int viewportId, const Q
     this->info = NULL;
     this->shareWidget = shareWidget;
     this->hasPolarization = false;
+    this->synchronized = false;
 
     /* configure the user interface */
     configureUI();
@@ -109,6 +110,9 @@ void MapViewport::configureUI()
     connect(actionSync, SIGNAL(triggered(bool)), this, SLOT(enableSynchronization(bool)));
     connect(action3D, SIGNAL(triggered()), this, SLOT(changeTo3D()));
     connect(actionMollweide, SIGNAL(triggered()), this, SLOT(changeToMollview()));
+
+    connect(mapviewer, SIGNAL(textureNsideUpdated(int)), this, SLOT(updateOptionTextureNside(int)));
+    connect(mapviewer, SIGNAL(vectorsNsideUpdated(int)), this, SLOT(updateOptionVectorsNside(int)));
 
     /* create field selector menu */
     fieldMenu = new QMenu;
@@ -264,12 +268,38 @@ void MapViewport::updateSelection(bool selected)
 }
 
 
-
-void MapViewport::synchronizeView(QEvent *event, int type, MapViewer* source)
+void MapViewport::updateCameraPosition(float position, MapViewer *viewer)
 {
-    if(mapviewer!=source)
+    if(mapviewer!=viewer)
     {
-        mapviewer->synchronize(event, type);
+        mapviewer->updateCameraPosition(position);
+    }
+}
+
+
+void MapViewport::updatePosition(Vec position, MapViewer *viewer)
+{
+    if(mapviewer!=viewer)
+    {
+        mapviewer->updatePosition(position);
+    }
+}
+
+
+void MapViewport::updateRotation(Quaternion rotation, MapViewer *viewer)
+{
+    if(mapviewer!=viewer)
+    {
+        mapviewer->updateRotation(rotation);
+    }
+}
+
+
+void MapViewport::updateKeyPress(QKeyEvent *e, MapViewer *viewer)
+{
+    if(mapviewer!=viewer)
+    {
+        mapviewer->updateKeyPress(e);
     }
 }
 
@@ -388,24 +418,73 @@ void MapViewport::close()
 
 void MapViewport::enableSynchronization(bool on)
 {
+    int currentProjection = workspace->getProjectionToSyncTo();
+
+    if(currentProjection==1 && mollview)
+        changeTo3D();
+    else if(currentProjection==2 && !mollview)
+        changeToMollview();
+
+    synchronized = on;
     actionSync->setChecked(on);
+
     if(on)
     {
+        resetViewport();
+
         /* connect signals */
-        /* listen for object moved in a viewport */
-        connect(mapviewer, SIGNAL(cameraChanged(QEvent*, int, MapViewer*)), workspace, SLOT(syncViewports(QEvent*, int, MapViewer*)));
-        /* listen for sync needed, to force viewports to update */
-        connect(workspace, SIGNAL(syncNeeded(QEvent*,int, MapViewer*)), this, SLOT(synchronizeView(QEvent*, int, MapViewer*)));
+        connect(mapviewer, SIGNAL(signalZoomChanged(float,MapViewer*)), workspace, SLOT(syncZoom(float,MapViewer*)));
+        connect(mapviewer, SIGNAL(signalPositionChanged(Vec,MapViewer*)), workspace, SLOT(syncPosition(Vec,MapViewer*)));
+        connect(mapviewer, SIGNAL(signalRotationChanged(Quaternion,MapViewer*)), workspace, SLOT(syncRotation(Quaternion,MapViewer*)));
+        connect(mapviewer, SIGNAL(signalKeyPressed(QKeyEvent*,MapViewer*)), workspace, SLOT(syncKeyPress(QKeyEvent*,MapViewer*)));
+        connect(workspace, SIGNAL(signalSyncZoom(float,MapViewer*)), this, SLOT(updateCameraPosition(float,MapViewer*)));
+        connect(workspace, SIGNAL(signalSyncPosition(Vec,MapViewer*)), this, SLOT(updatePosition(Vec,MapViewer*)));
+        connect(workspace, SIGNAL(signalSyncRotation(Quaternion,MapViewer*)), this, SLOT(updateRotation(Quaternion,MapViewer*)));
+        connect(workspace, SIGNAL(signalSyncKeyPress(QKeyEvent*,MapViewer*)), this, SLOT(updateKeyPress(QKeyEvent*,MapViewer*)));
+
     }
     else
     {
         /* disconnect signals */
-        disconnect(mapviewer, SIGNAL(cameraChanged(QEvent*, int, MapViewer*)), workspace, SLOT(syncViewports(QEvent*, int, MapViewer*)));
-        disconnect(workspace, SIGNAL(syncNeeded(QEvent*, int, MapViewer*)), this, SLOT(synchronizeView(QEvent*, int, MapViewer*)));
+        disconnect(mapviewer, SIGNAL(signalZoomChanged(float,MapViewer*)), workspace, SLOT(syncZoom(float,MapViewer*)));
+        disconnect(mapviewer, SIGNAL(signalPositionChanged(Vec,MapViewer*)), workspace, SLOT(syncPosition(Vec,MapViewer*)));
+        disconnect(mapviewer, SIGNAL(signalRotationChanged(Quaternion,MapViewer*)), workspace, SLOT(syncRotation(Quaternion,MapViewer*)));
+        disconnect(mapviewer, SIGNAL(signalKeyPressed(QKeyEvent*,MapViewer*)), workspace, SLOT(syncKeyPress(QKeyEvent*,MapViewer*)));
+        disconnect(workspace, SIGNAL(signalSyncZoom(float,MapViewer*)), this, SLOT(updateCameraPosition(float,MapViewer*)));
+        disconnect(workspace, SIGNAL(signalSyncPosition(Vec,MapViewer*)), this, SLOT(updatePosition(Vec,MapViewer*)));
+        disconnect(workspace, SIGNAL(signalSyncRotation(Quaternion,MapViewer*)), this, SLOT(updateRotation(Quaternion,MapViewer*)));
+        disconnect(workspace, SIGNAL(signalSyncKeyPress(QKeyEvent*,MapViewer*)), this, SLOT(updateKeyPress(QKeyEvent*,MapViewer*)));
     }
 }
 
 void MapViewport::disconnectFromWorkspace()
 {
     enableSynchronization(false);
+}
+
+
+void MapViewport::applyOptions(mapOptions *options)
+{
+    mapviewer->applyOptions(options);
+}
+
+
+void MapViewport::updateOptionTextureNside(int nside)
+{
+    emit(textureNsideUpdated(nside, viewportId));
+}
+
+void MapViewport::updateOptionVectorsNside(int nside)
+{
+    emit(vectorsNsideUpdated(nside, viewportId));
+}
+
+bool MapViewport::isSynchronized()
+{
+    return synchronized;
+}
+
+bool MapViewport::isMollweide()
+{
+    return mollview;
 }

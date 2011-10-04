@@ -1,12 +1,16 @@
 #include "polarizationvectors.h"
 
-PolarizationVectors::PolarizationVectors(int faceNumber, int nside, bool mollweide, HealpixMap* map)
+PolarizationVectors::PolarizationVectors(int faceNumber, int nside, bool mollweide, HealpixMap* map, double minMag, double maxMag, double magnification, int vectorsSpacing)
 {
     //qDebug() << "Const. PolVects with nside " << nside;
     this->faceNumber = faceNumber;
     this->nside = nside;
     this->map = map;
     this->mollweide = mollweide;
+    this->minMag = minMag;
+    this->maxMag = maxMag;
+    this->magnification = magnification;
+    this->vectorsSpacing = vectorsSpacing;
 
     bufferCreated = false;
     vectorsBuffer = NULL;
@@ -48,7 +52,7 @@ void PolarizationVectors::draw()
 
 void PolarizationVectors::build()
 {
-    vectors = map->getPolarizationVectors(faceNumber, nside, totalVectors);
+    vectors = map->getPolarizationVectors(faceNumber, nside, minMag, maxMag, magnification, vectorsSpacing, totalVectors);
 
     if(mollweide)
     {

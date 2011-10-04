@@ -12,7 +12,7 @@ class PolarizationVectors : public MapOverlay
 {
 
 public:
-    PolarizationVectors(int faceNumber, int nside, bool mollweide, HealpixMap* map);
+    PolarizationVectors(int faceNumber, int nside, bool mollweide, HealpixMap* map, double minMag, double maxMag, double magnification, int vectorsSpacing);
     ~PolarizationVectors();
     void draw();
     void build();
@@ -25,6 +25,10 @@ private:
 
     bool bufferCreated;
     bool valuesLoaded;
+
+    double minMag, maxMag;
+    double magnification;
+    int vectorsSpacing;
 
     long totalVectors;
     float* vectors;

@@ -22,6 +22,7 @@ signals:
     void viewportShowOn(int viewportId, MapViewport *viewport); /* connect to Workspace::addViewport */
     void viewportShowOff(int viewportId);                       /* connect to Workspace::removeViewport */
     void histogramViewportsSelectedUpdated(QList<int> viewports);        /* connect to HistoWidget::updateHistogram */
+    void viewportsSelectionUpdated(QList<int> viewports);       /* connect to mapoptions */
     void mapUpdated(int viewportId, mapInfo *info);             /* connect to HistoWidget::updateMapInfo */
     void mapClosed(int viewportId);                             /* connect to HistoWidget::unloadMapInfo */
 
@@ -32,6 +33,8 @@ public slots:
     void updateThresholds(ColorMap* colorMap, float min, float max);
     //void updateColorTable()
     void viewportSelectionChanged(int viewportId, bool selected);
+    /* apply map options */
+    void applyMapOptions(mapOptions* options);
 
 private slots:
     /* connected to map field combobox */

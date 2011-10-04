@@ -27,13 +27,16 @@ struct faceInfo
 };
 
 public:
-    Tesselation(int nside, bool mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache);
+    Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache);
     ~Tesselation();
     void draw();
     void drawAllFaces();
 
+    /* update faces nside */
+    void updateTesselationNside(int nside);
+
     /* update to new nside */
-    void updateNside(int nside);
+    void updateTextureNside(int nside);
 
     /* update vectors nside */
     void updateVectorsNside(int nside);
@@ -56,7 +59,8 @@ public:
     void changeToMollweide();
 
 private:
-    int nside;
+    int tesselationNside;
+    int textureNside;
     int vectorsNside;
     //QMap<int, Face*> availableFaces;
 

@@ -23,14 +23,23 @@ public:
     explicit WorkSpace(QWidget *parent = 0);
     ~WorkSpace();
 
+    int getProjectionToSyncTo();
+
+
 signals:
-    void syncNeeded(QEvent* e, int type, MapViewer* source);
+    void signalSyncZoom(float camPosition, MapViewer *viewer);
+    void signalSyncPosition(Vec position, MapViewer *viewer);
+    void signalSyncRotation(Quaternion rotation, MapViewer *viewer);
+    void signalSyncKeyPress(QKeyEvent *e, MapViewer *viewer);
+
+    void textureNsideUpdated(int nside, int viewport);
+    void vectorsNsideUpdated(int nside, int viewport);
 
 public slots:
     void changeToMollview();
     void changeTo3D();
     void changeSynchronization(bool on);
-    void syncViewports(QEvent* e, int type, MapViewer* viewer);
+
     void selectAllViewports();
     void deselectAllViewports();
     void resetViewports();
@@ -43,6 +52,12 @@ public slots:
 
     void maximize(int viewportId);
     void restore();
+
+    /* synchronization */
+    void syncZoom(float camPosition, MapViewer *viewer);
+    void syncPosition(Vec position, MapViewer *viewer);
+    void syncRotation(Quaternion rotation, MapViewer *viewer);
+    void syncKeyPress(QKeyEvent *e, MapViewer *viewer);
 
 
 private:

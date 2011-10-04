@@ -186,6 +186,9 @@ void HistogramWidget::updateHistogramThreshold()
 {
     /* rebuild histogram */
     ui->histogram->rebuildHistogram(min, max);
+
+    if(REALTIME_TEXTURES && selectedViewports.size()==1)
+        updateMap();
 }
 
 /* set new thresholds */
