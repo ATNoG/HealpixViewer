@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file alias="3dview.gif">images/icons/3dview.gif</file>
+        <file alias="mollview.gif">images/icons/mollview.gif</file>
+        <file>images/icons/viewports.gif</file>
+        <file alias="sync.gif">images/icons/sync.gif</file>
+        <file alias="colormap.gif">images/icons/colormap.gif</file>
+        <file alias="extract.gif">images/icons/extract.gif</file>
+        <file alias="select-all.gif">images/icons/selectall.gif</file>
+        <file alias="deselect-all.gif">images/icons/deselectall.gif</file>
+        <file alias="pol-vectors.gif">images/icons/polvectors.gif</file>
+        <file alias="grid.gif">images/icons/grid.gif</file>
+        <file alias="trash.gif">images/icons/trash.gif</file>
+    </qresource>
+</RCC>
