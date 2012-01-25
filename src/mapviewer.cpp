@@ -378,7 +378,6 @@ void MapViewer::mouseReleaseEvent(QMouseEvent *e)
 
 void MapViewer::postSelection (const QPoint &point)
 {
-    /*
     qDebug() << "Pixel selected: " << point.x() << "," << point.y();
     Vec origin, direction;
     camera()->convertClickToLine(point, origin, direction);
@@ -388,7 +387,6 @@ void MapViewer::postSelection (const QPoint &point)
 
     Vec v = currentManipulatedFrame->coordinatesOf(origin);
     qDebug() << "ManFrame: " << v.x << "," << v.y << "," << v.z;
-    */
 }
 
 
@@ -909,8 +907,9 @@ void MapViewer::checkNside()
     float percentageVisible;
     float sphereWidth, sphereHeight;
 
-    //if(!mollweide)
-    //{
+    long viewportArea, sphereArea;
+
+    // TODO: adapt to mollweide
 
         camera()->computeModelViewMatrix();
         camera()->computeProjectionMatrix();
@@ -923,44 +922,34 @@ void MapViewer::checkNside()
         sphereWidth = right.x - left.x;
         sphereHeight = top.y - bottom.y;
 
-        qDebug() << cameraPosition << " - Sphere size " << sphereWidth << "," << sphereHeight;
-
-        percentageVisible = min(sphereHeight, (float)height()) * min(sphereWidth, (float)width()) / (sphereWidth*sphereHeight);
+        viewportArea = height() * width();
+        sphereArea = 4 * M_PI * pow(sphereWidth/2, 2) * SPHERE_PROPORTION;
 
         /* calculate pixels that will be displayed */
-        pixelsDisplayed = min(sphereHeight, (float)height()) * min(sphereWidth, (float)width());
-    //}
-    //else
-        //percentageVisible = 1;
+        pixelsDisplayed = min(viewportArea, sphereArea);
+
 
     int nextNside = maxNside;
 
-    //float radius = min(width(), height())/2;
-    //pixelsDisplayed = width()*height();//M_PI*pow(radius, 2);
-
-    /*
-    if(percentageVisible>=0.8)
-    {
-        qDebug() << "Pixs displayed using circ area";
-        pixelsDisplayed = M_PI*pow(radius, 2);
-    }
-    else
-    {
-    */
-        //qDebug() << "Pixs displayed using rect area";
-        //pixelsDisplayed = width()*height();
-        //pixelsDisplayed = sphereWidth*sphereHeight;
-    //}
-
-    //qDebug() << "Viewport pixels = " << pixelsDisplayed;
-
     long oldPixelsToDisplay = 0;
+
+    float zoom = fabs(cameraPosition-maxCameraX);
+    float zoomFactor = 1- zoom/(maxCameraX-minCameraX);
 
     for(int auxNside=MIN_NSIDE; auxNside<=maxNside; auxNside*=2)
     {
-        pixelsToDisplay = nside2npix(auxNside)*SPHERE_VISIBLE;
+        if(sphereWidth>width() && sphereHeight>height())
+        {
+            percentageVisible = (float)viewportArea/(float)sphereArea;
+            //qDebug() << "Using percentage: " << percentageVisible;
+        }
+        else
+        {
+            percentageVisible = 1.0;//SPHERE_VISIBLE;
+            //qDebug() << "Using sphere visible";
+        }
 
-        //qDebug() << "Pixels to display (" << auxNside << "): " << pixelsToDisplay;
+        pixelsToDisplay = (long)(nside2npix(auxNside)*percentageVisible*0.14*zoomFactor);
 
         if(pixelsToDisplay>=pixelsDisplayed)
         {
@@ -972,19 +961,6 @@ void MapViewer::checkNside()
             oldPixelsToDisplay = pixelsToDisplay;
         }
     }
-
-    float zoom = fabs(cameraPosition-maxCameraX);
-    float zoomFactor = 1+zoom/(maxCameraX-minCameraX);
-
-    //qDebug() << "Zoom factor: " << zoomFactor;
-
-    if(abs(oldPixelsToDisplay-pixelsDisplayed)*zoomFactor < abs(pixelsToDisplay-pixelsDisplayed))
-    {
-        /* previous nside closer */
-        nextNside = max(MIN_NSIDE, nextNside/2);
-    }
-
-    //qDebug() << "Best nside: " << nextNside;
 
     updateNside(nextNside);
 }
