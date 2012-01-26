@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include "fieldmap.h"
+#include "exceptions.h"
 
 const double boost = 0.001;
 
@@ -9,6 +10,7 @@ const double boost = 0.001;
 /* keywords used to specify the columns */
 char  ICOLNAME1[]  = "TEMPERATURE";
 char  ICOLNAME2[]  = "Intensity";
+char  ICOLNAME3[]  = "SIGNAL";
 char  QCOLNAME1[]  = "Q_POLARISATION";
 char  QCOLNAME2[] = "QPOLARISATION";
 char  QCOLNAME3[] = "Q_POLARIZATION";
@@ -29,8 +31,12 @@ char  DEFFORM[]   = "1024E";
 
 HealpixMap::HealpixMap(QString _path, int minNside)
 {
+    //throw HealpixMapException("teste");
     path = _path;
     this->minNSide = minNside;
+
+    cacheCreated = false;
+    createCache = false;
 
     /* get name of file */
     QFileInfo pathInfo(path);
@@ -45,11 +51,16 @@ HealpixMap::HealpixMap(QString _path, int minNside)
     if(!checkMapCache())
     {
         qDebug() << "Map doesnt exists on cache";
+
+        createCache = true;
+
         /* creating folder on cache */
         QDir cachedDir(QString(CACHE_DIR));
         cachedDir.mkdir(filename);
+
         /* map not exists on cache: read FITS info and create individual maps */
         processFile(_path, true);
+
         /* save map info */
         writeMapInfo();
     }
@@ -77,7 +88,9 @@ HealpixMap::HealpixMap(QString _path, int minNside)
 
 HealpixMap::~HealpixMap()
 {
-    qDebug() << "Calling HealpixMap destructor";
+    //#if DEBUG > 0
+        qDebug() << "Calling HealpixMap destructor";
+    //#endif
 }
 
 void HealpixMap::processFile(QString path, bool generateMaps)
@@ -92,9 +105,12 @@ void HealpixMap::processFile(QString path, bool generateMaps)
     /* open fits file */
     if(fits_open_file(&fptr, pathByteArray.data(), READONLY, &status)!=0)
     {
-        qDebug("error opening fits file");
-        qDebug() << " status " << status;
-        return;
+        #if DEBUG > 0
+            qDebug("error opening fits file");
+            qDebug() << " status " << status;
+        #endif
+        abort();
+        throw HealpixMapException("Error opening FITS file");
     }
 
     /* read primary header */
@@ -102,15 +118,17 @@ void HealpixMap::processFile(QString path, bool generateMaps)
 
     /* get the number of hdus in fits file */
     result = fits_get_num_hdus(fptr, &hducount, &status);
-    //qDebug() << "Hdus = " << hducount;
+
     if(result!=0)
     {
-        qDebug("error on fits_get_num_hdus");
-        qDebug() << " return " << result;
-        qDebug() << " status " << status;
+        #if DEBUG > 0
+            qDebug("error on fits_get_num_hdus");
+            qDebug() << " return " << result;
+            qDebug() << " status " << status;
+        #endif
         fits_close_file(fptr, &status);
-        // TODO: throw exception
-        return;
+        abort();
+        throw HealpixMapException("Error processing FITS file");
     }
 
     correctHDU = false;
@@ -118,17 +136,51 @@ void HealpixMap::processFile(QString path, bool generateMaps)
     {
         if(fits_movabs_hdu(fptr, i, &exttype, &status)!=0)
         {
-            //qDebug("error on fits_movabs_hdu");
+            #if DEBUG > 0
+                qDebug("error on fits_movabs_hdu");
+            #endif
             fits_close_file(fptr, &status);
-            // TODO: throw exception
-            return;
+            abort();
+            throw HealpixMapException("Error processing FITS file");
         }
+
+        #if DEBUG > 0
+            switch(exttype)
+            {
+                case BINARY_TBL:
+                    qDebug("extension binary table");
+                    break;
+                case IMAGE_HDU:
+                    qDebug("extension image hdu");
+                    break;
+                case ASCII_TBL:
+                    qDebug("extension ascii table");
+                    break;
+            }
+        #endif
 
         if(exttype==BINARY_TBL)
         {
+            /*
+            char TESTE[]  = "*";
+            char colname[20];
+            int totalcols;
+
+            fits_get_num_cols(fptr, &totalcols, &status);
+            qDebug() << "Total columns = " << totalcols;
+
+            for(int i=0; i<totalcols; i++)
+            {
+                fits_get_colname(fptr, CASEINSEN, TESTE, colname, &t, &status);
+                qDebug() << "Column name: " << colname << ", Column n: " << t;
+            }
+            */
+
             if (fits_get_colnum(fptr, CASEINSEN, ICOLNAME1, &t, &status) == 0) icol = t;
             status = 0;
             if ((icol == 0) && (fits_get_colnum(fptr, CASEINSEN, ICOLNAME2, &t, &status) == 0)) icol = t;
+            status = 0;
+            if ((icol == 0) && (fits_get_colnum(fptr, CASEINSEN, ICOLNAME3, &t, &status) == 0)) icol = t;
 
             if(icol!=0)
             {
@@ -140,10 +192,12 @@ void HealpixMap::processFile(QString path, bool generateMaps)
     if(!correctHDU)
     {
         /* something wrong happened... invalid file ? */
-        qDebug("Correct extension not found");
+        #if DEBUG > 0
+            qDebug("Correct extension not found");
+        #endif
         fits_close_file(fptr, &status);
-        return;
-        /* TODO: throw exception */
+        abort();
+        throw HealpixMapException("Error processing FITS file: field not found");
     }
 
     /* read the extension header */
@@ -172,6 +226,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
 
     // TODO: need to set status to 0 everytime ?
 
+    /* Look for Q field */
     status = 0;
     if (fits_get_colnum(fptr, CASEINSEN, QCOLNAME1, &t, &status) == 0) qcol = t;
     /* try the different names for Q column */
@@ -187,6 +242,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
     if(qcol!=0)
         availableMaps.append(Q);
 
+    /* Look for U field */
     status = 0;
     if (fits_get_colnum(fptr, CASEINSEN, UCOLNAME1, &t, &status) == 0) ucol = t;
     /* try the different names for U column */
@@ -229,34 +285,56 @@ void HealpixMap::processFile(QString path, bool generateMaps)
 
             /* create map fields */
             float nul = -999.;
-            float *values = new float[npixels];
+            float *values;
+
+            try
+            {
+                values = new float[npixels];
+            }
+            catch(const std::bad_alloc &)
+            {
+                fits_close_file(fptr, &status);
+                abort();
+                throw HealpixMapException("Not enough memory");
+            }
 
             status = 0;
             if (fits_read_col(fptr, TFLOAT, col, 1, 1, npixels, &nul, values, &t, &status) != 0)
             {
-                qDebug("error reading values from file");
+                #if DEBUG > 0
+                    qDebug("error reading values from file");
+                #endif
+                status = 0;
+                fits_close_file(fptr, &status);
+                abort();
+                throw HealpixMapException("Error reading values from FITS file");
             }
 
-            //qDebug() << "Pre processing map " << maptype;
-
             /* create field map */
-            FieldMap *fieldMap = new FieldMap(values, maxNside, isOrderNested());
+            FieldMap *fieldMap = NULL;
+            try
+            {
+                 fieldMap = new FieldMap(values, maxNside, isOrderNested());
+                 fieldMap->generateDowngrades(cachePath, prefix, minNSide);
+            }
+            catch(FieldMapException &e)
+            {
+                status = 0;
+                fits_close_file(fptr, &status);
+                abort();
+                delete[] values;
+                throw HealpixMapException(e.what());
+            }
 
             // TODO: define minNside in some place...
-            //if(maptype!=NObs)
-                fieldMap->generateDowngrades(cachePath, prefix, minNSide);
-            //else
-                //fieldMap->generateDowngrades(cachePath, prefix, 8);
-
             delete fieldMap;
-            //qDebug() << "Map saved";
         }
 
         /* generate polarization map ? */
         if(hasPolarization())
         {
             /* create polarization map for each nside */
-            for(int nside=maxNside; nside>=8; nside=nside/2)
+            for(int nside=maxNside; nside>=minNSide; nside=nside/2)
             {
                 //qDebug() << "Generating polarization for " << nside;
 
@@ -298,11 +376,11 @@ void HealpixMap::processFile(QString path, bool generateMaps)
                 meanPolMagnitudes[nside] = mean;
                 devPolMagnitudes[nside] = sqrt(aux/(totalPixels-1));
 
-#if DEBUG > 0
-                qDebug() << "Media para nside = " << nside << " -> " << meanPolMagnitudes[nside];
-                qDebug() << "Max -> " << maxPolMagnitudes[nside];
-                qDebug() << "Desvio padrao -> " << devPolMagnitudes[nside];
-#endif
+                #if DEBUG > 0
+                    qDebug() << "Media para nside = " << nside << " -> " << meanPolMagnitudes[nside];
+                    qDebug() << "Max -> " << maxPolMagnitudes[nside];
+                    qDebug() << "Desvio padrao -> " << devPolMagnitudes[nside];
+                #endif
 
                 /* calculate filename to write */
                 QString nsideStr;
@@ -311,23 +389,32 @@ void HealpixMap::processFile(QString path, bool generateMaps)
 
                 /* save polarization into cache */
                 QFile file(filepath);
-                file.open(QIODevice::WriteOnly);
-                file.write((const char*)polarizationAng, totalPixels*sizeof(float));
-                file.write((const char*)polarizationMag, totalPixels*sizeof(float));
-                file.close();
+                if(file.open(QIODevice::WriteOnly))
+                {
+                    file.write((const char*)polarizationAng, totalPixels*sizeof(float));
+                    file.write((const char*)polarizationMag, totalPixels*sizeof(float));
+                    file.close();
+                }
+                else
+                {
+                    abort();
+                    throw HealpixMapException("Error writing into cache");
+                }
 
                 delete polarizationAng;
                 delete polarizationMag;
             }
+
+            qDebug() << "Cache written with success";
         }
+
+        cacheCreated = true;
     }
 
     /* close fits file */
     fits_close_file(fptr, &status);
 
     loadingDialog->setValue(loadingDialog->maximum());
-
-    //qDebug() << "Available Maps: " << availableMaps;
 }
 
 
@@ -348,10 +435,14 @@ void HealpixMap::readFITSExtensionHeader(fitsfile *fptr)
     status = 0;
     if(fits_read_keyword(fptr, "ORDERING", value, comment, &status)!=0)
     {
-        qDebug("error on reading keyword ordering");
+        #if DEBUG > 0
+            qDebug("error on reading keyword ordering");
+        #endif
+
+        status = 0;
         fits_close_file(fptr, &status);
-        // TODO: throw exception
-        return;
+        abort();
+        throw HealpixMapException("Can't get Healpix ordering schema from FITS file");
     }
     /* trim string */
     this->ordering = parseOrdering(value);
@@ -360,29 +451,36 @@ void HealpixMap::readFITSExtensionHeader(fitsfile *fptr)
     status = 0;
     if(fits_read_keyword(fptr, "COORDSYS", value, comment, &status)!=0)
     {
-        qDebug("error on reading keyword coordsys");
+        #if DEBUG > 0
+            qDebug("error on reading keyword coordsys");
+        #endif
     }
     else
     {
         /* trim string */
         this->coordsys = parseCoordsys(value);
-        //qDebug() << "Coordsys is " << value;
     }
 
     /* Read Nside */
     status = 0;
     if(fits_read_keyword(fptr, "NSIDE", value, comment, &status)!=0)
     {
-        qDebug("error on reading keyword nside");
+        #if DEBUG > 0
+            qDebug("error on reading keyword nside");
+        #endif
+
+        status = 0;
         fits_close_file(fptr, &status);
-        // TODO: throw exception
-        return;
+        abort();
+        throw HealpixMapException("Cant't get the Nside from FITS file");
     }
+
     /* save nside and npixels value */
     QString nside_qs(value);
     this->maxNside = nside_qs.toInt();
     this->npixels = nside2npix(this->maxNside);
-    //qDebug() << "Nside is " << maxNside << " with " << npixels << " pixels";
+
+    qDebug() << "Nside is " << maxNside << " with " << npixels << " pixels";
 }
 
 
@@ -394,10 +492,11 @@ HealpixMap::Ordering HealpixMap::parseOrdering(char *value)
         return RING;
     else if(aux.contains("NESTED", Qt::CaseInsensitive))
         return NESTED;
-
-    // TODO: throw exception if invalid order
     else
-        return RING;
+    {
+        abort();
+        throw HealpixMapException("Invalid Healpix ordering");
+    }
 }
 
 
@@ -409,10 +508,9 @@ HealpixMap::Coordsys HealpixMap::parseCoordsys(char* value)
         return ECLIPTIC;
     else if(!strcmp(value, "G"))
         return GALACTIC;
-
-    // TODO: throw exception if a invalid coordsys received
     else
-        return GALACTIC;
+        return CELESTIAL;
+        //throw HealpixMapException("Invalid coordsys in FITS file");
 }
 
 
@@ -626,7 +724,18 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, double minM
     totalVectors = npixels/spacingDivisor;
 
     /* allocate space (each vector will have 2 endpoints, of 3 coordinates each */
-    float* polVectors = new float[totalVectors*3*2];
+    float* polVectors;
+    try
+    {
+        polVectors = new float[totalVectors*3*2];
+    }
+    catch(const std::bad_alloc &)
+    {
+        delete[] nobs;
+        delete[] polAngles;
+        delete[] polMagnitudes;
+        throw HealpixMapException("Not enough memory");
+    }
 
     // TODO: what is this pixsize ?
     double pixsize = (sqrt(M_PI/3.) / nside) / 2.;
@@ -675,8 +784,21 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, double minM
             pixNest = xy2pix(x,y) + faceOffset;
 
             pix2ang_nest(nside, pixNest, &theta, &phi);
-            float* vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, minMag, maxMag, magnification);
-            //float* vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, (double)(meanPolMagnitudes[nside]-devPolMagnitudes[nside]), (double)(meanPolMagnitudes[nside]+devPolMagnitudes[nside]), magnification);
+
+            float* vector;
+            try
+            {
+                vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, minMag, maxMag, magnification);
+                //float* vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, (double)(meanPolMagnitudes[nside]-devPolMagnitudes[nside]), (double)(meanPolMagnitudes[nside]+devPolMagnitudes[nside]), magnification);
+            }
+            catch(const std::bad_alloc &)
+            {
+                delete[] nobs;
+                delete[] polAngles;
+                delete[] polMagnitudes;
+                delete[] polVectors;
+                throw HealpixMapException("Not enough memory");
+            }
 
             for(int j=0; j<6; j++)
             {
@@ -774,7 +896,17 @@ float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, i
     if(length==0)
         length = nside2npix(nside);
 
-    float *values = new float[length];
+    float *values;
+
+    try
+    {
+         values = new float[length];
+    }
+    catch(const std::bad_alloc &)
+    {
+        abort();
+        throw HealpixMapException("Not enough memory");
+    }
 
     //qDebug() << "Reading file " << path;
 
@@ -782,9 +914,18 @@ float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, i
     QFile f(path);
 
     cacheAccess.lock();
-    f.open(QIODevice::ReadOnly);
-    f.seek(firstPosition*sizeof(float));
-    f.read((char*)values, length*sizeof(float));
+    if(f.open(QIODevice::ReadOnly))
+    {
+        f.seek(firstPosition*sizeof(float));
+        f.read((char*)values, length*sizeof(float));
+    }
+    else
+    {
+        delete[] values;
+        cacheAccess.unlock();
+        abort();
+        throw HealpixMapException("Error reading cache");
+    }
     f.close();
     cacheAccess.unlock();
 
@@ -797,86 +938,102 @@ void HealpixMap::writeMapInfo()
 {
     // save file with map info
     QFile infoFile(cacheInfo);
-    infoFile.open(QIODevice::WriteOnly | QIODevice::Text);
-    QTextStream out(&infoFile);
-    out << path << endl;
-    out << maxNside << endl;
 
-    /* write polarization magnitudes - means */
-    out << "[polmeans]" << endl;
-    QMapIterator<int, float> i(meanPolMagnitudes);
-    while (i.hasNext())
+    if(infoFile.open(QIODevice::WriteOnly | QIODevice::Text))
     {
-        i.next();
-        out << i.key() << ":" << i.value() << endl;
-    }
-    out << "[/polmeans]" << endl;
+        QTextStream out(&infoFile);
+        out << path << endl;
+        out << maxNside << endl;
 
-    /* write polarization magnitudes - standar deviation */
-    out << "[poldeviations]" << endl;
-    QMapIterator<int, float> j(devPolMagnitudes);
-    while (j.hasNext())
-    {
-        j.next();
-        out << j.key() << ":" << j.value() << endl;
-    }
-    out << "[/poldeviations]" << endl;
+        /* write polarization magnitudes - means */
+        out << "[polmeans]" << endl;
+        QMapIterator<int, float> i(meanPolMagnitudes);
+        while (i.hasNext())
+        {
+            i.next();
+            out << i.key() << ":" << i.value() << endl;
+        }
+        out << "[/polmeans]" << endl;
 
-    /*
-    out << coordsys << endl;
-    QString availableMapsStr = "";
-    foreach(MapType maptype, availableMaps)
-    {
-        availableMapsStr.append(getMapType(maptype));
-        availableMapsStr.append(",");
+        /* write polarization magnitudes - standar deviation */
+        out << "[poldeviations]" << endl;
+        QMapIterator<int, float> j(devPolMagnitudes);
+        while (j.hasNext())
+        {
+            j.next();
+            out << j.key() << ":" << j.value() << endl;
+        }
+        out << "[/poldeviations]" << endl;
+
+        /*
+        out << coordsys << endl;
+        QString availableMapsStr = "";
+        foreach(MapType maptype, availableMaps)
+        {
+            availableMapsStr.append(getMapType(maptype));
+            availableMapsStr.append(",");
+        }
+        out << availableMapsStr << endl;
+        */
+        infoFile.close();
     }
-    out << availableMapsStr << endl;
-    */
-    infoFile.close();
+    else
+    {
+        abort();
+        throw HealpixMapException("Error writing map information into cache");
+    }
 }
 
 void HealpixMap::readMapInfo()
 {
     /* open file */
     QFile infoFile(cacheInfo);
-    infoFile.open(QIODevice::ReadOnly | QIODevice::Text);
-    QTextStream in(&infoFile);
 
-    QString line;
-    bool readingMeans = false;
-    bool readingDeviations = false;
-
-    /* read polarization magnitude means */
-    do
+    if(infoFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
-        line = in.readLine();
+        QTextStream in(&infoFile);
 
-        if(!readingMeans && !readingDeviations)
+        QString line;
+        bool readingMeans = false;
+        bool readingDeviations = false;
+
+        /* read polarization magnitude means */
+        do
         {
-            if(line=="[polmeans]")
-                readingMeans = true;
-            else if(line=="[poldeviations]")
-                readingDeviations = true;
-        }
-        else
-        {
-            /* check stop */
-            if(line=="[/polmeans]")
-                readingMeans = false;
-            else if(line=="[/poldeviations]")
-                readingDeviations = false;
+            line = in.readLine();
+
+            if(!readingMeans && !readingDeviations)
+            {
+                if(line=="[polmeans]")
+                    readingMeans = true;
+                else if(line=="[poldeviations]")
+                    readingDeviations = true;
+            }
             else
             {
-                QStringList aux = line.split(":");
-                int nside = aux[0].toInt();
-                float value = aux[1].toFloat();
-                if(readingMeans)
-                    meanPolMagnitudes[nside] = value;
+                /* check stop */
+                if(line=="[/polmeans]")
+                    readingMeans = false;
+                else if(line=="[/poldeviations]")
+                    readingDeviations = false;
                 else
-                    devPolMagnitudes[nside] = value;
+                {
+                    QStringList aux = line.split(":");
+                    int nside = aux[0].toInt();
+                    float value = aux[1].toFloat();
+                    if(readingMeans)
+                        meanPolMagnitudes[nside] = value;
+                    else
+                        devPolMagnitudes[nside] = value;
+                }
             }
-        }
-    }while(!line.isNull());
+        }while(!line.isNull());
+    }
+    else
+    {
+        abort();
+        throw HealpixMapException("Error reading map information from cache");
+    }
 }
 
 
@@ -889,7 +1046,6 @@ bool HealpixMap::checkMapCache()
 
     //qDebug() << "Checking cached map on " << cachedDirStr;
 
-    //return false;
     return cachedDir.exists();
 }
 
@@ -977,4 +1133,34 @@ void HealpixMap::getMagMinMax(double &min, double &max)
 {
     min = (double)(meanPolMagnitudes[128]-devPolMagnitudes[128]);
     max = (double)(meanPolMagnitudes[128]+devPolMagnitudes[128]);
+}
+
+
+void HealpixMap::removeCache()
+{
+    qDebug() << "Removing cache: " << cachePath;
+
+    /* remove cache folder */
+    QDir cachedDir(cachePath);
+    QDir cacheDir(QString(CACHE_DIR));
+
+    //First delete any files in the current directory
+    QFileInfoList files = cachedDir.entryInfoList(QDir::NoDotAndDotDot | QDir::Files);
+    for(int file = 0; file < files.count(); file++)
+    {
+        cachedDir.remove(files.at(file).fileName());
+    }
+
+    //Finally, remove empty parent directory
+    cacheDir.rmdir(filename);
+}
+
+
+void HealpixMap::abort()
+{
+    qDebug() << "Aborting FITS processing";
+    if(createCache && !cacheCreated)
+        removeCache();
+
+    delete loadingDialog;
 }

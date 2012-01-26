@@ -21,7 +21,10 @@ HistogramWidget::HistogramWidget(QWidget *parent) :
 
 HistogramWidget::~HistogramWidget()
 {
-    qDebug() << "Calling HistogramWidget destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling HistogramWidget destructor";
+    #endif
+
     delete ui;
 
     if(histogram!=NULL)

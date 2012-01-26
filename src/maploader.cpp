@@ -37,7 +37,9 @@ MapLoader::MapLoader(QWidget *parent, QString filename, QList<HealpixMap::MapTyp
 
 MapLoader::~MapLoader()
 {
-    qDebug() << "Calling MapLoader destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling MapLoader destructor";
+    #endif
 }
 
 HealpixMap::MapType MapLoader::getSelectedMapType()

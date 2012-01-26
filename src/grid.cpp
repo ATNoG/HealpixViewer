@@ -7,7 +7,9 @@ Grid::Grid(int lines)
 
 Grid::~Grid()
 {
-    qDebug() << "Calling Grid destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling Grid destructor";
+    #endif
 }
 
 void Grid::setNumberLines(int lines)

@@ -21,7 +21,9 @@ Face::Face(int faceNumber, int nside, bool mollweide)
 
 Face::~Face()
 {
-    //qDebug() << "Calling Face destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling Face destructor";
+    #endif
 
     //qDebug("Destroying face");
     if(vertexBuffer!=NULL)

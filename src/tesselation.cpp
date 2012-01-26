@@ -24,7 +24,10 @@ Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool
 
 Tesselation::~Tesselation()
 {
-    qDebug() << "Calling Tesselation destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling Tesselation destructor";
+    #endif
+
     delete grid;
 }
 

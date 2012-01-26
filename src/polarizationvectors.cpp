@@ -19,7 +19,9 @@ PolarizationVectors::PolarizationVectors(int faceNumber, int nside, bool mollwei
 
 PolarizationVectors::~ PolarizationVectors()
 {
-    //qDebug() << "Calling PolarizationVectors destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling PolarizationVectors destructor";
+    #endif
 
     if(vectorsBuffer!=NULL)
     {

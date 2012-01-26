@@ -30,7 +30,10 @@ MapViewport::MapViewport(QWidget *parent, QString title, int viewportId, const Q
 
 MapViewport::~MapViewport()
 {
-    qDebug() << "Calling MapVieweport destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling MapVieweport destructor";
+    #endif
+
     if(fieldsActionGroup!=NULL)
         delete fieldsActionGroup;
     if(info!=NULL)

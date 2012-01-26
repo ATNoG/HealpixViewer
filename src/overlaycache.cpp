@@ -26,7 +26,9 @@ OverlayCache::OverlayCache(HealpixMap* map, int minNside, int maxNside, int maxT
 
 OverlayCache::~OverlayCache()
 {
-    qDebug() << "Calling OverlayCache destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling OverlayCache destructor";
+    #endif
 
     QList<int> nsides = overlayCache.keys();
     foreach(int nside, nsides)

@@ -24,7 +24,9 @@ Texture::Texture(int faceNumber, int nside, ColorMap* colorMap)
 
 Texture::~Texture()
 {
-    //qDebug() << "Calling Texture destructor (" << faceNumber << "," << nside << ")";
+    #if DEBUG > 0
+        qDebug() << "Calling Texture destructor (" << faceNumber << "," << nside << ")";
+    #endif
 
     if(texture!=NULL)
     {

@@ -10,7 +10,9 @@ FaceVertices::FaceVertices()
 
 FaceVertices::~FaceVertices()
 {
-    qDebug() << "Calling FaceVertices destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling FaceVertices destructor";
+    #endif
 }
 
 

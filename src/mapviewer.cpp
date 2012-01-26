@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "grid.h"
+#include "exceptions.h"
 
 using namespace qglviewer;
 
@@ -32,7 +33,10 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
 
 MapViewer::~MapViewer()
 {
-    qDebug() << "Calling MapViewer destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling MapViewer destructor";
+    #endif
+
     delete currentManipulatedFrame;
     if(tesselation!=NULL)
         delete tesselation;
@@ -91,50 +95,64 @@ bool MapViewer::loadMap(QString fitsfile)
 
     if(!initialized)
     {
+        bool mapCreated;
+
         /* open fits file */
-        healpixMap = new HealpixMap(fitsfile, MIN_NSIDE);
-
-        /* get available maps */
-        QList<HealpixMap::MapType> availableMaps = healpixMap->getAvailableMaps();
-        mapType = HealpixMap::I;
-
-        MapLoader* mapLoader = new MapLoader(this, fitsfile, availableMaps);
-        if(mapLoader->exec())
+        try
         {
-            mapType = mapLoader->getSelectedMapType();
+            healpixMap = new HealpixMap(fitsfile, MIN_NSIDE);
+            mapCreated = true;
+        }
+        catch(HealpixMapException e)
+        {
+            qDebug() << e.what();
+            mapCreated = false;
         }
 
-        delete mapLoader;
+        if(mapCreated)
+        {
+            /* get available maps */
+            QList<HealpixMap::MapType> availableMaps = healpixMap->getAvailableMaps();
 
-#if DEBUG > 0
-        qDebug() << "Opening map with type: " << HealpixMap::mapTypeToString(mapType);
-#endif
-        healpixMap->changeCurrentMap(mapType);
+            MapLoader* mapLoader = new MapLoader(this, fitsfile, availableMaps);
+            if(mapLoader->exec())
+            {
+                mapType = mapLoader->getSelectedMapType();
 
-        /* calculate max nside */
-        maxNside = min(healpixMap->getMaxNside(), MAX_NSIDE);
+                #if DEBUG > 0
+                    qDebug() << "Opening map with type: " << HealpixMap::mapTypeToString(mapType);
+                #endif
 
-        /* get face cache */
-        faceCache = FaceCache::instance(MIN_NSIDE, MAX_NSIDE);          // TODO: correct ? MAX_NSIDE is used because facecache is shared
-        textureCache = new TextureCache(healpixMap, MIN_NSIDE, maxNside);
-        overlayCache = new OverlayCache(healpixMap, MIN_NSIDE, maxNside);
+                healpixMap->changeCurrentMap(mapType);
 
-        QObject::connect(faceCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
-        QObject::connect(textureCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
-        QObject::connect(overlayCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
+                /* calculate max nside */
+                maxNside = min(healpixMap->getMaxNside(), MAX_NSIDE);
 
-        qDebug() << "Max nside for this map is " << healpixMap->getMaxNside();
+                /* get face cache */
+                faceCache = FaceCache::instance(MIN_NSIDE, MAX_NSIDE);          // TODO: correct ? MAX_NSIDE is used because facecache is shared
+                textureCache = new TextureCache(healpixMap, MIN_NSIDE, maxNside);
+                overlayCache = new OverlayCache(healpixMap, MIN_NSIDE, maxNside);
 
-        /* create the sphere tesselation */
-        tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache);
-        tesselation->setMap(healpixMap);
+                QObject::connect(faceCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
+                QObject::connect(textureCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
+                QObject::connect(overlayCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
 
-        /* preload next faces */
-        preloadFaces();
+                qDebug() << "Max nside for this map is " << healpixMap->getMaxNside();
 
-        initialized = true;
+                /* create the sphere tesselation */
+                tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache);
+                tesselation->setMap(healpixMap);
 
-        return true;
+                /* preload next faces */
+                preloadFaces();
+
+                initialized = true;
+
+                return true;
+            }
+
+            delete mapLoader;
+        }
     }
 
     return false;

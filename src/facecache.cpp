@@ -20,7 +20,9 @@ FaceCache::FaceCache(int minNside, int maxNside, int maxTiles)
 
 FaceCache::~FaceCache()
 {
-    qDebug() << "Calling FaceCache destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling FaceCache destructor";
+    #endif
 
     QList<int> nsides = faceCache.keys();
     foreach(int nside, nsides)

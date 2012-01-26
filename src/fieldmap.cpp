@@ -1,4 +1,5 @@
 #include "fieldmap.h"
+#include "exceptions.h"
 #include <QDebug>
 
 
@@ -11,13 +12,15 @@ FieldMap::FieldMap(float* map, int nside, bool nest)
     if(!nest)
         convertToNest();
 
-    //orderMap();
+    // orderMap();
 }
 
 
 FieldMap::~FieldMap()
 {
-    qDebug() << "Calling FieldMap destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling FieldMap destructor";
+    #endif
 }
 
 void FieldMap::convertToNest()
@@ -25,7 +28,17 @@ void FieldMap::convertToNest()
     qDebug("Converting to nest");
 
     long totalPixels = currentNside*currentNside*12;
-    float* nestedMap = new float[totalPixels];
+    float* nestedMap;
+
+    try
+    {
+        nestedMap = new float[totalPixels];
+    }
+    catch(const std::bad_alloc &)
+    {
+        throw FieldMapException("Not enough memory");
+    }
+
     long npixel;
 
     for(long pixel=0; pixel<totalPixels; pixel++)
@@ -62,8 +75,21 @@ float* FieldMap::downgradeMap(int newNside)
 
     //qDebug() << "Old nside is " << oldNside;
 
-    float *newMap = new float[newNpixels];
-    int *count = new int[newNpixels];
+    float *newMap;
+    int *count;
+
+    try
+    {
+        newMap = new float[newNpixels];
+        count = new int[newNpixels];
+    }
+    catch(const std::bad_alloc &)
+    {
+        delete[] map;
+        delete[] newMap;
+        delete[] count;
+        throw FieldMapException("Not enough memory");
+    }
 
     /* initialize count to 0 */
     for(long i=0; i<newNpixels; i++)
@@ -107,8 +133,6 @@ int FieldMap::degradePixel(int pixel, int oldNside, int newNside)
     double scaleDown = double(newNside)/double(oldNside);
     newpos = int(npixel * scaleDown * scaleDown);
 
-    /*if(pixel < 25)
-        qDebug() << "Pixel " << pixel << " will contribute to pix " << newpos;*/
     return newpos;
 }
 
@@ -151,7 +175,16 @@ float* FieldMap::orderMap(float *values, int nside)
     float *orderedValues;
     long npixels = nside2npix(nside);
 
-    orderedValues = new float[npixels];
+    try
+    {
+        orderedValues = new float[npixels];
+    }
+    catch(const std::bad_alloc &)
+    {
+        delete[] map;
+        throw FieldMapException("Not enough memory");
+    }
+
     long texturepos;
 
 
@@ -162,74 +195,6 @@ float* FieldMap::orderMap(float *values, int nside)
     }
 
     return orderedValues;
-}
-
-
-float* FieldMap::getFaceValues(int faceNumber)
-{
-    int valuesPerFace = currentNside*currentNside;
-    //float* faceValues = new float[valuesPerFace];
-
-    /*
-    currentNside = 4;
-    long inest, aux;
-    qDebug() << "Pixel 0:";
-    long p = 0;
-    ring2nest(currentNside, p, &inest);
-    qDebug() << "  toNest: " << inest;
-    aux = (*lut)[p];
-    qDebug() << "  lut: " << aux;
-    this->nest = true;
-    buildLut();
-    aux = (*lut)[p];
-    qDebug() << "  lut(nest): " << aux;
-
-    qDebug() << "Pixel 1:";
-    p = 1;
-    ring2nest(currentNside, p, &inest);
-    qDebug() << "  toNest: " << inest;
-    aux = (*lut)[p];
-    qDebug() << "  lut: " << aux;
-    this->nest = true;
-    buildLut();
-    aux = (*lut)[p];
-    qDebug() << "  lut(nest): " << aux;
-    */
-
-    /*
-
-    long pixel=faceNumber*valuesPerFace;
-    long pix;
-
-    for(long i=0; i<valuesPerFace; i++)
-    {
-        pix = (*lut)[pixel]-pixelBase;
-        qDebug() << "pix in pos " << pix;
-        faceValues[pix] = map[pixel];
-        pixel++;
-    }
-    //memcpy(faceTexture, this->map+faceNumber*valuesPerFace*sizeof(float), valuesPerFace);
-    */
-
-
-    /*
-    long pixelBase = faceNumber*valuesPerFace;
-    for(int i=0; i<valuesPerFace; i++)
-    {
-        faceValues[i] = map[pixelBase+i];
-    }
-    */
-
-
-
-    float* aux = new float[valuesPerFace];
-    for(int i=0; i<valuesPerFace; i++)
-    {
-        //aux[i] = orderedMap[faceNumber*valuesPerFace+i];
-    }
-
-    //return orderedMap+faceNumber*valuesPerFace*sizeof(float);
-    return aux;
 }
 
 
@@ -280,7 +245,6 @@ void FieldMap::generateDowngrades(QString path, QString prefix, int minNside)
 {
     int nside = currentNside;
     float *values, *orderedValues;
-    //minNside = 16;
 
     //qDebug() << "Current nside is " << nside;
 
@@ -330,7 +294,13 @@ void FieldMap::saveFieldMap(QString filepath, float* values, int nvalues)
 {
     //qDebug() << "Writing values to file " << filepath;
     QFile file(filepath);
-    file.open(QIODevice::WriteOnly);
-    file.write((const char*)values, nvalues*sizeof(float));
-    file.close();
+    if(file.open(QIODevice::WriteOnly))
+    {
+        file.write((const char*)values, nvalues*sizeof(float));
+        file.close();
+    }
+    else
+    {
+        throw FieldMapException("Can't write map into cache");
+    }
 }

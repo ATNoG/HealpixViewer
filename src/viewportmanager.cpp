@@ -36,7 +36,9 @@ ViewportManager::ViewportManager(QWidget *parent) :
 
 ViewportManager::~ViewportManager()
 {
-    qDebug() << "Calling ViewportManager destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling ViewportManager destructor";
+    #endif
 
     // TODO: Invalid read of size 4
     for(int i=0; i<viewports.size(); i++)

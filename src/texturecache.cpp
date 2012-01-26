@@ -23,7 +23,9 @@ TextureCache::TextureCache(HealpixMap* map, int minNside, int maxNside, int maxT
 
 TextureCache::~TextureCache()
 {
-    qDebug() << "Calling TextureCache destructor";
+    #if DEBUG > 0
+        qDebug() << "Calling TextureCache destructor";
+    #endif
 
     QList<int> nsides = textureCache.keys();
     foreach(int nside, nsides)

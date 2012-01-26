@@ -78,6 +78,9 @@ private:
     Ordering ordering;
     Coordsys coordsys;
 
+    bool createCache;
+    bool cacheCreated;
+
     QList<MapType> availableMaps;
     MapType currentMapType;
 
@@ -101,6 +104,8 @@ private:
     void writeMapInfo();
     void readMapInfo();
     bool checkMapCache();
+    void removeCache();
+    void abort();
 
     QMutex cacheAccess;
 
