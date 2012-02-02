@@ -1,11 +1,29 @@
-Install Instructions:
-./configure
-make
-make install
+HealpixViewer is a software for visualization of Healpix maps stored in FITS files. This software is written in C++ and uses OpenGL for map visualization, and Qt library for the GUI, allowing cross-platform portability.
 
 
-Needed Libraries:
+== Features ==
 
- - libQGlViewer [http://www.libqglviewer.com/]
- - Healpix [http://healpix.jpl.nasa.gov/index.shtml]
- - CFITSIO [http://heasarc.gsfc.nasa.gov/fitsio/]
+ - Support for high resolution sky maps in HEALPix format (until nside 4096)
+ - Multiple viewports with synchronization between them
+ - Mollweide and 3D sphere map projection
+ - Rotate and zoom maps when using 3D sphere projection
+ - Histogram and color map selector to control the colors used to display the sky maps
+ - Support for polarization vectors over the map
+ - Automatic resolution to balance between sky map detail and performance
+
+
+== Requirements ==
+
+To run HealpixViewer the following packages are necessary: 
+ - libQGlViewer - http://www.libqglviewer.com/
+ - Healpix - http://healpix.jpl.nasa.gov/index.shtml
+ - CFITSIO - http://heasarc.gsfc.nasa.gov/fitsio/
+ - Qt - http://qt.nokia.com/products/
+
+
+== Install Instructions ==
+
+Make sure you have all the requirements needed and then run:
+  ./configure
+  make
+  make install (optional)
