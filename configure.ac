@@ -116,6 +116,22 @@ AC_MSG_CHECKING(for $MOC)
 AC_MSG_RESULT(yes)
 AC_SUBST(MOC)
 
+RCC="$QTDIR/bin/rcc"
+AC_MSG_CHECKING(for $RCC)
+	if test ! -x "$RCC"; then
+		AC_MSG_ERROR("Unable to find rcc")
+	fi
+AC_MSG_RESULT(yes)
+AC_SUBST(RCC)
+
+UIC="$QTDIR/bin/uic"
+AC_MSG_CHECKING(for $UIC)
+	if test ! -x "$UIC"; then
+		AC_MSG_ERROR("Unable to find uic")
+	fi
+AC_MSG_RESULT(yes)
+AC_SUBST(UIC)
+
 #Fitsio
 CFITSIO_DIR=xxx
 AC_ARG_WITH([cfitsio-dir],
@@ -200,9 +216,6 @@ AC_CHECK_LIB([qglviewer-qt4], [main],[AC_DEFINE(HAVE_QGLVIEWER)],[AC_MSG_ERROR("
 LIBS="$LIBS -lqglviewer-qt4"
 
 #Final processing
-#AC_SUBST(MOC)
-#AC_SUBST(RCC)
-#AC_SUBST(UIC)
 
 AC_SUBST(CXXFLAGS)
 AC_SUBST(CPPFLAGS)

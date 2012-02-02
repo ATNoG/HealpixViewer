@@ -57,5 +57,4 @@ src/moc_%.cpp : src/%.h
 	$(MOC) $< -o $@
 
 EXTRA_DIST = \
-	$(nodist_skyviewer_SOURCES:moc_%.cpp=%.h) \
-	icons.qrc
+	$(nodist_skyviewer_SOURCES:moc_%.cpp=%.h) 
