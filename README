@@ -1,0 +1,11 @@
+Install Instructions:
+./configure
+make
+make install
+
+
+Needed Libraries:
+
+ - libQGlViewer [http://www.libqglviewer.com/]
+ - Healpix [http://healpix.jpl.nasa.gov/index.shtml]
+ - CFITSIO [http://heasarc.gsfc.nasa.gov/fitsio/]

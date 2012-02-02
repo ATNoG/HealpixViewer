@@ -108,6 +108,11 @@ bool MapViewer::loadMap(QString fitsfile)
             qDebug() << e.what();
             mapCreated = false;
         }
+        catch(std::bad_alloc e)
+        {
+            qDebug() << "Not enough memory";
+            mapCreated = false;
+        }
 
         if(mapCreated)
         {
