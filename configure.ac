@@ -14,27 +14,6 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_RANLIB
 
-# Checks for libraries.
-# FIXME: Replace `main' with a function in `-lGL':
-AC_CHECK_LIB([GL], [main])
-# FIXME: Replace `main' with a function in `-lGLU':
-AC_CHECK_LIB([GLU], [main])
-# FIXME: Replace `main' with a function in `-lQtCore':
-AC_CHECK_LIB([QtCore], [main])
-# FIXME: Replace `main' with a function in `-lQtGui':
-AC_CHECK_LIB([QtGui], [main])
-# FIXME: Replace `main' with a function in `-lQtOpenGL':
-AC_CHECK_LIB([QtOpenGL], [main])
-# FIXME: Replace `main' with a function in `-lQtXml':
-AC_CHECK_LIB([QtXml], [main])
-# FIXME: Replace `main' with a function in `-lcfitsio':
-AC_CHECK_LIB([cfitsio], [main])
-# FIXME: Replace `main' with a function in `-lchealpix':
-AC_CHECK_LIB([chealpix], [main])
-# FIXME: Replace `main' with a function in `-lm':
-AC_CHECK_LIB([m], [main])
-# FIXME: Replace `main' with a function in `-lpthread':
-AC_CHECK_LIB([pthread], [main])
 
 # Checks for header files.
 
@@ -44,22 +23,6 @@ AC_C_INLINE
 
 # Checks for library functions.
 AC_CHECK_FUNCS([floor mkdir pow sqrt])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -80,9 +43,31 @@ for x in $QTPATHS; do
 done
 if test $QTDIR = xxx ; then
    AC_MSG_ERROR(Could not locate QT 4.7)
+else
+   AC_MSG_RESULT($QTDIR)
 fi
-AC_MSG_RESULT($QTDIR)
 
+
+# Checks for libraries.
+AC_CHECK_LIB([GL], [main])
+AC_CHECK_LIB([GLU], [main])
+AC_CHECK_LIB([QtCore], [main])
+AC_CHECK_LIB([QtGui], [main])
+AC_CHECK_LIB([QtOpenGL], [main])
+AC_CHECK_LIB([QtXml], [main])
+
+AC_CHECK_LIB([cfitsio], [main], [], [
+	echo "Error: CFITSIO not found!"
+	exit -1
+])
+
+AC_CHECK_LIB([chealpix], [main], [], [
+	echo "Error: Healpix not found!"
+	exit -1
+])
+
+AC_CHECK_LIB([m], [main])
+AC_CHECK_LIB([pthread], [main])
 
 AC_PATH_PROG(RCC, rcc, rcc)
 AC_PATH_PROGS(UIC, [uic-qt4 uic], uic)
@@ -119,13 +104,6 @@ INCLUDES="$INCLUDES $QTINC"
 PATH="$PATH:$QTBIN"
 CXXFLAGS="$CXXFLAGS $QTINC"
 
-
-#AC_MSG_NOTICE(Configuring MOC)
-#AC_PATH_PROGS(MOC, [moc-qt4 moc], moc)
-#AC_SUBST(MOC)
-
-
-AC_MSG_NOTICE($MOC)
 
 AC_SUBST(MOC)
 AC_SUBST(RCC)
