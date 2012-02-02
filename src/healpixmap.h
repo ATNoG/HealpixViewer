@@ -14,7 +14,7 @@
 #include <QGLViewer/qglviewer.h>
 #include <chealpix.h>
 #include <fitsio.h>
-#include <healpixutil.h>
+#include "healpixutil.h"
 #include <QGLViewer/vec.h>
 #include <math.h>
 #include "configs.h"

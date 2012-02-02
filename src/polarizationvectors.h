@@ -3,7 +3,7 @@
 
 #include <QGLBuffer>
 #include "mapoverlay.h"
-#include <healpixutil.h>
+#include "healpixutil.h"
 #include <math.h>
 #include "configs.h"
 

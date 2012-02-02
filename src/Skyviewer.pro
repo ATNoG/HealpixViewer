@@ -42,7 +42,8 @@ HEADERS += boundary.h \
            ui_sidepanel.h \
            vertice.h \
            viewportmanager.h \
-           workspace.h
+           workspace.h \
+    exceptions.h
 FORMS += histogramwidget.ui mainwindow.ui mapoptions.ui viewportmanager.ui
 SOURCES += boundary.cpp \
            colormap.cpp \
