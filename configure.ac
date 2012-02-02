@@ -5,7 +5,8 @@ AC_PREREQ([2.67])
 AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/workspace.h])
-AC_CONFIG_HEADERS([src/config.h])
+#AC_CONFIG_HEADERS([src/configs.h])
+AC_LANG([C++])
 
 # Checks for programs.
 AC_PROG_CXX
@@ -15,101 +16,64 @@ AC_PROG_LN_S
 AC_PROG_RANLIB
 
 # Checks for libraries.
-# FIXME: Replace `main' with a function in `-lGL':
-AC_CHECK_LIB([GL], [main])
-# FIXME: Replace `main' with a function in `-lGLU':
-AC_CHECK_LIB([GLU], [main])
-# FIXME: Replace `main' with a function in `-lQtCore':
-AC_CHECK_LIB([QtCore], [main])
-# FIXME: Replace `main' with a function in `-lQtGui':
-AC_CHECK_LIB([QtGui], [main])
-# FIXME: Replace `main' with a function in `-lQtOpenGL':
-AC_CHECK_LIB([QtOpenGL], [main])
-# FIXME: Replace `main' with a function in `-lQtXml':
-AC_CHECK_LIB([QtXml], [main])
-# FIXME: Replace `main' with a function in `-lcfitsio':
-AC_CHECK_LIB([cfitsio], [main])
-# FIXME: Replace `main' with a function in `-lchealpix':
-AC_CHECK_LIB([chealpix], [main])
-# FIXME: Replace `main' with a function in `-lm':
 AC_CHECK_LIB([m], [main])
 # FIXME: Replace `main' with a function in `-lpthread':
-AC_CHECK_LIB([pthread], [main])
+AC_CHECK_LIB([pthread], [pthread_create])
 
-# Checks for header files.
-
-# Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
 AC_C_INLINE
 
-# Checks for library functions.
 AC_CHECK_FUNCS([floor mkdir pow sqrt])
 
+# FIXME: Replace `main' with a function in `-lGL':
+AC_CHECK_LIB([GL], [main])
+# FIXME: Replace `main' with a function in `-lGLU':
+AC_CHECK_HEADERS([GL/glu.h],[AC_DEFINE(HAVE_GLU_H)],[AC_MSG_ERROR("Could not find GLU headers")])
+AC_CHECK_LIB([GLU],[main],[AC_DEFINE(HAVE_GLU)],[AC_MSG_ERROR("Could not find GLU")])
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#QT 
 AC_MSG_CHECKING(QT4.7 directory)
 QTDIR=xxx
+QTINC_PREFIX=""
 AC_ARG_WITH([qt-dir],
              AC_HELP_STRING([--with-qt-dir=/path/to/Qt-4.7.0],
                             [to specify the path to the Qt-4.7.0 directory.]),
              [QTPATHS="$withval"],
-             [QTPATHS="/usr/local/Trolltech/Qt-4.7.0 /c/Qt/4.7.0 /usr/include/qt4"])
+             [QTPATHS="/usr/local/Trolltech/Qt-4.7.0 /c/Qt/4.7.0 /usr /usr/local"])
 
 for x in $QTPATHS; do
-    if test -d $x ; then
+    if test -d "$x/include/qt4/QtCore" ; then
        QTDIR="$x"
+		QTINC_PREFIX="qt4"
+	else
+    	if test -d "$x/include/qt/QtCore" ; then
+       	QTDIR="$x"
+		QTINC_PREFIX="qt"
+		else
+    		if test -d "$x/include/QtCore" ; then
+       		QTDIR="$x"
+			fi
+		fi
     fi
 done
 if test $QTDIR = xxx ; then
    AC_MSG_ERROR(Could not locate QT 4.7)
 fi
+
 AC_MSG_RESULT($QTDIR)
-
-
-AC_PATH_PROG(RCC, rcc, rcc)
-AC_PATH_PROGS(UIC, [uic-qt4 uic], uic)
-AC_PATH_PROGS(MOC, [moc-qt4 moc], moc)
-
-
-#QT_MOC="$QTDIR/bin/moc"
-#AC_MSG_CHECKING(for $QT_MOC)
-	#if test ! -x "$QT_MOC"; then
-#		AC_MSG_ERROR("Unable to find moc")
-	#fi
-#AC_SUBST(QT_MOC)
-
-
 host=`uname -a` # AC_CANONICAL_HOST is broken at the time of this writing.
 case $host in
   MINGW32*)
     AC_MSG_NOTICE(MinGW detected.)
     QTLIBS="-L$QTDIR/lib -lopengl32 -lglu32 -lgdi32 -luser32 -lmingw32 -lqtmain -lQtOpenGL4 -lQtGui4 -lQtCore4 -mthreads -Wl,-enable-stdcall-fixup -Wl,-enable-auto-import -Wl,-enable-runtime-pseudo-reloc -Wl,-s -Wl,-s -Wl,-subsystem,windows"
-    QTINC="-I$QTDIR/include -I$QTDIR/include/QtCore -I$QTDIR/include/QtGui -I$QTDIR/include/QtOpenGL -I$QTDIR/include/QtXml -DUNICODE -DQT_LARGEFILE_SUPPORT -DQT_DLL -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_THREAD_SUPPORT -DQT_NEEDS_QMAIN -frtti -fexceptions"
+    QTINC="-I$QTDIR/include/$QTINC_PREFIX -I$QTDIR/include/$QTINC_PREFIX/QtCore -I$QTDIR/include/$QTINC_PREFIX/QtGui -I$QTDIR/include/$QTINC_PREFIX/QtOpenGL -I$QTDIR/include/$QTINC_PREFIX/QtXml -DUNICODE -DQT_LARGEFILE_SUPPORT -DQT_DLL -DQT_NO_DEBUG -DQT_OPENGL_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_THREAD_SUPPORT -DQT_NEEDS_QMAIN -frtti -fexceptions"
     QTBIN="$QTDIR/bin"
     ;;
   *)
-    AC_MSG_NOTICE(I'm assuming this is Linux)
+    AC_MSG_NOTICE(I am assuming this is Linux)
     AC_PATH_XTRA
-    QTLIBS="-Wl,-rpath,$QTDIR/lib -L$QTDIR/lib -lQtGui -lQtOpenGL -lQtCore -lqglviewer-qt4 -lQtXml -lchealpix -lm -lcfitsio $X_LIBS -lX11 $X_EXTRA_LIBS -lGLU -lGL -lpthread"
-    QTINC="-I$QTDIR -I$QTDIR/QtGui -I$QTDIR/QtCore -I$QTDIR/QtOpenGL -I$QTDIR/QtXml $X_CFLAGS -DQT_XML_LIB -DQT_OPENGL_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED"
+    QTLIBS="-Wl,-rpath,$QTDIR/lib -L$QTDIR/lib -lQtGui -lQtOpenGL -lQtCore $X_LIBS -lX11 -lXext -lXmu -lXt -lXi $X_EXTRA_LIBS -lGLU -lGL -lpthread"
+    QTINC="-I$QTDIR/include/$QTINC_PREFIX -I$QTDIR/include/$QTINC_PREFIX/QtGui -I$QTDIR/include/$QTINC_PREFIX/QtCore -I$QTDIR/include/$QTINC_PREFIX/QtOpenGL -I$QTDIR/include/$QTINC_PREFIX/QtXml $X_CFLAGS -DQT_OPENGL_LIB -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED"
     QTBIN="$QTDIR/bin"
     ;;
 esac
@@ -118,18 +82,104 @@ LIBS="$LIBS $QTLIBS"
 INCLUDES="$INCLUDES $QTINC"
 PATH="$PATH:$QTBIN"
 CXXFLAGS="$CXXFLAGS $QTINC"
+CPPFLAGS="$CPPFLAGS $QTINC"
 
 
-#AC_MSG_NOTICE(Configuring MOC)
-#AC_PATH_PROGS(MOC, [moc-qt4 moc], moc)
-#AC_SUBST(MOC)
+AC_CHECK_HEADERS([QtCore/QtCore],[AC_DEFINE(HAVE_QTCORE_H)],[AC_MSG_ERROR("Could not find QtCore headers")])
+AC_CHECK_LIB([QtCore],[main],[AC_DEFINE(HAVE_QTCORE)],[AC_MSG_ERROR("Could not find QtCore")])
+AC_CHECK_HEADERS([QtGui/QtGui],[AC_DEFINE(HAVE_QTCORE_H)],[AC_MSG_ERROR("Could not find QtGui headers")])
+AC_CHECK_LIB([QtGui],[main],[AC_DEFINE(HAVE_QTCORE)],[AC_MSG_ERROR("Could not find QtGui")])
+AC_CHECK_HEADERS([QtOpenGL/QtOpenGL],[AC_DEFINE(HAVE_QTOPENGL_H)],[AC_MSG_ERROR("Could not find QtOpenGL headers")])
+AC_CHECK_LIB([QtOpenGL],[main],[AC_DEFINE(HAVE_QTOPENGL)],[AC_MSG_ERROR("Could not find QtOpenGL")])
+AC_CHECK_HEADERS([QtXml/QtXml],[AC_DEFINE(HAVE_QTXML_H)],[AC_MSG_ERROR("Could not find QtXml headers")])
+AC_CHECK_LIB([QtXml],[main],[AC_DEFINE(HAVE_QTXML)],[AC_MSG_ERROR("Could not find QtXml")])
 
 
-AC_MSG_NOTICE($MOC)
+AC_MSG_CHECKING(does moc work?)
+bnv_try_1="moc myqt.h -o moc_myqt.cpp"
+AC_TRY_EVAL(bnv_try_1)
+if test x"$ac_status" != x0; then
+   AC_MSG_ERROR(moc doesn't work)
+fi
+AC_MSG_RESULT(yes)
+AC_MSG_CHECKING(can I compile moc_myqt.cpp?)
+bnv_try_2="$CXX -c $CXXFLAGS -o moc_myqt.o moc_myqt.cpp"
+AC_TRY_EVAL(bnv_try_2)
+if test x"$ac_status" != x0; then
+   AC_MSG_ERROR(couldn't compile moc_myqt.cpp)
+fi
+AC_MSG_RESULT(yes)
 
+
+MOC="$QTDIR/bin/moc"
+AC_MSG_CHECKING(for $MOC)
+	if test ! -x "$MOC"; then
+		AC_MSG_ERROR("Unable to find moc")
+	fi
+AC_MSG_RESULT(yes)
 AC_SUBST(MOC)
-AC_SUBST(RCC)
-AC_SUBST(UIC)
+
+#Fitsio
+CFITSIO_DIR=xxx
+AC_ARG_WITH([cfitsio-dir],
+             AC_HELP_STRING([--with-cfitsio-dir=/path/to/cfitsio],
+                            [to specify the path to the CFITSIO directory.]),
+             [CFITSIO_PATHS="$withval"],
+             [CFITSIO_PATHS="deps/cfitsio"])
+
+for x in $CFITSIO_PATHS; do
+    if test -f "$x/include/fitsio.h" ; then
+       CFITSIO_DIR="$x"
+    fi
+done
+
+  
+if ! test $CFITSIO_DIR = xxx ; then
+  LIBS="$LIBS -L$CFITSIO_DIR/lib"
+  INCLUDES="$INCLUDES -I$CFITSIO_DIR/include"
+  CXXFLAGS="$CXXFLAGS -I$CFITSIO_DIR/include"
+  CPPFLAGS="$CPPFLAGS -I$CFITSIO_DIR/include"
+fi
+
+AC_CHECK_HEADERS([fitsio.h],[AC_DEFINE(HAVE_FITSIO_H)],[AC_MSG_ERROR("Could not find fitsio.h from the cfitsio package")])
+AC_CHECK_LIB([cfitsio], [fits_init_cfitsio],[AC_DEFINE(HAVE_FITSIO)],[AC_MSG_ERROR("Could not link against cfitsio")])
+
+LIBS="$LIBS -lcfitsio"
+#------------------------------------
+
+# Check Healpix
+HEALPIX_DIR=xxx
+AC_ARG_WITH([healpix-dir],
+             AC_HELP_STRING([--with-healpix-dir=/path/to/Healpix],
+                            [to specify the path to the Healpix directory.]),
+             [HEALPIX_PATHS="$withval"],
+             [HEALPIX_PATHS=""])
+
+for x in $HEALPIX_PATHS; do
+    if test -d $x ; then
+       HEALPIX_DIR="$x"
+    fi
+done
+
+if ! test $HEALPIX_DIR = xxx ; then
+  LIBS="$LIBS -L$HEALPIX_DIR/lib"
+  INCLUDES="$INCLUDES -I$HEALPIX_DIR/include"
+  CXXFLAGS="$CXXFLAGS -I$HEALPIX_DIR/include"
+  CPPFLAGS="$CPPFLAGS -I$HEALPIX_DIR/include"
+fi
+
+
+AC_CHECK_HEADERS([chealpix.h],[AC_DEFINE(HAVE_CHEALPIX_H)],[AC_MSG_ERROR("Could not find chealpix.h from the Healpix package")])
+AC_CHECK_LIB([chealpix], [read_healpix_map],[AC_DEFINE(HAVE_HEALPIX)],[AC_MSG_ERROR("Could not link against Healpix")])
+
+LIBS="$LIBS -lchealpix"
+
+#--------------------------------------
+
+#Final processing
+#AC_SUBST(MOC)
+#AC_SUBST(RCC)
+#AC_SUBST(UIC)
 
 
 AC_CONFIG_FILES([Makefile])
