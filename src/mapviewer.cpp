@@ -249,6 +249,10 @@ void MapViewer::init()
         i++;
     }
 
+	/*Setup Mouse Events */
+	setWheelBinding(Qt::AltModifier, CAMERA, MOVE_FORWARD);
+	setMouseBinding(Qt::LeftButton, FRAME, ROTATE);
+
     /* update scene */
     sceneUpdated(false);
 }
@@ -309,7 +313,7 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
 
 
 void MapViewer::changeProjectionConstraints()
-{   
+{
     if(mollweide)
     {
         //qDebug() << "Changing projection constraints to mollweide";
@@ -345,7 +349,7 @@ void MapViewer::changeProjectionConstraints()
 
 
 void MapViewer::changeToMollview()
-{    
+{
     if(!mollweide)
     {
         mollweide = true;
@@ -449,7 +453,7 @@ void MapViewer::resizeGL(int width, int height)
     //qDebug() << "New max cam distance = " << maxCameraX;
 
     if(FIT_CONTENT_RESIZE)
-    {       
+    {
         /* change camera to fit content */
         updateCameraPosition(maxCameraX);
     }
