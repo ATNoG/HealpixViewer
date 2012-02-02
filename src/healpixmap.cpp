@@ -47,6 +47,15 @@ HealpixMap::HealpixMap(QString _path, int minNside)
     loadingDialog->setWindowModality(Qt::WindowModal);
     loadingDialog->setValue(1);
 
+    /* check if cache folder exists */
+    QDir cachedDir(QString(CACHE_DIR));
+
+    if(!cachedDir.exists())
+    {
+        QDir::current().mkdir(CACHE_DIR);
+    }
+
+
     /* Map already processed ? Check cache */
     if(!checkMapCache())
     {
@@ -55,7 +64,6 @@ HealpixMap::HealpixMap(QString _path, int minNside)
         createCache = true;
 
         /* creating folder on cache */
-        QDir cachedDir(QString(CACHE_DIR));
         cachedDir.mkdir(filename);
 
         /* map not exists on cache: read FITS info and create individual maps */
