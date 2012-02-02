@@ -32,7 +32,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-bin_PROGRAMS = skyviewer$(EXEEXT)
+bin_PROGRAMS = healpixviewer$(EXEEXT)
 subdir = .
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/configure \
@@ -50,7 +50,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_skyviewer_OBJECTS = icons.$(OBJEXT) moc_facecache.$(OBJEXT) \
+am_healpixviewer_OBJECTS = icons.$(OBJEXT) moc_facecache.$(OBJEXT) \
 	moc_histogramviewer.$(OBJEXT) moc_histogramwidget.$(OBJEXT) \
 	moc_mainwindow.$(OBJEXT) moc_maploader.$(OBJEXT) \
 	moc_mapoptions.$(OBJEXT) moc_mapviewer.$(OBJEXT) \
@@ -67,8 +67,8 @@ am_skyviewer_OBJECTS = icons.$(OBJEXT) moc_facecache.$(OBJEXT) \
 	tesselation.$(OBJEXT) texture.$(OBJEXT) texturecache.$(OBJEXT) \
 	vertice.$(OBJEXT) viewportmanager.$(OBJEXT) \
 	workspace.$(OBJEXT)
-skyviewer_OBJECTS = $(am_skyviewer_OBJECTS)
-skyviewer_LDADD = $(LDADD)
+healpixviewer_OBJECTS = $(am_healpixviewer_OBJECTS)
+healpixviewer_LDADD = $(LDADD)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/src
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -78,8 +78,8 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-SOURCES = $(skyviewer_SOURCES)
-DIST_SOURCES = $(skyviewer_SOURCES)
+SOURCES = $(healpixviewer_SOURCES)
+DIST_SOURCES = $(healpixviewer_SOURCES)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -199,7 +199,7 @@ BUILT_SOURCES = \
 	src/ui_mapoptions.h \
 	src/ui_viewportmanager.h
 
-skyviewer_SOURCES = \
+healpixviewer_SOURCES = \
 		src/icons.cpp \
 		src/moc_facecache.cpp \
 		src/moc_histogramviewer.cpp \
@@ -337,9 +337,9 @@ uninstall-binPROGRAMS:
 
 clean-binPROGRAMS:
 	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
-skyviewer$(EXEEXT): $(skyviewer_OBJECTS) $(skyviewer_DEPENDENCIES) 
-	@rm -f skyviewer$(EXEEXT)
-	$(CXXLINK) $(skyviewer_OBJECTS) $(skyviewer_LDADD) $(LIBS)
+healpixviewer$(EXEEXT): $(healpixviewer_OBJECTS) $(healpixviewer_DEPENDENCIES) 
+	@rm -f healpixviewer$(EXEEXT)
+	$(CXXLINK) $(healpixviewer_OBJECTS) $(healpixviewer_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)

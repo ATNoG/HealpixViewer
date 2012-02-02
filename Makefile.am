@@ -1,4 +1,4 @@
-bin_PROGRAMS = skyviewer
+bin_PROGRAMS = healpixviewer
 
 BUILT_SOURCES = \
 	src/ui_histogramwidget.h\
@@ -6,7 +6,7 @@ BUILT_SOURCES = \
 	src/ui_mapoptions.h \
 	src/ui_viewportmanager.h
 
-skyviewer_SOURCES = \
+healpixviewer_SOURCES = \
 		src/icons.cpp \
 		src/moc_facecache.cpp \
 		src/moc_histogramviewer.cpp \
