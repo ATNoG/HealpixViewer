@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.67])
-AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
+AC_INIT([SkyViewer], [0.1], [diogopinheiro@ua.pt])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/workspace.h])
 #AC_CONFIG_HEADERS([src/configs.h])
@@ -17,7 +17,6 @@ AC_PROG_RANLIB
 
 # Checks for libraries.
 AC_CHECK_LIB([m], [main])
-# FIXME: Replace `main' with a function in `-lpthread':
 AC_CHECK_LIB([pthread], [pthread_create])
 
 AC_HEADER_STDBOOL
@@ -25,9 +24,7 @@ AC_C_INLINE
 
 AC_CHECK_FUNCS([floor mkdir pow sqrt])
 
-# FIXME: Replace `main' with a function in `-lGL':
 AC_CHECK_LIB([GL], [main])
-# FIXME: Replace `main' with a function in `-lGLU':
 AC_CHECK_HEADERS([GL/glu.h],[AC_DEFINE(HAVE_GLU_H)],[AC_MSG_ERROR("Could not find GLU headers")])
 AC_CHECK_LIB([GLU],[main],[AC_DEFINE(HAVE_GLU)],[AC_MSG_ERROR("Could not find GLU")])
 
@@ -176,11 +173,41 @@ LIBS="$LIBS -lchealpix"
 
 #--------------------------------------
 
+# Check QGLViewer
+QGLVIEWER_DIR=xxx
+AC_ARG_WITH([qglviewer-dir],
+             AC_HELP_STRING([--with-qglviewer-dir=/path/to/QGLViewer],
+                            [to specify the path to the Healpix directory.]),
+             [QGLVIEWER_PATHS="$withval"],
+             [QGLVIEWER_PATHS=""])
+
+for x in $QGLVIEWER_PATHS; do
+    if test -d $x ; then
+       QGLVIEWER_DIR="$x"
+    fi
+done
+
+if ! test $QGLVIEWER_DIR = xxx ; then
+  LIBS="$LIBS -L$QGLVIEWER_DIR/lib"
+  INCLUDES="$INCLUDES -I$QGLVIEWER_DIR/include"
+  CXXFLAGS="$CXXFLAGS -I$QGLVIEWER_DIR/include"
+  CPPFLAGS="$CPPFLAGS -I$QGLVIEWER_DIR/include"
+fi
+
+AC_CHECK_HEADERS([QGLViewer/qglviewer.h],[AC_DEFINE(HAVE_QGLVIEWER_H)],[AC_MSG_ERROR("Could not find qglviewer.h from the QGLViewer package")])
+AC_CHECK_LIB([qglviewer-qt4], [main],[AC_DEFINE(HAVE_QGLVIEWER)],[AC_MSG_ERROR("Could not link against QGLViewer")])
+
+LIBS="$LIBS -lqglviewer-qt4"
+
 #Final processing
 #AC_SUBST(MOC)
 #AC_SUBST(RCC)
 #AC_SUBST(UIC)
 
+AC_SUBST(CXXFLAGS)
+AC_SUBST(CPPFLAGS)
+AC_SUBST(PATH)
+AC_SUBST(LIBS)
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
