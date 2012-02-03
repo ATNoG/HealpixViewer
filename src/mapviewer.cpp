@@ -217,6 +217,12 @@ void MapViewer::init()
     /* change projection constraints */
     changeProjectionConstraints();
 
+    /* more constraints */
+    WorldConstraint* constraintWorld = new WorldConstraint();
+    constraintWorld->setRotationConstraintType(AxisPlaneConstraint::FORBIDDEN);
+    constraintWorld->setTranslationConstraintType(AxisPlaneConstraint::FORBIDDEN);
+
+    /* create manipulated frame */
     currentManipulatedFrame = new ManipulatedFrame();
     currentManipulatedFrame->setConstraint(constraint);
     setManipulatedFrame(currentManipulatedFrame);
@@ -314,11 +320,12 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
 
 void MapViewer::changeProjectionConstraints()
 {
+    if(constraint!=NULL)
+        delete constraint;
+
     if(mollweide)
     {
         //qDebug() << "Changing projection constraints to mollweide";
-        if(constraint!=NULL)
-            delete constraint;
 
         /* set camera constraints: translation enabled, rotation disabled */
         constraint = new CameraConstraint(camera());
@@ -331,8 +338,6 @@ void MapViewer::changeProjectionConstraints()
     else
     {
         //qDebug() << "Changing projection constraints to 3D";
-        if(constraint!=NULL)
-            delete constraint;
 
         /* set camera constraints: translation disabled, rotation enabled */
         constraint = new CameraConstraint(camera());
