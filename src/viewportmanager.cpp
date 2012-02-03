@@ -432,7 +432,7 @@ void ViewportManager::addViewportToList(int viewportId, QString title, mapInfo *
     ui->treeViewports->addTopLevelItem(item);
 
     QCheckBox *viewCheck = new QCheckBox;
-    viewCheck->setStyleSheet("QCheckBox::indicator {width: 16px;height: 16px;} QCheckBox::indicator:checked { image: url(images/icons/view.gif);} QCheckBox::indicator:unchecked { image: url(images/icons/noview.gif);} ");
+    viewCheck->setStyleSheet("QCheckBox::indicator {width: 16px;height: 16px;} QCheckBox::indicator:checked { image: url(src/images/icons/view.gif);} QCheckBox::indicator:unchecked { image: url(src/images/icons/noview.gif);} ");
     ui->treeViewports->setItemWidget(item, 1, viewCheck);
 
     /* display viewport when opening */
