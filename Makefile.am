@@ -56,6 +56,10 @@ src/ui_%.h : src/%.ui
 src/moc_%.cpp : src/%.h
 	$(MOC) $< -o $@
 
+clean-local :
+	-rm -rf src/moc_*
+	-rm -f src/icons.cpp
+
 EXTRA_DIST = \
 	$(nodist_skyviewer_SOURCES:moc_%.cpp=%.h) \
 	icons.qrc
