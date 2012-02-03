@@ -98,6 +98,10 @@
        <property name="text">
         <string/>
        </property>
+       <property name="icon">
+        <iconset resource="icons.qrc">
+         <normaloff>:/open.gif</normaloff>:/open.gif</iconset>
+       </property>
       </widget>
      </item>
      <item>
@@ -149,6 +153,8 @@
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -198,7 +198,7 @@
      <x>0</x>
      <y>0</y>
      <width>679</width>
-     <height>25</height>
+     <height>26</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -270,7 +270,7 @@
     <string>About</string>
    </property>
    <property name="toolTip">
-    <string>&amp;About</string>
+    <string>About</string>
    </property>
   </action>
   <action name="actionExit">
@@ -278,18 +278,26 @@
     <string>Exit</string>
    </property>
    <property name="toolTip">
-    <string>&amp;Exit</string>
+    <string>Exit</string>
    </property>
   </action>
   <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/open.gif</normaloff>:/open.gif</iconset>
+   </property>
    <property name="text">
     <string>Open</string>
    </property>
    <property name="toolTip">
-    <string>&amp;Open Map</string>
+    <string>Open Map</string>
    </property>
   </action>
   <action name="actionReset">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/reset.gif</normaloff>:/reset.gif</iconset>
+   </property>
    <property name="text">
     <string>Reset</string>
    </property>
@@ -306,7 +314,7 @@
     <string>3D view</string>
    </property>
    <property name="toolTip">
-    <string>&amp;Switch to 3D</string>
+    <string>Switch to 3D</string>
    </property>
   </action>
   <action name="actionMollview">
@@ -318,7 +326,7 @@
     <string>Mollview</string>
    </property>
    <property name="toolTip">
-    <string>&amp;Switch to Mollview</string>
+    <string>Switch to Mollview</string>
    </property>
   </action>
   <action name="actionSynchronize">
@@ -333,7 +341,7 @@
     <string>Synchronize views</string>
    </property>
    <property name="toolTip">
-    <string>&amp;Synchronize views</string>
+    <string>Synchronize views</string>
    </property>
   </action>
   <action name="actionColors">
@@ -345,7 +353,7 @@
     <string>Colors</string>
    </property>
    <property name="toolTip">
-    <string>&amp;Select colors</string>
+    <string>Show Options</string>
    </property>
   </action>
   <action name="actionExtract">
@@ -357,7 +365,7 @@
     <string>Extract</string>
    </property>
    <property name="toolTip">
-    <string>&amp;Extract ROI</string>
+    <string>Extract ROI</string>
    </property>
   </action>
   <action name="actionSelectAll">
@@ -369,7 +377,7 @@
     <string>Select All</string>
    </property>
    <property name="toolTip">
-    <string>&amp;Select All Viewports</string>
+    <string>Select All Viewports</string>
    </property>
   </action>
   <action name="actionDeselectAll">
@@ -381,7 +389,7 @@
     <string>Deselect All</string>
    </property>
    <property name="toolTip">
-    <string>&amp;Deselect All</string>
+    <string>Deselect All</string>
    </property>
   </action>
   <action name="actionPolarizationVectors">
@@ -396,7 +404,7 @@
     <string>Polarization Vectors</string>
    </property>
    <property name="toolTip">
-    <string>&amp;Show/Hide Polarization Vectors</string>
+    <string>Show/Hide Polarization Vectors</string>
    </property>
   </action>
   <action name="actionShowGrid">
@@ -411,7 +419,7 @@
     <string>Grid</string>
    </property>
    <property name="toolTip">
-    <string>&amp;Show Grid</string>
+    <string>Show Grid</string>
    </property>
   </action>
  </widget>

@@ -1,8 +1,8 @@
 /********************************************************************************
 ** Form generated from reading UI file 'viewportmanager.ui'
 **
-** Created: Mon Jan 16 17:16:34 2012
-**      by: Qt User Interface Compiler version 4.7.2
+** Created: Thu Feb 2 21:54:28 2012
+**      by: Qt User Interface Compiler version 4.7.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -82,6 +82,9 @@ public:
         sizePolicy2.setHeightForWidth(btnOpen->sizePolicy().hasHeightForWidth());
         btnOpen->setSizePolicy(sizePolicy2);
         btnOpen->setLayoutDirection(Qt::RightToLeft);
+        QIcon icon;
+        icon.addFile(QString::fromUtf8(":/open.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        btnOpen->setIcon(icon);
 
         iconLayout->addWidget(btnOpen);
 
@@ -90,9 +93,9 @@ public:
         sizePolicy2.setHeightForWidth(btnClose->sizePolicy().hasHeightForWidth());
         btnClose->setSizePolicy(sizePolicy2);
         btnClose->setLayoutDirection(Qt::RightToLeft);
-        QIcon icon;
-        icon.addFile(QString::fromUtf8(":/trash.gif"), QSize(), QIcon::Normal, QIcon::On);
-        btnClose->setIcon(icon);
+        QIcon icon1;
+        icon1.addFile(QString::fromUtf8(":/trash.gif"), QSize(), QIcon::Normal, QIcon::On);
+        btnClose->setIcon(icon1);
 
         iconLayout->addWidget(btnClose);
 

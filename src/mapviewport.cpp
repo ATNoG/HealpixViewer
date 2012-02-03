@@ -87,10 +87,10 @@ void MapViewport::configureUI()
     toolbar->layout()->setSpacing(0);
 
     /* create toolbar actions */
-    QAction *actionClose = new QAction(QIcon::fromTheme("window-close"), "Close Map", toolbar);
-    QAction *actionReset = new QAction(QIcon::fromTheme("edit-undo"), "Reset view", toolbar);
-    actionMaximize = new QAction(QIcon::fromTheme("view-fullscreen"), "Fullscreen", toolbar);
-    actionRestore = new QAction(QIcon::fromTheme("view-restore"), "Restore window", toolbar);
+    QAction *actionClose = new QAction(QIcon(":/close.gif"), "Close Map", toolbar);
+    QAction *actionReset = new QAction(QIcon(":/reset.gif"), "Reset view", toolbar);
+    actionMaximize = new QAction(QIcon(":/fullscreen.gif"), "Fullscreen", toolbar);
+    actionRestore = new QAction(QIcon(":/restore.gif"), "Restore window", toolbar);
     QAction *actionField = new QAction(QIcon(":/mollview.gif"), "Map Field", toolbar);
     actionGrid = new QAction(QIcon(":/grid.gif"), "Show Grid", toolbar);
     actionPvectors = new QAction(QIcon(":/pol-vectors.gif"), "Show Polarization Vectors", toolbar);

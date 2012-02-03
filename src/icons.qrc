@@ -11,5 +11,11 @@
         <file alias="pol-vectors.gif">images/icons/polvectors.gif</file>
         <file alias="grid.gif">images/icons/grid.gif</file>
         <file alias="trash.gif">images/icons/trash.gif</file>
+        <file alias="close.gif">images/icons/close.gif</file>
+        <file alias="fullscreen.gif">images/icons/fullscreen.gif</file>
+        <file alias="open.gif">images/icons/open.gif</file>
+        <file alias="reset.gif">images/icons/reset.gif</file>
+        <file alias="restore.gif">images/icons/restore.gif</file>
+        <file alias="save.gif">images/icons/save.gif</file>
     </qresource>
 </RCC>

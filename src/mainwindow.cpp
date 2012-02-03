@@ -12,15 +12,6 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    /* configure toolbar icons */
-    QIcon openicon  = QIcon::fromTheme("document-open");
-    QIcon saveicon  = QIcon::fromTheme("document-save");
-    QIcon reseticon = QIcon::fromTheme("edit-undo");
-    ui->actionOpen->setIcon(openicon);
-    //ui->actionSave->setIcon(saveicon);
-    ui->actionReset->setIcon(reseticon);
-
-
     /* Configure workspace */
     workspace = ui->workspace;
     ViewportManager *viewportManager  = ui->viewportManager;

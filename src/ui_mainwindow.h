@@ -1,8 +1,8 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created: Mon Jan 16 17:16:34 2012
-**      by: Qt User Interface Compiler version 4.7.2
+** Created: Fri Feb 3 13:43:05 2012
+**      by: Qt User Interface Compiler version 4.7.4
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
 ********************************************************************************/
@@ -91,54 +91,60 @@ public:
         actionExit->setObjectName(QString::fromUtf8("actionExit"));
         actionOpen = new QAction(MainWindow);
         actionOpen->setObjectName(QString::fromUtf8("actionOpen"));
+        QIcon icon1;
+        icon1.addFile(QString::fromUtf8(":/open.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        actionOpen->setIcon(icon1);
         actionReset = new QAction(MainWindow);
         actionReset->setObjectName(QString::fromUtf8("actionReset"));
+        QIcon icon2;
+        icon2.addFile(QString::fromUtf8(":/reset.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        actionReset->setIcon(icon2);
         action3Dview = new QAction(MainWindow);
         action3Dview->setObjectName(QString::fromUtf8("action3Dview"));
         action3Dview->setIcon(icon);
         actionMollview = new QAction(MainWindow);
         actionMollview->setObjectName(QString::fromUtf8("actionMollview"));
-        QIcon icon1;
-        icon1.addFile(QString::fromUtf8(":/mollview.gif"), QSize(), QIcon::Normal, QIcon::Off);
-        actionMollview->setIcon(icon1);
+        QIcon icon3;
+        icon3.addFile(QString::fromUtf8(":/mollview.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        actionMollview->setIcon(icon3);
         actionSynchronize = new QAction(MainWindow);
         actionSynchronize->setObjectName(QString::fromUtf8("actionSynchronize"));
         actionSynchronize->setCheckable(true);
-        QIcon icon2;
-        icon2.addFile(QString::fromUtf8(":/sync.gif"), QSize(), QIcon::Normal, QIcon::Off);
-        actionSynchronize->setIcon(icon2);
+        QIcon icon4;
+        icon4.addFile(QString::fromUtf8(":/sync.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        actionSynchronize->setIcon(icon4);
         actionColors = new QAction(MainWindow);
         actionColors->setObjectName(QString::fromUtf8("actionColors"));
-        QIcon icon3;
-        icon3.addFile(QString::fromUtf8(":/colormap.gif"), QSize(), QIcon::Normal, QIcon::Off);
-        actionColors->setIcon(icon3);
+        QIcon icon5;
+        icon5.addFile(QString::fromUtf8(":/colormap.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        actionColors->setIcon(icon5);
         actionExtract = new QAction(MainWindow);
         actionExtract->setObjectName(QString::fromUtf8("actionExtract"));
-        QIcon icon4;
-        icon4.addFile(QString::fromUtf8(":/extract.gif"), QSize(), QIcon::Normal, QIcon::Off);
-        actionExtract->setIcon(icon4);
+        QIcon icon6;
+        icon6.addFile(QString::fromUtf8(":/extract.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        actionExtract->setIcon(icon6);
         actionSelectAll = new QAction(MainWindow);
         actionSelectAll->setObjectName(QString::fromUtf8("actionSelectAll"));
-        QIcon icon5;
-        icon5.addFile(QString::fromUtf8(":/select-all.gif"), QSize(), QIcon::Normal, QIcon::Off);
-        actionSelectAll->setIcon(icon5);
+        QIcon icon7;
+        icon7.addFile(QString::fromUtf8(":/select-all.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        actionSelectAll->setIcon(icon7);
         actionDeselectAll = new QAction(MainWindow);
         actionDeselectAll->setObjectName(QString::fromUtf8("actionDeselectAll"));
-        QIcon icon6;
-        icon6.addFile(QString::fromUtf8(":/deselect-all.gif"), QSize(), QIcon::Normal, QIcon::Off);
-        actionDeselectAll->setIcon(icon6);
+        QIcon icon8;
+        icon8.addFile(QString::fromUtf8(":/deselect-all.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        actionDeselectAll->setIcon(icon8);
         actionPolarizationVectors = new QAction(MainWindow);
         actionPolarizationVectors->setObjectName(QString::fromUtf8("actionPolarizationVectors"));
         actionPolarizationVectors->setCheckable(true);
-        QIcon icon7;
-        icon7.addFile(QString::fromUtf8(":/pol-vectors.gif"), QSize(), QIcon::Normal, QIcon::Off);
-        actionPolarizationVectors->setIcon(icon7);
+        QIcon icon9;
+        icon9.addFile(QString::fromUtf8(":/pol-vectors.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        actionPolarizationVectors->setIcon(icon9);
         actionShowGrid = new QAction(MainWindow);
         actionShowGrid->setObjectName(QString::fromUtf8("actionShowGrid"));
         actionShowGrid->setCheckable(true);
-        QIcon icon8;
-        icon8.addFile(QString::fromUtf8(":/grid.gif"), QSize(), QIcon::Normal, QIcon::Off);
-        actionShowGrid->setIcon(icon8);
+        QIcon icon10;
+        icon10.addFile(QString::fromUtf8(":/grid.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        actionShowGrid->setIcon(icon10);
         centralWidget = new QWidget(MainWindow);
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         QSizePolicy sizePolicy1(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -233,7 +239,7 @@ public:
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 679, 25));
+        menuBar->setGeometry(QRect(0, 0, 679, 26));
         menuFile = new QMenu(menuBar);
         menuFile->setObjectName(QString::fromUtf8("menuFile"));
         menuEdit = new QMenu(menuBar);
@@ -287,15 +293,15 @@ public:
         MainWindow->setWindowTitle(QApplication::translate("MainWindow", "Healpix Viewer", 0, QApplication::UnicodeUTF8));
         actionAbout->setText(QApplication::translate("MainWindow", "About", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        actionAbout->setToolTip(QApplication::translate("MainWindow", "&About", 0, QApplication::UnicodeUTF8));
+        actionAbout->setToolTip(QApplication::translate("MainWindow", "About", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         actionExit->setText(QApplication::translate("MainWindow", "Exit", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        actionExit->setToolTip(QApplication::translate("MainWindow", "&Exit", 0, QApplication::UnicodeUTF8));
+        actionExit->setToolTip(QApplication::translate("MainWindow", "Exit", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         actionOpen->setText(QApplication::translate("MainWindow", "Open", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        actionOpen->setToolTip(QApplication::translate("MainWindow", "&Open Map", 0, QApplication::UnicodeUTF8));
+        actionOpen->setToolTip(QApplication::translate("MainWindow", "Open Map", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         actionReset->setText(QApplication::translate("MainWindow", "Reset", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
@@ -303,39 +309,39 @@ public:
 #endif // QT_NO_TOOLTIP
         action3Dview->setText(QApplication::translate("MainWindow", "3D view", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        action3Dview->setToolTip(QApplication::translate("MainWindow", "&Switch to 3D", 0, QApplication::UnicodeUTF8));
+        action3Dview->setToolTip(QApplication::translate("MainWindow", "Switch to 3D", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         actionMollview->setText(QApplication::translate("MainWindow", "Mollview", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        actionMollview->setToolTip(QApplication::translate("MainWindow", "&Switch to Mollview", 0, QApplication::UnicodeUTF8));
+        actionMollview->setToolTip(QApplication::translate("MainWindow", "Switch to Mollview", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         actionSynchronize->setText(QApplication::translate("MainWindow", "Synchronize views", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        actionSynchronize->setToolTip(QApplication::translate("MainWindow", "&Synchronize views", 0, QApplication::UnicodeUTF8));
+        actionSynchronize->setToolTip(QApplication::translate("MainWindow", "Synchronize views", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         actionColors->setText(QApplication::translate("MainWindow", "Colors", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        actionColors->setToolTip(QApplication::translate("MainWindow", "&Select colors", 0, QApplication::UnicodeUTF8));
+        actionColors->setToolTip(QApplication::translate("MainWindow", "Show Options", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         actionExtract->setText(QApplication::translate("MainWindow", "Extract", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        actionExtract->setToolTip(QApplication::translate("MainWindow", "&Extract ROI", 0, QApplication::UnicodeUTF8));
+        actionExtract->setToolTip(QApplication::translate("MainWindow", "Extract ROI", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         actionSelectAll->setText(QApplication::translate("MainWindow", "Select All", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        actionSelectAll->setToolTip(QApplication::translate("MainWindow", "&Select All Viewports", 0, QApplication::UnicodeUTF8));
+        actionSelectAll->setToolTip(QApplication::translate("MainWindow", "Select All Viewports", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         actionDeselectAll->setText(QApplication::translate("MainWindow", "Deselect All", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        actionDeselectAll->setToolTip(QApplication::translate("MainWindow", "&Deselect All", 0, QApplication::UnicodeUTF8));
+        actionDeselectAll->setToolTip(QApplication::translate("MainWindow", "Deselect All", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         actionPolarizationVectors->setText(QApplication::translate("MainWindow", "Polarization Vectors", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        actionPolarizationVectors->setToolTip(QApplication::translate("MainWindow", "&Show/Hide Polarization Vectors", 0, QApplication::UnicodeUTF8));
+        actionPolarizationVectors->setToolTip(QApplication::translate("MainWindow", "Show/Hide Polarization Vectors", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         actionShowGrid->setText(QApplication::translate("MainWindow", "Grid", 0, QApplication::UnicodeUTF8));
 #ifndef QT_NO_TOOLTIP
-        actionShowGrid->setToolTip(QApplication::translate("MainWindow", "&Show Grid", 0, QApplication::UnicodeUTF8));
+        actionShowGrid->setToolTip(QApplication::translate("MainWindow", "Show Grid", 0, QApplication::UnicodeUTF8));
 #endif // QT_NO_TOOLTIP
         tabWidget->setTabText(tabWidget->indexOf(histogramTab), QApplication::translate("MainWindow", "Histogram", 0, QApplication::UnicodeUTF8));
         tabWidget->setTabText(tabWidget->indexOf(optionstab), QApplication::translate("MainWindow", "Options", 0, QApplication::UnicodeUTF8));

@@ -12,8 +12,6 @@ ViewportManager::ViewportManager(QWidget *parent) :
     shareWidget = new QGLWidget();
 
     /* setup ui */
-    QIcon openicon  = QIcon::fromTheme("document-open");
-    ui->btnOpen->setIcon(openicon);
     ui->treeViewports->setColumnWidth(0, 50);
     ui->treeViewports->setColumnWidth(1, 30);
     QStringList headers;
