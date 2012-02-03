@@ -111,6 +111,9 @@ AC_MSG_CHECKING(for $QMAKE)
 AC_MSG_RESULT(yes)
 AC_SUBST(QMAKE)
 
+
+if test $SYSTEM = "Darwin"; then
+
 MACDEPLOYQT="$QTDIR/bin/macdeployqt"
 AC_MSG_CHECKING(for $MACDEPLOYQT)
 	if test ! -x "$MACDEPLOYQT"; then
@@ -118,6 +121,8 @@ AC_MSG_CHECKING(for $MACDEPLOYQT)
 	fi
 AC_MSG_RESULT(yes)
 AC_SUBST(MACDEPLOYQT)
+
+fi
 
 
 TMPDIR=tmp
@@ -144,7 +149,7 @@ if test x"$ac_status" != x0; then
 fi
 
 # add options
-echo "QT += xml gui opengl core " >> $tmp/test.pro
+echo "QT += xml gui opengl core" >> $tmp/test.pro
 
 # generate Makefile
 qmake_try=`cd $tmp; $QMAKE`
@@ -252,7 +257,12 @@ fi
 AC_CHECK_HEADERS([chealpix.h],[AC_DEFINE(HAVE_CHEALPIX_H)],[AC_MSG_ERROR("Could not find chealpix.h from the Healpix package")])
 AC_CHECK_LIB([chealpix], [read_healpix_map],[AC_DEFINE(HAVE_HEALPIX)],[AC_MSG_ERROR("Could not link against Healpix")])
 
-LIBS="$LIBS $HEALPIX_DIR/lib/libchealpix.a"
+if test $SYSTEM = "Darwin"; then
+	LIBS="$LIBS $HEALPIX_DIR/lib/libchealpix.a"
+else
+	LIBS="$LIBS -lchealpix"
+fi
+
 
 #--------------------------------------
 
