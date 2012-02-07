@@ -24,6 +24,7 @@ To run HealpixViewer the following packages are necessary:
 == Install Instructions ==
 
 Make sure you have all the requirements needed and then run:
+  ./autogen.sh
   ./configure
   make
   make install (optional)
