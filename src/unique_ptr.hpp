@@ -37,6 +37,7 @@ public:
     {
         reset(rhs._ptr);
         rhs._ptr = 0;
+        return *this;
     }
 
     ~unique_ptr()
@@ -136,6 +137,7 @@ public:
     {
         reset(rhs._ptr);
         rhs._ptr = 0;
+        return *this;
     }
 
     ~unique_array()
