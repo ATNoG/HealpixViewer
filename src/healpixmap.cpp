@@ -904,17 +904,7 @@ float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, i
     if(length==0)
         length = nside2npix(nside);
 
-    float *values;
-
-    try
-    {
-         values = new float[length];
-    }
-    catch(const std::bad_alloc &)
-    {
-        abort();
-        throw HealpixMapException("Not enough memory");
-    }
+    hv::unique_array<float> values(new float[length]);
 
     //qDebug() << "Reading file " << path;
 
@@ -925,11 +915,10 @@ float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, i
     if(f.open(QIODevice::ReadOnly))
     {
         f.seek(firstPosition*sizeof(float));
-        f.read((char*)values, length*sizeof(float));
+        f.read((char*)values.get(), length*sizeof(float));
     }
     else
     {
-        delete[] values;
         cacheAccess.unlock();
         abort();
         throw HealpixMapException("Error reading cache");
@@ -937,7 +926,7 @@ float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, i
     f.close();
     cacheAccess.unlock();
 
-    return values;
+    return values.release();
 }
 
 
@@ -1115,12 +1104,9 @@ void HealpixMap::changeCurrentMap(MapType type)
     currentMapType = type;
 
     /* regenerate min and max values */
-    float* values = getFullMap(minNSide);
-    Histogram *histo = new Histogram(values, nside2npix(minNSide));
+    hv::unique_array<float> values(getFullMap(minNSide));
+    hv::unique_ptr<Histogram> histo(new Histogram(values.move(), nside2npix(minNSide)));
     histo->getMinMax(min, max);
-
-    delete[] values;
-    delete histo;
 }
 
 

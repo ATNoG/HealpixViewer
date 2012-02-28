@@ -1,23 +1,18 @@
 #include "histogram.h"
 
-Histogram::Histogram(float* values, int totalValues)
+Histogram::Histogram(hv::unique_array<float> values, int totalValues)
 {
     this->numberBins = NUMBER_BINS;
-    this->histogram = NULL;
-    this->values = NULL;
 
     /* single map histogram */
     composite = false;
 
-    setupHistogram(values, totalValues);
+    setupHistogram(values.move(), totalValues);
 }
-
 
 Histogram::Histogram(QList<float*> valuesList, QList<int> nValues)
 {
     this->numberBins = NUMBER_BINS;
-    this->histogram = NULL;
-    this->values = NULL;
 
     /* check if histogram is from 1 or more maps */
     if(valuesList.size()>1)
@@ -33,7 +28,7 @@ Histogram::Histogram(QList<float*> valuesList, QList<int> nValues)
     }
 
     /* create new array for hold information */
-    float* values = new float[totalValues];
+    hv::unique_array<float> values(new float[totalValues]);
 
     /* fill values array */
     long filledValues = 0;
@@ -47,7 +42,7 @@ Histogram::Histogram(QList<float*> valuesList, QList<int> nValues)
         }
     }
 
-    setupHistogram(values, totalValues);
+    setupHistogram(values.move(), totalValues);
 }
 
 
@@ -56,11 +51,6 @@ Histogram::~Histogram()
     #if DEBUG > 0
         qDebug() << "Calling Histogram destructor";
     #endif
-
-    if(histogram!=NULL)
-        delete[] histogram;
-    if(composite && values!=NULL)
-        delete[] values;
 }
 
 
@@ -84,8 +74,8 @@ void Histogram::configureThresholds(float min, float max)
 void Histogram::buildHistogram()
 {
     /* allocate space for histogram */
-    if(histogram==NULL)
-        histogram = new int[numberBins];
+    if(!histogram)
+        histogram.reset(new int[numberBins]);
 
     /* initialize values */
     for(int i=0; i<numberBins; i++)
@@ -155,20 +145,16 @@ void Histogram::calculateMinMax()
 }
 
 
-void Histogram::setupHistogram(float* values, int totalValues)
+void Histogram::setupHistogram(hv::unique_array<float> values, int totalValues)
 {
-    this->values = values;
+    this->values = values.move();
     this->totalValues = totalValues;
 
     /* get min and max for map */
     calculateMinMax();
 
     /* delete old histogram */
-    if(histogram!=NULL)
-    {
-        delete[] histogram;
-        histogram = NULL;
-    }
+    histogram.reset();
 
     configureThresholds(minValue, maxValue);
 }

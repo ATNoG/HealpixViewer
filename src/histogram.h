@@ -4,12 +4,15 @@
 #include <QList>
 #include <QDebug>
 #include "configs.h"
+#include "unique_ptr.hpp"
 
 class Histogram
 {
+    Histogram();
+    Histogram& operator=(Histogram const&);
 
 public:
-    Histogram(float* values, int totalValues);
+    Histogram(hv::unique_array<float> values, int totalValues);
     Histogram(QList<float*> values, QList<int> totalValues);
     ~Histogram();
 
@@ -24,18 +27,18 @@ private:
     float minValue;
     float maxValue;
 
-    int *histogram;
+    hv::unique_array<int> histogram;
 
     int numberBins;
     int maxbin;
 
-    float *values;
+    hv::unique_array<float> values;
     int totalValues;
 
     bool composite;
 
     /* setup histogram with new values */
-    void setupHistogram(float* values, int totalValues);
+    void setupHistogram(hv::unique_array<float> values, int totalValues);
 
     void calculateMinMax();
 
