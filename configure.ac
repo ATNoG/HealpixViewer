@@ -79,7 +79,26 @@ if test $QTDIR = xxx ; then
 fi
 
 
-MOC="$QTDIR/bin/moc"
+QTBINDIR=xxx
+AC_ARG_WITH([qtbin-dir],
+             AC_HELP_STRING([--with-qtbin-dir=/path/to/QTbinaries],
+                            [to specify the path to the QT binaries.]),
+             [QTBIN_PATHS="$withval"],
+             [QTBIN_PATHS="$QTDIR/bin /usr/lib/qt4/bin"])
+
+for x in $QTBIN_PATHS; do
+    if test -d "$x" ; then
+       QTBINDIR="$x"
+    fi
+done
+
+if test $QTBINDIR = xxx ; then
+  AC_MSG_ERROR(Could not locate QT binaries)
+fi
+
+
+
+MOC="$QTBINDIR/moc"
 AC_MSG_CHECKING(for $MOC)
 	if test ! -x "$MOC"; then
 		AC_MSG_ERROR("Unable to find moc")
@@ -87,7 +106,7 @@ AC_MSG_CHECKING(for $MOC)
 AC_MSG_RESULT(yes)
 AC_SUBST(MOC)
 
-RCC="$QTDIR/bin/rcc"
+RCC="$QTBINDIR/rcc"
 AC_MSG_CHECKING(for $RCC)
 	if test ! -x "$RCC"; then
 		AC_MSG_ERROR("Unable to find rcc")
@@ -95,7 +114,7 @@ AC_MSG_CHECKING(for $RCC)
 AC_MSG_RESULT(yes)
 AC_SUBST(RCC)
 
-UIC="$QTDIR/bin/uic"
+UIC="$QTBINDIR/uic"
 AC_MSG_CHECKING(for $UIC)
 	if test ! -x "$UIC"; then
 		AC_MSG_ERROR("Unable to find uic")
@@ -103,7 +122,7 @@ AC_MSG_CHECKING(for $UIC)
 AC_MSG_RESULT(yes)
 AC_SUBST(UIC)
 
-QMAKE="$QTDIR/bin/qmake"
+QMAKE="$QTBINDIR/qmake"
 AC_MSG_CHECKING(for $QMAKE)
 	if test ! -x "$QMAKE"; then
 		AC_MSG_ERROR("Unable to find qmake")
@@ -114,7 +133,7 @@ AC_SUBST(QMAKE)
 
 if test $SYSTEM = "Darwin"; then
 
-MACDEPLOYQT="$QTDIR/bin/macdeployqt"
+MACDEPLOYQT="$QTBINDIR/bin/macdeployqt"
 AC_MSG_CHECKING(for $MACDEPLOYQT)
 	if test ! -x "$MACDEPLOYQT"; then
 		AC_MSG_ERROR("Unable to find macdeployqt")
@@ -126,6 +145,7 @@ fi
 
 
 TMPDIR=tmp
+mkdir $TMPDIR 2>/dev/null
 tmp=`(umask 077 && mktemp -d -q "$TMPDIR/test-vim-qt-XXXXXXXX") 2>/dev/null`;
 if test -z "$tmp" -a -d "$tmp"; then
 	AC_MSG_ERROR(Unable to create temporary directory)
@@ -182,7 +202,7 @@ AC_MSG_NOTICE($QT_LFLAGS)
 
 LDFLAGS="$LDFLAGS $QT_LFLAGS -lstdc++"
 
-LIBS="$LIBS $QT_LIBS"
+LIBS="$LIBS $QT_LIBS -lGLU"
 INCLUDES="$INCLUDES $QT_INCPATH"
 CXXFLAGS="$CXXFLAGS $QT_INCPATH"
 CPPFLAGS="$CPPFLAGS $QT_INCPATH"
@@ -205,25 +225,32 @@ AC_CHECK_LIB([QtXml],[main],[AC_DEFINE(HAVE_QTXML)],[AC_MSG_ERROR("Could not fin
 fi
 
 #Fitsio
-CFITSIO_DIR=xxx
+CFITSIO_LIB_DIR=xxx
+CFITSIO_HEADER_DIR=xxx
 AC_ARG_WITH([cfitsio-dir],
              AC_HELP_STRING([--with-cfitsio-dir=/path/to/cfitsio],
                             [to specify the path to the CFITSIO directory.]),
              [CFITSIO_PATHS="$withval"],
-             [CFITSIO_PATHS="deps/cfitsio"])
+             [CFITSIO_PATHS="deps/cfitsio /usr"])
 
 for x in $CFITSIO_PATHS; do
     if test -f "$x/include/fitsio.h" ; then
-       CFITSIO_DIR="$x"
+       CFITSIO_HEADER_DIR="$x/include"
+       CFITSIO_LIB_DIR="$x/lib"
+    else
+       if test -f "$x/include/cfitsio/fitsio.h" ; then
+          CFITSIO_HEADER_DIR="$x/include/cfitsio"
+	  CFITSIO_LIB_DIR="$x/lib"
+       fi
     fi
 done
 
 
-if ! test $CFITSIO_DIR = xxx ; then
-  LIBS="$LIBS -L$CFITSIO_DIR/lib"
-  INCLUDES="$INCLUDES -I$CFITSIO_DIR/include"
-  CXXFLAGS="$CXXFLAGS -I$CFITSIO_DIR/include"
-  CPPFLAGS="$CPPFLAGS -I$CFITSIO_DIR/include"
+if ! test $CFITSIO_HEADER_DIR = xxx ; then
+  LIBS="$LIBS -L$CFITSIO_LIB_DIR"
+  INCLUDES="$INCLUDES -I$CFITSIO_HEADER_DIR"
+  CXXFLAGS="$CXXFLAGS -I$CFITSIO_HEADER_DIR"
+  CPPFLAGS="$CPPFLAGS -I$CFITSIO_HEADER_DIR"
 fi
 
 AC_CHECK_HEADERS([fitsio.h],[AC_DEFINE(HAVE_FITSIO_H)],[AC_MSG_ERROR("Could not find fitsio.h from the cfitsio package")])
@@ -238,7 +265,7 @@ AC_ARG_WITH([healpix-dir],
              AC_HELP_STRING([--with-healpix-dir=/path/to/Healpix],
                             [to specify the path to the Healpix directory.]),
              [HEALPIX_PATHS="$withval"],
-             [HEALPIX_PATHS=""])
+             [HEALPIX_PATHS="$HEALPIX"])
 
 for x in $HEALPIX_PATHS; do
     if test -d $x ; then
@@ -272,7 +299,7 @@ AC_ARG_WITH([qglviewer-dir],
             AC_HELP_STRING([--with-qglviewer-dir=/path/to/QGLViewer],
                            [to specify the path to the Healpix directory.]),
             [QGLVIEWER_PATHS="$withval"],
-            [QGLVIEWER_PATHS="/Library/Frameworks/QGLViewer.framework"])
+            [QGLVIEWER_PATHS="/Library/Frameworks/QGLViewer.framework /usr"])
 
 for x in $QGLVIEWER_PATHS; do
 	if test -d $x ; then
@@ -289,9 +316,9 @@ if test $SYSTEM = "Linux"; then
 	fi
 
 	AC_CHECK_HEADERS([QGLViewer/qglviewer.h],[AC_DEFINE(HAVE_QGLVIEWER_H)],[AC_MSG_ERROR("Could not find qglviewer.h from the QGLViewer package")])
-	AC_CHECK_LIB([qglviewer-qt4], [main],[AC_DEFINE(HAVE_QGLVIEWER)],[AC_MSG_ERROR("Could not link against QGLViewer")])
+	#AC_CHECK_LIB([QGLViewer], [main],[AC_DEFINE(HAVE_QGLVIEWER)],[AC_MSG_ERROR("Could not link against QGLViewer")])
 
-	LIBS="$LIBS -lqglviewer-qt4"
+	LIBS="$LIBS -lQGLViewer"
 else
 	if test $SYSTEM = "Darwin"; then
 		if ! test -d $QGLVIEWER_DIR/Versions/Current; then
