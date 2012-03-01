@@ -31,6 +31,7 @@ GLDIR=xxx
 for x in $GLPATHS; do
 	if test -d $x/include/GL; then
 		GLDIR="$x"
+		break
 	fi
 done
 
@@ -61,23 +62,21 @@ AC_ARG_WITH([qt-dir],
 
 for x in $QTPATHS; do
     if test -d "$x/include/qt4/QtCore" ; then
-       QTDIR="$x"
-		QTINC_PREFIX="qt4"
-	else
-    	if test -d "$x/include/qt/QtCore" ; then
-       	QTDIR="$x"
-		QTINC_PREFIX="qt"
-		else
-    		if test -d "$x/include/QtCore" ; then
-       		QTDIR="$x"
-			fi
-		fi
+        QTDIR="$x"
+        QTINC_PREFIX="qt4"
+    elif test -d "$x/include/qt/QtCore" ; then
+        QTDIR="$x"
+        QTINC_PREFIX="qt"
+    elif test -d "$x/include/QtCore" ; then
+        QTDIR="$x"
+    else
+        continue
     fi
+    break
 done
 if test $QTDIR = xxx ; then
    AC_MSG_ERROR(Could not locate QT 4.7)
 fi
-
 
 QTBINDIR=xxx
 AC_ARG_WITH([qtbin-dir],
@@ -89,6 +88,7 @@ AC_ARG_WITH([qtbin-dir],
 for x in $QTBIN_PATHS; do
     if test -d "$x" ; then
        QTBINDIR="$x"
+       break
     fi
 done
 
@@ -133,7 +133,7 @@ AC_SUBST(QMAKE)
 
 if test $SYSTEM = "Darwin"; then
 
-MACDEPLOYQT="$QTBINDIR/bin/macdeployqt"
+MACDEPLOYQT="$QTBINDIR/macdeployqt"
 AC_MSG_CHECKING(for $MACDEPLOYQT)
 	if test ! -x "$MACDEPLOYQT"; then
 		AC_MSG_ERROR("Unable to find macdeployqt")
@@ -237,12 +237,13 @@ for x in $CFITSIO_PATHS; do
     if test -f "$x/include/fitsio.h" ; then
        CFITSIO_HEADER_DIR="$x/include"
        CFITSIO_LIB_DIR="$x/lib"
+    elif test -f "$x/include/cfitsio/fitsio.h" ; then
+       CFITSIO_HEADER_DIR="$x/include/cfitsio"
+	   CFITSIO_LIB_DIR="$x/lib"
     else
-       if test -f "$x/include/cfitsio/fitsio.h" ; then
-          CFITSIO_HEADER_DIR="$x/include/cfitsio"
-	  CFITSIO_LIB_DIR="$x/lib"
-       fi
+        continue
     fi
+    break
 done
 
 
@@ -270,6 +271,7 @@ AC_ARG_WITH([healpix-dir],
 for x in $HEALPIX_PATHS; do
     if test -d $x ; then
        HEALPIX_DIR="$x"
+       break
     fi
 done
 
@@ -304,6 +306,7 @@ AC_ARG_WITH([qglviewer-dir],
 for x in $QGLVIEWER_PATHS; do
 	if test -d $x ; then
   		QGLVIEWER_DIR="$x"
+		break
   	fi
 done
 
