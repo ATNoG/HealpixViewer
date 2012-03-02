@@ -1,5 +1,6 @@
 *.[oa]
 .deps
+dist
 Makefile
 Makefile.in
 aclocal.m4
