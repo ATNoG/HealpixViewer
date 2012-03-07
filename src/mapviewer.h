@@ -1,7 +1,11 @@
 #ifndef MAPVIEWER_H
 #define MAPVIEWER_H
 
+#ifdef DARWIN
+#include <qglviewer.h>
+#else
 #include <QGLViewer/qglviewer.h>
+#endif
 #include <QMouseEvent>
 #include <QDebug>
 #include <QMap>

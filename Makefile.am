@@ -49,6 +49,15 @@ healpixviewer_SOURCES = \
 		src/viewportmanager.cpp \
 		src/workspace.cpp
 
+app:
+	rm -rf HealpixViewer.app
+	mkdir -p HealpixViewer.app/Contents/MacOS
+	mkdir -p HealpixViewer.app/Contents/Resources
+	cp healpixviewer HealpixViewer.app/Contents/MacOS/
+	cp Info.plist HealpixViewer.app/Contents
+	cp healpixviewer.icns HealpixViewer.app/Contents/Resources
+	macdeployqt HealpixViewer.app
+
 src/icons.cpp :
 	$(RCC) src/icons.qrc -o src/icons.cpp
 

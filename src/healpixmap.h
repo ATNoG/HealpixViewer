@@ -11,11 +11,16 @@
 #include <QTextOStream>
 #include <QProgressDialog>
 #include "histogram.h"
+#ifdef DARWIN
+#include <vec.h>
+#include <qglviewer.h>
+#else
+#include <QGLViewer/vec.h>
 #include <QGLViewer/qglviewer.h>
+#endif
 #include <chealpix.h>
 #include <fitsio.h>
 #include "healpixutil.h"
-#include <QGLViewer/vec.h>
 #include <math.h>
 #include "configs.h"
 

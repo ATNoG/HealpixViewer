@@ -24,14 +24,21 @@ AC_C_INLINE
 
 AC_CHECK_FUNCS([floor mkdir pow sqrt])
 
+
 SYSTEM=`uname`
+GCC_VERSION=$(gcc -v 2>&1|grep version |cut -d ' ' -f 3)
 
 if test $SYSTEM = "Darwin"; then
-	CPPFLAGS="$CPPFLAGS  -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386 -arch x86_64"
-	CXXFLAGS="$XXFLAGS  -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386 -arch x86_64"
-	CFLAGS="$CFLAGS  -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386 -arch x86_64"
+	CPPFLAGS="$CPPFLAGS -isysroot /Developer/SDKs/MacOSX10.6.sdk -mmacosx-version-min=10.5 -arch i386 -arch x86_64"
+	CXXFLAGS="$CXXFLAGS -isysroot /Developer/SDKs/MacOSX10.6.sdk -mmacosx-version-min=10.5 -arch i386 -arch x86_64"
 	AC_MSG_NOTICE("Compiling for MAC OSX 10.5 and up with Universial binary")
+	AC_DEFINE(DARWIN)
+
 fi
+
+CFLAGS="$CFLAGS -I/usr/include -I/usr/local/include"
+CXXFLAGS="$CXXFLAGS -I/usr/include -I/usr/local/include"
+CPPFLAGS="$CPPFLAGS -I/usr/include -I/usr/local/include"
 
 GLPATHS="/usr/X11"
 GLDIR=xxx
@@ -65,7 +72,7 @@ AC_ARG_WITH([qt-dir],
              AC_HELP_STRING([--with-qt-dir=/path/to/Qt-4.7.0],
                             [to specify the path to the Qt-4.7.0 directory.]),
              [QTPATHS="$withval"],
-             [QTPATHS="/usr/local/Trolltech/Qt-4.7.0 /c/Qt/4.7.0 /usr /usr/local deps/qt-everywhere-opensource-src-4.8.0"])
+            [QTPATHS="/usr/local/Trolltech/Qt-4.7.0 /c/Qt/4.7.0 /usr /usr/local /usr/local/Trolltech/Qt-4.8.0/ "$(pwd)"/deps/qt-everywhere-opensource-src-4.8.0"])
 
 for x in $QTPATHS; do
     if test -d "$x/include/qt4/QtCore" ; then
@@ -242,7 +249,7 @@ AC_ARG_WITH([cfitsio-dir],
              AC_HELP_STRING([--with-cfitsio-dir=/path/to/cfitsio],
                             [to specify the path to the CFITSIO directory.]),
              [CFITSIO_PATHS="$withval"],
-             [CFITSIO_PATHS="deps/cfitsio /usr"])
+             [CFITSIO_PATHS="/usr/local/cfitsio /usr /usr/local/homebrew/"])
 
 for x in $CFITSIO_PATHS; do
     if test -f "$x/include/fitsio.h" ; then
@@ -266,7 +273,10 @@ if ! test $CFITSIO_HEADER_DIR = xxx ; then
   CPPFLAGS="$CPPFLAGS -I$CFITSIO_HEADER_DIR"
 fi
 
+if ! test $SYSTEM = "Darwin"; then
 AC_CHECK_HEADERS([fitsio.h],[AC_DEFINE(HAVE_FITSIO_H)],[AC_MSG_ERROR("Could not find fitsio.h from the cfitsio package")])
+fi
+
 AC_CHECK_LIB([cfitsio], [fits_init_cfitsio],[AC_DEFINE(HAVE_FITSIO)],[AC_MSG_ERROR("Could not link against cfitsio")])
 
 LIBS="$LIBS -lcfitsio"
@@ -278,7 +288,7 @@ AC_ARG_WITH([healpix-dir],
              AC_HELP_STRING([--with-healpix-dir=/path/to/Healpix],
                             [to specify the path to the Healpix directory.]),
              [HEALPIX_PATHS="$withval"],
-             [HEALPIX_PATHS="$HEALPIX"])
+             [HEALPIX_PATHS="$HEALPIX ./deps/Healpix_2.20a/"])
 
 for x in $HEALPIX_PATHS; do
     if test -d $x ; then
@@ -295,7 +305,9 @@ if ! test $HEALPIX_DIR = xxx ; then
 fi
 
 
+if ! test $SYSTEM = "Darwin"; then
 AC_CHECK_HEADERS([chealpix.h],[AC_DEFINE(HAVE_CHEALPIX_H)],[AC_MSG_ERROR("Could not find chealpix.h from the Healpix package")])
+fi
 AC_CHECK_LIB([chealpix], [read_healpix_map],[AC_DEFINE(HAVE_HEALPIX)],[AC_MSG_ERROR("Could not link against Healpix")])
 
 if test $SYSTEM = "Darwin"; then
@@ -313,7 +325,7 @@ AC_ARG_WITH([qglviewer-dir],
             AC_HELP_STRING([--with-qglviewer-dir=/path/to/QGLViewer],
                            [to specify the path to the Healpix directory.]),
             [QGLVIEWER_PATHS="$withval"],
-            [QGLVIEWER_PATHS="/Library/Frameworks/QGLViewer.framework /usr"])
+            [QGLVIEWER_PATHS="${HOME}/Library/Frameworks/ /Library/Frameworks/ /usr /usr/local"])
 
 for x in $QGLVIEWER_PATHS; do
 	if test -d $x ; then
@@ -331,21 +343,20 @@ if test $SYSTEM = "Linux"; then
 	fi
 
 	AC_CHECK_HEADERS([QGLViewer/qglviewer.h],[AC_DEFINE(HAVE_QGLVIEWER_H)],[AC_MSG_ERROR("Could not find qglviewer.h from the QGLViewer package")])
-	#AC_CHECK_LIB([QGLViewer], [main],[AC_DEFINE(HAVE_QGLVIEWER)],[AC_MSG_ERROR("Could not link against QGLViewer")])
 
 	LIBS="$LIBS -lQGLViewer"
 else
 	if test $SYSTEM = "Darwin"; then
-		if ! test -d $QGLVIEWER_DIR/Versions/Current; then
+		if ! test -d $QGLVIEWER_DIR/QGLViewer.framework/Versions/Current; then
 			AC_MSG_ERROR("QGLViewer Not Found");
 		fi
 
 		AC_MSG_NOTICE("QGLViewer found at $QGLVIEWER_DIR")
 
 		LIBS="$LIBS -F$QGLVIEWER_DIR -framework QGLViewer"
-  		INCLUDES="$INCLUDES -I$QGLVIEWER_DIR/Versions/Current/Headers/"
-  		CXXFLAGS="$CXXFLAGS -I$QGLVIEWER_DIR/Versions/Current/Headers/"
-  		CPPFLAGS="$CPPFLAGS -I$QGLVIEWER_DIR/Versions/Current/Headers/"
+  		INCLUDES="$INCLUDES -I$QGLVIEWER_DIR/QGLViewer.framework/Versions/Current/Headers/"
+  		CXXFLAGS="$CXXFLAGS -I$QGLVIEWER_DIR/QGLViewer.framework/Versions/Current/Headers/"
+  		CPPFLAGS="$CPPFLAGS -I$QGLVIEWER_DIR/QGLViewer.framework/Versions/Current/Headers/"
 	fi
 fi
 
