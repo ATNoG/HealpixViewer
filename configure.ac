@@ -26,6 +26,13 @@ AC_CHECK_FUNCS([floor mkdir pow sqrt])
 
 SYSTEM=`uname`
 
+if test $SYSTEM = "Darwin"; then
+	CPPFLAGS="$CPPFLAGS  -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386 -arch x86_64"
+	CXXFLAGS="$XXFLAGS  -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386 -arch x86_64"
+	CFLAGS="$CFLAGS  -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386 -arch x86_64"
+	AC_MSG_NOTICE("Compiling for MAC OSX 10.5 and up with Universial binary")
+fi
+
 GLPATHS="/usr/X11"
 GLDIR=xxx
 for x in $GLPATHS; do
@@ -58,7 +65,7 @@ AC_ARG_WITH([qt-dir],
              AC_HELP_STRING([--with-qt-dir=/path/to/Qt-4.7.0],
                             [to specify the path to the Qt-4.7.0 directory.]),
              [QTPATHS="$withval"],
-             [QTPATHS="/usr/local/Trolltech/Qt-4.7.0 /c/Qt/4.7.0 /usr /usr/local /opt/QtSDK/Desktop/Qt/474/gcc/"])
+             [QTPATHS="/usr/local/Trolltech/Qt-4.7.0 /c/Qt/4.7.0 /usr /usr/local deps/qt-everywhere-opensource-src-4.8.0"])
 
 for x in $QTPATHS; do
     if test -d "$x/include/qt4/QtCore" ; then
@@ -171,6 +178,10 @@ fi
 # add options
 echo "QT += xml gui opengl core" >> $tmp/test.pro
 
+if test $SYSTEM = "Darwin"; then
+	echo "CONFIG += x86 x86_64 " >> $tmp/test.pro
+fi
+
 # generate Makefile
 qmake_try=`cd $tmp; $QMAKE`
 AC_TRY_EVAL(qt_try)
@@ -235,7 +246,7 @@ AC_ARG_WITH([cfitsio-dir],
 
 for x in $CFITSIO_PATHS; do
     if test -f "$x/include/fitsio.h" ; then
-       CFITSIO_HEADER_DIR="$x/include"
+  		CFITSIO_HEADER_DIR="$x/include"
        CFITSIO_LIB_DIR="$x/lib"
     elif test -f "$x/include/cfitsio/fitsio.h" ; then
        CFITSIO_HEADER_DIR="$x/include/cfitsio"
@@ -248,6 +259,7 @@ done
 
 
 if ! test $CFITSIO_HEADER_DIR = xxx ; then
+   AC_MSG_NOTICE("Using cfitsio from $CFITSIO_HEADER_DIR")
   LIBS="$LIBS -L$CFITSIO_LIB_DIR"
   INCLUDES="$INCLUDES -I$CFITSIO_HEADER_DIR"
   CXXFLAGS="$CXXFLAGS -I$CFITSIO_HEADER_DIR"

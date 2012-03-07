@@ -1,5 +1,7 @@
 bin_PROGRAMS = healpixviewer
 
+AUTOMAKE_OPTIONS = no-dependencies
+
 BUILT_SOURCES = \
 	src/ui_histogramwidget.h\
 	src/ui_mainwindow.h \
