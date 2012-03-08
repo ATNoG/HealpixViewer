@@ -24,7 +24,6 @@ AC_C_INLINE
 
 AC_CHECK_FUNCS([floor mkdir pow sqrt])
 
-
 SYSTEM=`uname`
 GCC_VERSION=$(gcc -v 2>&1|grep version |cut -d ' ' -f 3)
 
