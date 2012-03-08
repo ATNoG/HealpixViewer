@@ -1,6 +1,0 @@
-# !/bin/bash
-
-mkdir -p dist/HealpixViewer.app/Contents/MacOS
-cp healpixviewer dist/HealpixViewer.app/Contents/MacOS
-macdeployqt dist/HealpixViewer.app
-
