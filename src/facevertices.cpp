@@ -49,7 +49,7 @@ QVector<Strip> FaceVertices::getRigging_EQ(int faceNumber, int nside, QVector<do
 
     /* foreach strip */
     stripIT = strips.begin();
-    for(int i = 0; i < nside; i++)
+    for(int i = 0; i < nside && i<costhetas->size()-1; i++)
     {
         t = 0;
         stripIT->resize(2*(nside+1));
@@ -59,7 +59,7 @@ QVector<Strip> FaceVertices::getRigging_EQ(int faceNumber, int nside, QVector<do
 
         /* foreach division in strip */
         verticeIT = stripIT->begin();
-        for(int j = i; j <= i+nside; j++)
+        for(int j = i; j <= i+nside && j<costhetas->size()-1; j++)
         {
             verticeIT->setVertS(acos((*costhetas)[j]),boundry0((*costhetas)[j]),rad);
             verticeIT->setTex(s,t);
@@ -98,7 +98,7 @@ QVector<Strip> FaceVertices::getRigging_NP(int faceNumber, int nside, QVector<do
 
     /* foreach strip */
     stripIT = strips.begin();
-    for(int i = 0; i < nside; i++)
+    for(int i = 0; i < nside && i<costhetas->size()-1; i++)
     {
         t = 0;
         stripIT->resize(2*(nside+1));
@@ -110,7 +110,7 @@ QVector<Strip> FaceVertices::getRigging_NP(int faceNumber, int nside, QVector<do
 
         /* foreach division in strip */
         verticeIT = stripIT->begin();
-        for(int j = i; j <= i+nside; j++)
+        for(int j = i; j <= i+nside && j<costhetas->size()-1; j++)
         {
             verticeIT->setVertS(acos((*costhetas)[j]),boundry0((*costhetas)[j]),rad);
             verticeIT->setTex(s,t);
@@ -151,8 +151,6 @@ QVector<Strip> FaceVertices::getRigging_SP(int faceNumber, int nside, QVector<do
     Boundary boundry0;
     Boundary boundry1;
 
-    //qDebug("set Rigging");
-
     QVector<Strip> strips;
     strips.resize(nside);
 
@@ -161,7 +159,7 @@ QVector<Strip> FaceVertices::getRigging_SP(int faceNumber, int nside, QVector<do
 
     /* foreach strip */
     stripIT = strips.begin();
-    for(int i = 0; i < nside; i++)
+    for(int i = 0; i < nside && i<costhetas->size()-1; i++)
     {
         t = 0;
         stripIT->resize(2*(nside+1));
@@ -173,7 +171,7 @@ QVector<Strip> FaceVertices::getRigging_SP(int faceNumber, int nside, QVector<do
 
         /* foreach division in strip */
         verticeIT = stripIT->begin();
-        for(int j = i; j <= i+nside; j++)
+        for(int j = i; j <= i+nside && j<costhetas->size()-1; j++)
         {
             verticeIT->setVertS(acos((*costhetas)[j]),boundry0((*costhetas)[j]),rad);
             verticeIT->setTex(s,t);
@@ -200,8 +198,6 @@ QVector<Strip> FaceVertices::getRigging_SP(int faceNumber, int nside, QVector<do
         s += ds;
         stripIT++;
     }
-
-    //qDebug("Ring finished");
 
     return strips;
 }
@@ -263,18 +259,21 @@ void FaceVertices::getRingLatitudes(int nside, QVector<double> *costhetas_np, QV
     /* add south pole point */
     thetas_sp.push_back(M_PI);
 
-
-    unsigned int n = thetas_np.size();
-    costhetas_np->resize(n);
-    costhetas_eq->resize(n);
-    costhetas_sp->resize(n);
-
     /* save cosThetas in reverse order */
     // TODO: maybe a better way is to reverse the above algorithm...
+    unsigned int n;
+    n = thetas_np.size();
+    costhetas_np->resize(n);
     for(unsigned int i = 0; i < n; i++)
-    {
-        (*costhetas_np)[i] = cos(thetas_np[n-i-1]);
-        (*costhetas_eq)[i] = cos(thetas_eq[n-i-1]);
-        (*costhetas_sp)[i] = cos(thetas_sp[n-i-1]);
-    }
+	(*costhetas_np)[i] = cos(thetas_np[n-i-1]);   
+    
+    n = thetas_eq.size();
+    costhetas_eq->resize(thetas_eq.size());
+    for(unsigned int i = 0; i < n; i++)
+	(*costhetas_eq)[i] = cos(thetas_eq[n-i-1]);
+   
+    n = thetas_sp.size();
+    costhetas_sp->resize(thetas_sp.size());
+    for(unsigned int i = 0; i < n; i++)
+	(*costhetas_sp)[i] = cos(thetas_sp[n-i-1]);
 }
