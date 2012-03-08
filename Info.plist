@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>BuildMachineOSBuild</key>
+	<string>11C74</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleIconFile</key>
+	<string>healpixviewer</string>
+	<key>CFBundleDocumentTypes</key>
+
+	<array>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>fits</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>healpixviewer</string>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>binary/image</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>FITS file</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSIsAppleDefaultForType</key>
+			<true/>
+		</dict>
+	</array>
+</dict>
+</plist>
