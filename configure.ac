@@ -24,15 +24,23 @@ AC_C_INLINE
 
 AC_CHECK_FUNCS([floor mkdir pow sqrt])
 
+
 SYSTEM=`uname`
+ARCH=`uname -p`
+X64="x86_64"
+
 GCC_VERSION=$(gcc -v 2>&1|grep version |cut -d ' ' -f 3)
 
 if test $SYSTEM = "Darwin"; then
-	CPPFLAGS="$CPPFLAGS -isysroot /Developer/SDKs/MacOSX10.6.sdk -mmacosx-version-min=10.5 -arch i386 -arch x86_64"
-	CXXFLAGS="$CXXFLAGS -isysroot /Developer/SDKs/MacOSX10.6.sdk -mmacosx-version-min=10.5 -arch i386 -arch x86_64"
+	CPPFLAGS="$CPPFLAGS  -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386"
+	CXXFLAGS="$XXFLAGS  -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386"
+	CFLAGS="$CFLAGS  -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386"
+	if test $ARCH = $X64; then
+		CPPFLAGS="$CPPFLAGS -arch x86_64"
+		CXXFLAGS="$CXXFLAGS -arch x86_64"
+		CFLAGS="$CFLAGS -arch x86_64"
+	fi
 	AC_MSG_NOTICE("Compiling for MAC OSX 10.5 and up with Universial binary")
-	AC_DEFINE(DARWIN)
-
 fi
 
 CFLAGS="$CFLAGS -I/usr/include -I/usr/local/include"
@@ -96,10 +104,10 @@ AC_ARG_WITH([qtbin-dir],
              AC_HELP_STRING([--with-qtbin-dir=/path/to/QTbinaries],
                             [to specify the path to the QT binaries.]),
              [QTBIN_PATHS="$withval"],
-             [QTBIN_PATHS="$QTDIR/bin /usr/lib/qt4/bin"])
+             [QTBIN_PATHS="$QTDIR/bin /usr/lib/qt4/bin /usr/bin"])
 
 for x in $QTBIN_PATHS; do
-    if test -d "$x" ; then
+    if test -d "$x" && test -f "$x/qmake" ; then
        QTBINDIR="$x"
        break
     fi
@@ -185,11 +193,19 @@ fi
 echo "QT += xml gui opengl core" >> $tmp/test.pro
 
 if test $SYSTEM = "Darwin"; then
-	echo "CONFIG += x86 x86_64 " >> $tmp/test.pro
+	if test $ARCH = $X64; then
+		echo "CONFIG += x86 x86_64 " >> $tmp/test.pro
+	else
+		echo "CONFIG += x86 " >> $tmp/test.pro
+	fi
 fi
 
 # generate Makefile
-qmake_try=`cd $tmp; $QMAKE`
+if ! test $SYSTEM = "Darwin"; then
+	qmake_try=`cd $tmp; $QMAKE`
+else
+	qmake_try=`cd $tmp; $QMAKE test.pro -spec macx-g++`
+fi
 AC_TRY_EVAL(qt_try)
 if test x"$ac_status" != x0; then
 	AC_MSG_ERROR(qmake failed)
@@ -214,22 +230,26 @@ QT_LFLAGS=`grep LFLAGS.*= $tmp/Makefile | awk '{sub(/^LFLAGS +=/, ""); print}'`
 if test -z "$QT_LFLAGS"; then
 	AC_MSG_ERROR(Unable to find Qt link flags)
 fi
-
 AC_MSG_NOTICE($QT_LFLAGS)
 
-LDFLAGS="$LDFLAGS $QT_LFLAGS -lstdc++"
 
-LIBS="$LIBS $QT_LIBS -lGLU"
+LIBS="$LIBS $QT_LIBS"
+
+if ! test $SYSTEM = "Darwin"; then
+    LIBS="$LIBS -lGLU"
+fi
+
 INCLUDES="$INCLUDES $QT_INCPATH"
 CXXFLAGS="$CXXFLAGS $QT_INCPATH"
 CPPFLAGS="$CPPFLAGS $QT_INCPATH"
-LDFLAGS="$LDFLAGS $QT_LFLAGS"
+LDFLAGS="$LDFLAGS $QT_LFLAGS -lstdc++"
+
 
 # Remove temp directory
-#rm $tmp/Makefile
-#rm $tmp/qttest.cpp
-#rm $tmp/test.pro
-#rmdir $tmp
+rm $tmp/Makefile
+rm $tmp/qttest.cpp
+rm $tmp/test.pro
+rmdir $tmp
 if test $SYSTEM = "Linux"; then
 AC_CHECK_HEADERS([QtCore/QtCore],[AC_DEFINE(HAVE_QTCORE_H)],[AC_MSG_ERROR("Could not find QtCore headers")])
 AC_CHECK_LIB([QtCore],[main],[AC_DEFINE(HAVE_QTCORE)],[AC_MSG_ERROR("Could not find QtCore")])
@@ -252,11 +272,11 @@ AC_ARG_WITH([cfitsio-dir],
 
 for x in $CFITSIO_PATHS; do
     if test -f "$x/include/fitsio.h" ; then
-  		CFITSIO_HEADER_DIR="$x/include"
-       CFITSIO_LIB_DIR="$x/lib"
+  	CFITSIO_HEADER_DIR="$x/include"
+       	CFITSIO_LIB_DIR="$x/lib"
     elif test -f "$x/include/cfitsio/fitsio.h" ; then
-       CFITSIO_HEADER_DIR="$x/include/cfitsio"
-	   CFITSIO_LIB_DIR="$x/lib"
+       	CFITSIO_HEADER_DIR="$x/include/cfitsio"
+	CFITSIO_LIB_DIR="$x/lib"
     else
         continue
     fi
@@ -272,11 +292,13 @@ if ! test $CFITSIO_HEADER_DIR = xxx ; then
   CPPFLAGS="$CPPFLAGS -I$CFITSIO_HEADER_DIR"
 fi
 
+AC_LANG_PUSH([C])
 if ! test $SYSTEM = "Darwin"; then
 AC_CHECK_HEADERS([fitsio.h],[AC_DEFINE(HAVE_FITSIO_H)],[AC_MSG_ERROR("Could not find fitsio.h from the cfitsio package")])
 fi
 
 AC_CHECK_LIB([cfitsio], [fits_init_cfitsio],[AC_DEFINE(HAVE_FITSIO)],[AC_MSG_ERROR("Could not link against cfitsio")])
+AC_LANG_POP([C])
 
 LIBS="$LIBS -lcfitsio"
 #------------------------------------
