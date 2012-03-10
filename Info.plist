@@ -2,14 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>BuildMachineOSBuild</key>
-	<string>11C74</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleIconFile</key>
 	<string>healpixviewer</string>
 	<key>CFBundleDocumentTypes</key>
-
 	<array>
 		<dict>
 			<key>CFBundleTypeExtensions</key>
@@ -30,5 +27,17 @@
 			<true/>
 		</dict>
 	</array>
+	<key>CFBundleDisplayName</key>
+	<string>HealpixViewer</string>
+	<key>CFBundleIdentifier</key>
+	<string>org.ua.healpixviewer</string>
+	<key>CFBundleVersion</key>
+	<string>0.1</string>
+	<key>CFBundleExecutable</key>
+	<string>healpixviewer</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.5</string>
 </dict>
 </plist>
