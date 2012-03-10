@@ -346,40 +346,39 @@ AC_ARG_WITH([qglviewer-dir],
             AC_HELP_STRING([--with-qglviewer-dir=/path/to/QGLViewer],
                            [to specify the path to the Healpix directory.]),
             [QGLVIEWER_PATHS="$withval"],
-            [QGLVIEWER_PATHS="${HOME}/Library/Frameworks/ /Library/Frameworks/ /usr /usr/local"])
+            [QGLVIEWER_PATHS="${HOME}/Library/Frameworks /Library/Frameworks /usr /usr/local"])
 
-for x in $QGLVIEWER_PATHS; do
-	if test -d $x ; then
-  		QGLVIEWER_DIR="$x"
-		break
-  	fi
-done
+if test $SYSTEM = "Darwin"; then
+  for x in $QGLVIEWER_PATHS; do
+    if test -d $x/QGLViewer.framework ; then
+        QGLVIEWER_DIR=$x
+        break
+    fi
+  done
 
-if test $SYSTEM = "Linux"; then
-	if ! test $QGLVIEWER_DIR = xxx ; then
-  		LIBS="$LIBS -L$QGLVIEWER_DIR/lib"
-  		INCLUDES="$INCLUDES -I$QGLVIEWER_DIR/include"
-  		CXXFLAGS="$CXXFLAGS -I$QGLVIEWER_DIR/include"
-  		CPPFLAGS="$CPPFLAGS -I$QGLVIEWER_DIR/include"
-	fi
+  LIBS="$LIBS -F$QGLVIEWER_DIR -framework QGLViewer"
+  INCLUDES="$INCLUDES -F$QGLVIEWER_DIR"
+  CXXFLAGS="$CXXFLAGS -F$QGLVIEWER_DIR"
+  CPPFLAGS="$CPPFLAGS -F$QGLVIEWER_DIR"
 
-	AC_CHECK_HEADERS([QGLViewer/qglviewer.h],[AC_DEFINE(HAVE_QGLVIEWER_H)],[AC_MSG_ERROR("Could not find qglviewer.h from the QGLViewer package")])
+else
+  for x in $QGLVIEWER_PATHS; do
+    if test -d $x/include/QGLViewer ; then
+        QGLVIEWER_DIR=$x
+        break
+    fi
+  done
+
+  LIBS="$LIBS -L$QGLVIEWER_DIR/lib"
+  INCLUDES="$INCLUDES -I$QGLVIEWER_DIR/include"
+  CXXFLAGS="$CXXFLAGS -I$QGLVIEWER_DIR/include"
+  CPPFLAGS="$CPPFLAGS -I$QGLVIEWER_DIR/include"
 
 	LIBS="$LIBS -lQGLViewer"
-else
-	if test $SYSTEM = "Darwin"; then
-		if ! test -d $QGLVIEWER_DIR/QGLViewer.framework/Versions/Current; then
-			AC_MSG_ERROR("QGLViewer Not Found");
-		fi
-
-		AC_MSG_NOTICE("QGLViewer found at $QGLVIEWER_DIR")
-
-		LIBS="$LIBS -F$QGLVIEWER_DIR -framework QGLViewer"
-  		INCLUDES="$INCLUDES -I$QGLVIEWER_DIR/QGLViewer.framework/Versions/Current/Headers/"
-  		CXXFLAGS="$CXXFLAGS -I$QGLVIEWER_DIR/QGLViewer.framework/Versions/Current/Headers/"
-  		CPPFLAGS="$CPPFLAGS -I$QGLVIEWER_DIR/QGLViewer.framework/Versions/Current/Headers/"
-	fi
 fi
+
+AC_CHECK_HEADERS([QGLViewer/qglviewer.h],[AC_DEFINE(HAVE_QGLVIEWER_H)],[AC_MSG_ERROR("Could not find qglviewer.h from the QGLViewer package")])
+
 
 #Final processing
 

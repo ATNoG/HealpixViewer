@@ -2,12 +2,7 @@
 #define VERTICE_H
 
 #include <math.h>
-
-#ifdef DARWIN
-#include <qglviewer.h>
-#else
 #include <QGLViewer/qglviewer.h>
-#endif
 #include <QDebug>
 
 class Vertice
