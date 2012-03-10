@@ -32,9 +32,9 @@ X64="x86_64"
 GCC_VERSION=$(gcc -v 2>&1|grep version |cut -d ' ' -f 3)
 
 if test $SYSTEM = "Darwin"; then
-	CPPFLAGS="$CPPFLAGS  -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386"
-	CXXFLAGS="$XXFLAGS  -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386"
-	CFLAGS="$CFLAGS  -isysroot /Developer/SDKs/MacOSX10.5.sdk -mmacosx-version-min=10.5 -arch i386"
+	CPPFLAGS="$CPPFLAGS -mmacosx-version-min=10.5 -arch i386"
+	CXXFLAGS="$XXFLAGS -mmacosx-version-min=10.5 -arch i386"
+	CFLAGS="$CFLAGS -mmacosx-version-min=10.5 -arch i386"
 	if test $ARCH = $X64; then
 		CPPFLAGS="$CPPFLAGS -arch x86_64"
 		CXXFLAGS="$CXXFLAGS -arch x86_64"
