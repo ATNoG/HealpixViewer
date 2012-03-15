@@ -212,17 +212,45 @@ if test x"$ac_status" != x0; then
 fi
 
 # LIBS
-QT_LIBS=`grep LIBS.*= $tmp/Makefile | sed -e 's/\\$(SUBLIBS)//g' | awk '{sub(/^LIBS +=/, ""); print}'`
-if test -z "$QT_LIBS"; then
+QT_LIBS_AUX=`grep LIBS.*= $tmp/Makefile | sed -e 's/\\$(SUBLIBS)//g' | awk '{sub(/^LIBS +=/, ""); print}'`
+if test -z "$QT_LIBS_AUX"; then
 	AC_MSG_ERROR(Unable to find Qt libraries)
 fi
+
+ARR=$(echo $QT_LIBS_AUX | tr ";" "\n")
+QT_LIBS=""
+for x in $ARR
+do
+    prefix="${x:0:2}"
+    path="${x:2}"
+    if expr "$path" : '\..*' > /dev/null; then
+    	abspath=`cd $tmp/$path; pwd`
+        QT_LIBS="$QT_LIBS $prefix$abspath"
+    else
+        QT_LIBS="$QT_LIBS $x"
+    fi
+done
 AC_MSG_NOTICE($QT_LIBS)
 
 # Include directives
-QT_INCPATH=`grep INCPATH.*= $tmp/Makefile | awk '{sub(/^INCPATH +=/, ""); print}'`
-if test -z "$QT_LIBS"; then
+QT_INCPATH_AUX=`grep INCPATH.*= $tmp/Makefile | awk '{sub(/^INCPATH +=/, ""); print}'`
+if test -z "$QT_INCPATH_AUX"; then
     AC_MSG_ERROR(Unable to find Qt include path)
 fi
+
+ARR=$(echo $QT_INCPATH_AUX | tr ";" "\n")
+QT_INCPATH=""
+for x in $ARR
+do
+    prefix="${x:0:2}"
+    path="${x:2}"
+    if expr "$path" : '\..*' > /dev/null; then
+    	abspath=`cd "$tmp/$path"; pwd`
+	QT_INCPATH="$QT_INCPATH $prefix$abspath"
+    else
+        QT_INCPATH="$QT_INCPATH $x"
+    fi
+done
 AC_MSG_NOTICE($QT_INCPATH)
 
 # LFLAGS
