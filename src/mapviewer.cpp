@@ -410,15 +410,34 @@ void MapViewer::mouseReleaseEvent(QMouseEvent *e)
 
 void MapViewer::postSelection (const QPoint &point)
 {
-    qDebug() << "Pixel selected: " << point.x() << "," << point.y();
-    Vec origin, direction;
-    camera()->convertClickToLine(point, origin, direction);
+    Vec d, v, o;
+    camera()->convertClickToLine(point, o, d);
 
-    qDebug() << "Origin: " << origin.x << "," << origin.y << "," << origin.z;
-    qDebug() << "Direction: " << direction.x << "," << direction.y << "," << direction.z;
+    const float srad2 = 1.;						// Radius^2 of the 3D sphere.
 
-    Vec v = currentManipulatedFrame->coordinatesOf(origin);
-    qDebug() << "ManFrame: " << v.x << "," << v.y << "," << v.z;
+    float sqrtterm, t1, t2, oo, od, dd, t;
+    oo = o * o;
+    od = o * d;
+    dd = d * d;
+    sqrtterm = (od * od) - (dd * (oo - srad2));
+    if (sqrtterm < 0) qDebug("error");
+    t1 = (-od - sqrt(sqrtterm))/(dd);
+    t2 = (-od + sqrt(sqrtterm))/(dd);
+    t = (t1 < t2) ? t1 : t2;
+    v = o + t*d;
+
+    Vec r = manipulatedFrame()->coordinatesOf(v);
+
+    double lambda, phi;
+    phi    = acos(r.z);
+    lambda = atan2(r.y, r.x);
+
+    int pix;
+    long p;
+    healpixMap->angle2pix(phi, lambda, currentNside, p);
+
+    pix = int(p);
+    qDebug() << "Pixel index: " << pix;
 }
 
 
