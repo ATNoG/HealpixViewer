@@ -977,7 +977,7 @@ void HealpixMap::writeMapInfo()
     else
     {
         abort();
-        throw HealpixMapException("Error writing map information into cache");
+        throw HealpixMapException("Error writing map information into cache: check if directory have write permissions");
     }
 }
 
