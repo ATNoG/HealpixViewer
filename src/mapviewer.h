@@ -116,9 +116,6 @@ public slots:
     void checkForUpdates(bool cleanCache);
     //void checkForUpdates(void);
 
-private slots:
-    void blink();
-
 private:
     HealpixMap* skymap;
     Tesselation* tesselation;
