@@ -20,6 +20,7 @@
 
 using namespace qglviewer;
 
+enum SelectionType { SINGLE_POINT, DISC, TRIANGLE };
 
 struct mapOptions
 {
@@ -115,6 +116,9 @@ public slots:
     void checkForUpdates(bool cleanCache);
     //void checkForUpdates(void);
 
+private slots:
+    void blink();
+
 private:
     HealpixMap* skymap;
     Tesselation* tesselation;
@@ -155,6 +159,9 @@ private:
     void changeProjectionConstraints();
     void updateMouseSensitivity();
 
+    SelectionType selectionType;
+    int firstPix;
+
     QMap<int, QVector<Vec> > faceBoundaries;
     QVector<int> visibleFaces;
 
@@ -164,6 +171,7 @@ private:
 
     PolarizationVectors* polVectors;
 
+    std::set<int> selectedPixels;
 };
 
 #endif // MAPVIEWER_H

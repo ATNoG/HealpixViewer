@@ -347,10 +347,10 @@ for x in $HEALPIX_PATHS; do
 done
 
 if ! test $HEALPIX_DIR = xxx ; then
-  LIBS="$LIBS -L$HEALPIX_DIR/lib"
-  INCLUDES="$INCLUDES -I$HEALPIX_DIR/include"
-  CXXFLAGS="$CXXFLAGS -I$HEALPIX_DIR/include"
-  CPPFLAGS="$CPPFLAGS -I$HEALPIX_DIR/include"
+  LIBS="$LIBS -L$HEALPIX_DIR/lib -L$HEALPIX_DIR/src/cxx/$HEALPIX_TARGET/lib"
+  INCLUDES="$INCLUDES -I$HEALPIX_DIR/include -I$HEALPIX_DIR/src/cxx/$HEALPIX_TARGET/include"
+  CXXFLAGS="$CXXFLAGS -I$HEALPIX_DIR/include -I$HEALPIX_DIR/src/cxx/$HEALPIX_TARGET/include"
+  CPPFLAGS="$CPPFLAGS -I$HEALPIX_DIR/include -I$HEALPIX_DIR/src/cxx/$HEALPIX_TARGET/include"
 fi
 
 
@@ -362,7 +362,7 @@ AC_CHECK_LIB([chealpix], [read_healpix_map],[AC_DEFINE(HAVE_HEALPIX)],[AC_MSG_ER
 if test $SYSTEM = "Darwin"; then
 	LIBS="$LIBS $HEALPIX_DIR/lib/libchealpix.a"
 else
-	LIBS="$LIBS -lchealpix"
+	LIBS="$LIBS -lchealpix -lhealpix_cxx -lcxxsupport -fopenmp"
 fi
 
 

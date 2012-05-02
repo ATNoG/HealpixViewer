@@ -29,6 +29,9 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     this->automaticPVectorsNside = AUTO_PVECTORS_NSIDE;
     this->pvectorsNsideFactor = PVECTORS_NSIDE_FACTOR;
     this->tesselationNside = TESSELATION_DEFAULT_NSIDE;
+
+    selectionType = SINGLE_POINT;
+    firstPix = -1;
 }
 
 MapViewer::~MapViewer()
@@ -263,7 +266,6 @@ void MapViewer::init()
     sceneUpdated(false);
 }
 
-
 void MapViewer::updateCameraPosition(float pos, bool signal, bool update)
 {
     cameraPosition = pos;
@@ -313,6 +315,19 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
         case Qt::Key_A:
             automaticPVectorsNside = false;
             updateVectorsNside(max(currentVectorsNside/2, MIN_NSIDE), true);
+            break;
+        case Qt::Key_S:
+            selectionType = SINGLE_POINT;
+            break;
+        case Qt::Key_D:
+            selectionType = DISC;
+            break;
+        case Qt::Key_T:
+            selectionType = TRIANGLE;
+            break;
+        case Qt::Key_C:
+            tesselation->clearROI();
+            updateGL();
             break;
     }
 }
@@ -437,7 +452,35 @@ void MapViewer::postSelection (const QPoint &point)
     healpixMap->angle2pix(phi, lambda, currentNside, p);
 
     pix = int(p);
-    qDebug() << "Pixel index: " << pix;
+
+
+    if(pix>=0)
+    {
+        // TODO: verify if is a good selection        
+        switch(selectionType)
+        {
+            case SINGLE_POINT:
+                selectedPixels.insert(pix);
+                break;
+
+            case DISC:
+                if(firstPix==-1)
+                {
+                    firstPix = pix;
+                    selectedPixels.clear();
+                    selectedPixels.insert(pix);
+                }
+                else
+                {
+                    selectedPixels = healpixMap->query_disc(firstPix, pix, currentNside);
+                    firstPix = -1;
+                }
+                break;
+        }
+
+        tesselation->selectPixels(selectedPixels);
+    }
+
 }
 
 
@@ -469,7 +512,7 @@ void MapViewer::resizeGL(int width, int height)
 {
     QGLViewer::resizeGL(width, height);
 
-    qDebug() << "Resize!";
+    //qDebug() << "Resize!";
 
     /* compute max camera distance for the new viewport size */
     computeMaxCameraDistance();

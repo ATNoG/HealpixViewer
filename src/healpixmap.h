@@ -15,8 +15,12 @@
 #include <chealpix.h>
 #include <fitsio.h>
 #include "healpixutil.h"
+#include <error_handling.h>
+#include <cxxutils.h>
+#include <healpix_base.h>
 #include <QGLViewer/vec.h>
 #include <math.h>
+#include <set>
 #include "configs.h"
 
 using namespace std;
@@ -67,6 +71,10 @@ public:
 
     static unsigned int NSide2Res  (unsigned int ns);
     static QString mapTypeToString(MapType type);
+
+    void angle2pix(double theta, double phi, int nside, long &pix);
+
+    std::set<int> query_disc(int pixel1, int pixel2, int nside);
 
 private:
     QString path;

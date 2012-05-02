@@ -7,6 +7,7 @@
 #include <chealpix.h>
 #include <math.h>
 #include <set>
+#include "roi.h"
 #include "face.h"
 #include "facecache.h"
 #include "texture.h"
@@ -16,6 +17,7 @@
 #include "healpixmap.h"
 #include "grid.h"
 #include "configs.h"
+#include <set>
 
 class Tesselation
 {
@@ -58,6 +60,9 @@ public:
     void changeTo3D();
     void changeToMollweide();
 
+    void selectPixels(std::set<int> pixelIndexes);
+    void clearROI();
+
 private:
     int tesselationNside;
     int textureNside;
@@ -72,11 +77,14 @@ private:
     bool displayPolarizationVectors;
     bool displayGrid;
 
+    ROI* roi;
     FaceCache* faceCache;
     TextureCache* textureCache;
     OverlayCache* overlayCache;
     QVector<int> facesv;
     QVector<Face*> visibleFaces;
+
+    std::set<int> selectedPixels;
 
     Grid *grid;
 

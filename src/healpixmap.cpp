@@ -1158,3 +1158,42 @@ void HealpixMap::abort()
 
     delete loadingDialog;
 }
+
+void HealpixMap::angle2pix(double theta, double phi, int nside, long &pix)
+{
+    pix = 0;
+
+    /*
+    theta *= deg2rad;
+    phi   *= deg2rad;
+    */
+
+    switch(ordering)
+    {
+        case NESTED:
+            ang2pix_nest(long(nside), theta, phi, &pix);
+            break;
+        case RING:
+            ang2pix_ring(long(nside), theta, phi, &pix);
+            break;
+    }
+}
+
+std::set<int> HealpixMap::query_disc(int pixel1, int pixel2, int nside)
+{
+    double radius;
+    std::vector<int> listPix;
+
+    Healpix_Base* hp = new Healpix_Base(nside, NEST , SET_NSIDE);
+
+    vec3 v1 = hp->pix2vec(pixel1);
+    vec3 v2 = hp->pix2vec(pixel2);
+    radius = acos(dotprod(v1, v2));
+
+    hp->query_disc(hp->pix2ang(pixel1), radius, listPix);
+
+    std::set<int> result;
+    result.insert(listPix.begin(), listPix.end());
+
+    return result;
+}

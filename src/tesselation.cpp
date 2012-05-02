@@ -15,6 +15,7 @@ Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool
     this->textureCache = textureCache;
     this->overlayCache = overlayCache;
     //this->mapType = mapType;
+    this->roi = NULL;
 
     createInitialTesselation();
 
@@ -138,13 +139,18 @@ void Tesselation::draw()
             polVectors = (PolarizationVectors*)overlayCache->getFace(facesv[i], vectorsNside, mollview, MapOverlay::POLARIZATION_VECTORS);
             polVectors->draw();
         }
+    }
 
-        /* display grid */
-        if(displayGrid)
-        {
-            glColor3f(1.0, 1.0, 1.0);
-            grid->draw();
-        }
+    if(roi!=NULL)
+    {
+        roi->draw();
+    }
+
+    /* display grid */
+    if(displayGrid)
+    {
+        glColor3f(1.0, 1.0, 1.0);
+        grid->draw();
     }
 }
 
@@ -188,4 +194,21 @@ void Tesselation::changeToMollweide()
 {
     if(!mollview)
         mollview = true;
+}
+
+void Tesselation::selectPixels(std::set<int> pixelIndexes)
+{    
+    //selectedPixels.insert(pixelIndexes.begin(), pixelIndexes.end());
+    clearROI();
+
+    roi = new ROI(pixelIndexes, 1024);
+}
+
+void Tesselation::clearROI()
+{
+    if(roi!=NULL)
+    {
+        delete roi;
+        roi = NULL;
+    }
 }
