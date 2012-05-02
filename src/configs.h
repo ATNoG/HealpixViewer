@@ -80,7 +80,7 @@
 #define GPU_BUFFER true
 
 
-#define REALTIME_TEXTURES true
+#define REALTIME_TEXTURES false
 
 
 #endif // CONFIGS_H
