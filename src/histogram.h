@@ -5,6 +5,7 @@
 #include <QDebug>
 #include "configs.h"
 #include "unique_ptr.hpp"
+#include <chealpix.h>
 
 class Histogram
 {

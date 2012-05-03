@@ -136,7 +136,7 @@ void Histogram::calculateMinMax()
     {
         if(values[i]>max)
             max = values[i];
-        else if(values[i]<min)
+        else if(values[i]<min && values[i]!=HEALPIX_NULLVAL)
             min = values[i];
     }
 

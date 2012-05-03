@@ -4,8 +4,11 @@
 #include <QtOpenGL>
 #include <QDebug>
 #include "colormap.h"
+#include <chealpix.h>
 
 using namespace std;
+
+QColor NULLVAL_COLOR(128, 128, 128);
 
 class Texture
 {

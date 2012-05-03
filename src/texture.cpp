@@ -51,10 +51,17 @@ void Texture::buildTexture(float* data, float minv, float maxv)
     {
         v = data[pix];
 
-        if (v < minv) v = minv;
-        if (v > maxv) v = maxv;
-        v = (v-minv)/(maxv-minv);
-        color = (*colorMap)(v);
+        if(v==HEALPIX_NULLVAL)
+        {
+            color = NULLVAL_COLOR;
+        }
+        else
+        {
+            if (v < minv) v = minv;
+            if (v > maxv) v = maxv;
+            v = (v-minv)/(maxv-minv);
+            color = (*colorMap)(v);
+        }
 
         texk = pix*3;
 
