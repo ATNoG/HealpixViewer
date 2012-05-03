@@ -8,7 +8,7 @@
 
 using namespace std;
 
-QColor NULLVAL_COLOR(128, 128, 128);
+QColor NULLPIX_COLOR(128, 128, 128);
 
 class Texture
 {

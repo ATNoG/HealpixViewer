@@ -20,7 +20,7 @@ Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool
     createInitialTesselation();
 
     /* create grid */
-    grid = new Grid(GRID_LINES);
+    grid = new Grid(45, 45);
 }
 
 Tesselation::~Tesselation()

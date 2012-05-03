@@ -1,8 +1,8 @@
 #include "grid.h"
 
-Grid::Grid(int lines)
+Grid::Grid(int dlong, int dlat)
 {
-    this->lines = lines;
+    setConfiguration(dlong, dlat);
 }
 
 Grid::~Grid()
@@ -12,9 +12,10 @@ Grid::~Grid()
     #endif
 }
 
-void Grid::setNumberLines(int lines)
+void Grid::setConfiguration(int dlong, int dlat)
 {
-    this->lines = lines;
+    this->dlong = dlong;
+    this->dlat  = dlat;
 }
 
 void Grid::draw()
@@ -26,13 +27,16 @@ void Grid::draw()
     float dtheta, dphi;
     float radius = 1.001;
 
+    int nmerid = (int)(181/dlong);
+    int nparal = (int)(181/dlat);
+
     dtheta = 2.0*M_PI / (float)points;
     dphi = 2.0*M_PI / (float)points;
 
-    for (int i=0; i<lines; i++)
+    /* draw meridians (longitude lines) */
+    for (int i=0; i<nmerid; i++)
     {
-        /* draw longitude lines */
-        phi = (float) i*M_PI / lines;
+        phi = (float) i*M_PI / nmerid;
         cosphi = cos(phi);
         sinphi = sin(phi);
 
@@ -47,9 +51,15 @@ void Grid::draw()
             glVertex3f(x*radius, y*radius, costheta*radius);
         }
         glEnd();
+    }
 
-        /* draw latitude lines */
-        theta = (float) i*M_PI / lines;
+    qDebug() << "total paralelos: " << nparal;
+
+    /* draw parallels (latitude lines) */
+    for(int i=0; i<nparal; i++)
+    {
+        qDebug() << "paralelo " << i;
+        theta = (float) i*M_PI / nparal;
         costheta = cos(theta);
         sintheta = sin(theta);
 
@@ -63,6 +73,4 @@ void Grid::draw()
         }
         glEnd();
     }
-
-    //qDebug("Drawing grid");
 }

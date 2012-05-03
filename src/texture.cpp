@@ -53,7 +53,7 @@ void Texture::buildTexture(float* data, float minv, float maxv)
 
         if(v==HEALPIX_NULLVAL)
         {
-            color = NULLVAL_COLOR;
+            color = NULLPIX_COLOR;
         }
         else
         {

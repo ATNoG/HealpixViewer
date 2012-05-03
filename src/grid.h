@@ -8,14 +8,15 @@
 class Grid
 {
 public:
-    Grid(int lines);
+    Grid(int dlong, int dlat);
     ~Grid();
 
-    void setNumberLines(int lines);
+    void setConfiguration(int dlong, int dlat);
     void draw();
 
 private:
-    int lines;
+    int dlong;
+    int dlat;
 };
 
 #endif // GRID_H
