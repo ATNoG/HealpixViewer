@@ -266,6 +266,7 @@ void MapViewer::init()
     sceneUpdated(false);
 }
 
+
 void MapViewer::updateCameraPosition(float pos, bool signal, bool update)
 {
     cameraPosition = pos;
@@ -1103,7 +1104,7 @@ void MapViewer::computeMaxCameraDistance()
     if(!mollweide)
         auxCamera->fitSphere(Vec(0,0,0), 1.05);
     else
-        auxCamera->fitSphere(Vec(0,0,0), 1.12);
+        auxCamera->fitSphere(Vec(0,0,0), 1.98);
     float auxPosition = auxCamera->position().x;
 
     //qDebug() << "computeMaxCameraDistance = " << auxPosition;
