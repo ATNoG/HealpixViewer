@@ -147,7 +147,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QFrame" name="frame">
+         <widget class="QFrame" name="managerWidget">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>0</horstretch>
@@ -205,17 +205,8 @@
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionOpen_Map"/>
     <addaction name="actionExit"/>
-   </widget>
-   <widget class="QMenu" name="menuEdit">
-    <property name="title">
-     <string>Edit</string>
-    </property>
-   </widget>
-   <widget class="QMenu" name="menuView">
-    <property name="title">
-     <string>View</string>
-    </property>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -223,9 +214,41 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
+   <widget class="QMenu" name="menuSynchronization">
+    <property name="title">
+     <string>Sync</string>
+    </property>
+    <addaction name="actionSync_all_maps"/>
+    <addaction name="actionSync_selected_maps"/>
+    <addaction name="actionStop_sync"/>
+   </widget>
+   <widget class="QMenu" name="menuSelect">
+    <property name="title">
+     <string>Select</string>
+    </property>
+    <addaction name="actionSelectAllViewports"/>
+    <addaction name="actionClearViewportSelection"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <widget class="QMenu" name="menuProjection">
+     <property name="title">
+      <string>Projection</string>
+     </property>
+     <addaction name="action3D_Sphere"/>
+     <addaction name="actionMollweide"/>
+    </widget>
+    <addaction name="actionGrid"/>
+    <addaction name="actionShow_polarization_vectors"/>
+    <addaction name="actionReset_view"/>
+    <addaction name="menuProjection"/>
+   </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuEdit"/>
+   <addaction name="menuSelect"/>
    <addaction name="menuView"/>
+   <addaction name="menuSynchronization"/>
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -345,6 +368,9 @@
    </property>
   </action>
   <action name="actionColors">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="icons.qrc">
      <normaloff>:/colormap.gif</normaloff>:/colormap.gif</iconset>
@@ -420,6 +446,80 @@
    </property>
    <property name="toolTip">
     <string>Show Grid</string>
+   </property>
+  </action>
+  <action name="actionOpen_Map">
+   <property name="text">
+    <string>Open Map</string>
+   </property>
+  </action>
+  <action name="actionShow_polarization_vectors">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show polarization vectors</string>
+   </property>
+  </action>
+  <action name="actionSelect_all_viewports">
+   <property name="text">
+    <string>Select all viewports</string>
+   </property>
+  </action>
+  <action name="actionClear_viewport_selection">
+   <property name="text">
+    <string>Clear viewport selection</string>
+   </property>
+  </action>
+  <action name="actionReset_view">
+   <property name="text">
+    <string>Reset view</string>
+   </property>
+  </action>
+  <action name="actionGrid">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Grid</string>
+   </property>
+  </action>
+  <action name="actionSync_all_maps">
+   <property name="text">
+    <string>Sync all maps</string>
+   </property>
+  </action>
+  <action name="actionSync_selected_maps">
+   <property name="text">
+    <string>Sync selected maps</string>
+   </property>
+  </action>
+  <action name="actionStop_sync">
+   <property name="text">
+    <string>Stop sync</string>
+   </property>
+  </action>
+  <action name="actionSelectAllViewports">
+   <property name="text">
+    <string>All viewports</string>
+   </property>
+  </action>
+  <action name="actionClearViewportSelection">
+   <property name="text">
+    <string>Clear selection</string>
+   </property>
+  </action>
+  <action name="action3D_Sphere">
+   <property name="text">
+    <string>3D Sphere</string>
+   </property>
+  </action>
+  <action name="actionMollweide">
+   <property name="text">
+    <string>Mollweide</string>
    </property>
   </action>
  </widget>

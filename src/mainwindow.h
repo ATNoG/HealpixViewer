@@ -23,13 +23,18 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+public slots:
+    void updateInterface();
+
 private slots:
     void showHistogram(bool show=true);
     void viewportSelectionChanged(QList<int> selectedViewports);
+    void syncAllViewports();
 
 private:
     void enableButtons();
     void disableButtons();
+    int sidePanelSize;
 
 private:
     Ui::MainWindow *ui;

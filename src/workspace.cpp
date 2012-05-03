@@ -37,6 +37,12 @@ WorkSpace::~WorkSpace()
 }
 
 
+bool WorkSpace::hasViewports()
+{
+    return numberViewports!=0;
+}
+
+
 /* Slots */
 
 /* add viewport to workspace */
@@ -65,6 +71,8 @@ void WorkSpace::addViewport(int viewportId, MapViewport *viewport)
         /* show warning dialog */
         QMessageBox::warning (this, "HealpixViewer", "No more viewports can be displayed in workspace, hide some viewport first");
     }
+
+    emit(workspaceUpdated());
 }
 
 
@@ -86,6 +94,8 @@ void WorkSpace::removeViewport(int viewportId)
 
         reorganizeLayout();
     }
+
+    emit(workspaceUpdated());
 }
 
 
@@ -139,6 +149,16 @@ void WorkSpace::changeSynchronization(bool on)
     foreach(viewport, viewports.values())
         if(viewport->isSelected())
             viewport->enableSynchronization(on);
+}
+
+void WorkSpace::enableSynchronization()
+{
+    changeSynchronization(true);
+}
+
+void WorkSpace::disableSynchronization()
+{
+    changeSynchronization(false);
 }
 
 

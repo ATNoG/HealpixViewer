@@ -24,6 +24,7 @@ public:
     ~WorkSpace();
 
     int getProjectionToSyncTo();
+    bool hasViewports();
 
 
 signals:
@@ -34,11 +35,14 @@ signals:
 
     void textureNsideUpdated(int nside, int viewport);
     void vectorsNsideUpdated(int nside, int viewport);
+    void workspaceUpdated();
 
 public slots:
     void changeToMollview();
     void changeTo3D();
     void changeSynchronization(bool on);
+    void enableSynchronization();
+    void disableSynchronization();
 
     void selectAllViewports();
     void deselectAllViewports();
