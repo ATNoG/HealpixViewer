@@ -48,7 +48,8 @@ healpixviewer_SOURCES = \
 		src/vertice.cpp \
 		src/viewportmanager.cpp \
 		src/workspace.cpp \
-		src/roi.cpp
+		src/roi.cpp \
+		src/pixellutcache.cpp
 
 app:
 	rm -rf HealpixViewer.app

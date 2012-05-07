@@ -53,12 +53,9 @@ void Grid::draw()
         glEnd();
     }
 
-    qDebug() << "total paralelos: " << nparal;
-
     /* draw parallels (latitude lines) */
     for(int i=0; i<nparal; i++)
     {
-        qDebug() << "paralelo " << i;
         theta = (float) i*M_PI / nparal;
         costheta = cos(theta);
         sintheta = sin(theta);

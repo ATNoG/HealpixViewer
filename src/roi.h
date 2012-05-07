@@ -8,29 +8,48 @@
 #include "vertice.h"
 #include "facevertices.h"
 #include "configs.h"
+#include "pixellutcache.h"
 #include <set>
+#include <QMap>
 
 using namespace std;
 
 class ROI
 {
     public:
-        ROI(std::set<int> pixelIndexes, int nside);
+        ROI(int faceNumber, int nside);
         ~ROI();
         void draw();
-        void createBuffer();
+        void build();
+        void unbind();
+        void addPoint(long pos);
 
     private:
-        std::set<int> pixelIndexes;
-        void createVertexs();
         int nside;
-        int totalPoints;
+        int faceNumber;
 
-        GLfloat* vertexs;
-        QGLBuffer* vertexBuffer;
+        GLuint textureId;
+        bool created;
+        bool valuesLoaded;
+        bool pixelSetChanged;
+        unsigned char* mask;
 
-        bool bufferInitialized;
-        bool vertexsCalculated;
+        void createBuffer();
+        void updateBuffer();
+};
+
+class ROIManager
+{
+    public:
+        ROIManager();
+        ~ROIManager();
+        void addPoints(std::set<int> pixelIndexes, int nside);
+        ROI* getFaceROI(int face);
+        bool hasROI(int face);
+        void clear();
+    private:
+        QMap<int, ROI*> faceROI;
+        PixelLUTCache* lut_cache;
 };
 
 #endif // ROI_H

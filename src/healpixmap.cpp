@@ -1195,5 +1195,7 @@ std::set<int> HealpixMap::query_disc(int pixel1, int pixel2, int nside)
     std::set<int> result;
     result.insert(listPix.begin(), listPix.end());
 
+    delete hp;
+
     return result;
 }

@@ -17,6 +17,8 @@ Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool
     //this->mapType = mapType;
     this->roi = NULL;
 
+    this->manager = new ROIManager();
+
     createInitialTesselation();
 
     /* create grid */
@@ -113,17 +115,31 @@ void Tesselation::draw()
     Face* face;
     Texture* texture;
     PolarizationVectors* polVectors;
+    ROI* roi;
 
     /* get faces */
     for(int i=0; i<totalFaces; i++)
     {
         face = faceCache->getFace(facesv[i], tesselationNside, mollview);
+        bool hasROI = manager->hasROI(facesv[i]);
 
         /* display texture */
         if(DISPLAY_TEXTURE)
         {
+            if(hasROI)
+            {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_DST_COLOR);
+            }
+
             texture = textureCache->getFace(facesv[i], textureNside);
             texture->draw();
+
+            if(hasROI)
+            {
+                roi = manager->getFaceROI(facesv[i]);
+                roi->draw();
+            }
         }
 
         face->draw();
@@ -131,6 +147,9 @@ void Tesselation::draw()
         if(DISPLAY_TEXTURE)
         {
             texture->unbind();
+
+            if(hasROI)
+                roi->unbind();
         }
 
         /* display polarization vectors */
@@ -141,10 +160,6 @@ void Tesselation::draw()
         }
     }
 
-    if(roi!=NULL)
-    {
-        roi->draw();
-    }
 
     /* display grid */
     if(displayGrid)
@@ -198,17 +213,12 @@ void Tesselation::changeToMollweide()
 
 void Tesselation::selectPixels(std::set<int> pixelIndexes)
 {    
-    //selectedPixels.insert(pixelIndexes.begin(), pixelIndexes.end());
-    clearROI();
-
-    roi = new ROI(pixelIndexes, 1024);
+    /* split pixels indexes into faces */
+    manager->addPoints(pixelIndexes, this->textureNside);
 }
 
 void Tesselation::clearROI()
 {
-    if(roi!=NULL)
-    {
-        delete roi;
-        roi = NULL;
-    }
+    qDebug() << "CLEAR!";
+    manager->clear();
 }

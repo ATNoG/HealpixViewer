@@ -5,10 +5,6 @@
 #include <map>
 #include <chealpix.h>
 
-typedef std::vector<long> PixLUT;
-typedef std::map<int, PixLUT > PixLUTCache;
-
-
 inline long xy2pix(long ix, long iy)
 {
         static int x2pix[128];

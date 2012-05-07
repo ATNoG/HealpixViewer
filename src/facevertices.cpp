@@ -1,7 +1,16 @@
 #include "facevertices.h"
 
 /* pointer to the singleton */
-//FaceVertices *FaceVertices::s_instance = 0;
+FaceVertices* FaceVertices::s_instance = NULL;
+
+
+FaceVertices* FaceVertices::instance()
+{
+    if(!s_instance)
+        s_instance = new FaceVertices;
+
+    return s_instance;
+}
 
 
 FaceVertices::FaceVertices()

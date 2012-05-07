@@ -1,114 +1,147 @@
 #include "roi.h"
 
-ROI::ROI(std::set<int> pixelIndexes, int nside)
-{
-    this->pixelIndexes = pixelIndexes;
-    this->nside = nside;
-    this->totalPoints = pixelIndexes.size();
 
-    vertexBuffer = NULL;
-    bufferInitialized = false;
+ROIManager::ROIManager()
+{
+    lut_cache = PixelLUTCache::getInstance();
 }
 
-ROI::~ROI()
+ROIManager::~ROIManager()
 {
-    if(vertexBuffer!=NULL)
-    {
-        vertexBuffer->release();
-        vertexBuffer->destroy();
-        delete vertexBuffer;
-    }
+
 }
 
-/* create vertex list */
-void ROI::createVertexs()
+void ROIManager::addPoints(std::set<int> pixelIndexes, int nside)
 {
-    int i=0;
-    vertexs = new GLfloat[3*4*totalPoints];
+    long pixelsPerFace = nside2npix(nside)/12;
+    PixelLUT *lut = lut_cache->getLut(nside);
 
-    FaceVertices* factory = FaceVertices::instance();
-
-    std::set<int>::iterator pixelIT;
-    for(pixelIT=pixelIndexes.begin(); pixelIT!=pixelIndexes.end(); pixelIT++)
+    set<int>::iterator it;
+    for(it=pixelIndexes.begin(); it!=pixelIndexes.end(); it++)
     {
-        QVector<Vertice> pixelVertices = factory->getPixelVertices(*pixelIT, nside);
+        /* use LUT */
+        long texturepos = lut->at(*it);
+        int face = texturepos / pixelsPerFace;
+        long pos = texturepos % pixelsPerFace;
 
-        QVector<Vertice>::iterator verticesIT;
-        for(verticesIT=pixelVertices.begin(); verticesIT!=pixelVertices.end(); verticesIT++)
+        ROI* roi;
+
+        if(faceROI.contains(face))
         {
-            vertexs[i] = verticesIT->x;
-            vertexs[i+1] = verticesIT->y;
-            vertexs[i+2] = verticesIT->z;
-            i+=3;
+            roi = faceROI[face];
+        }
+        else
+        {
+            roi = new ROI(face, nside);
+            faceROI.insert(face, roi);
         }
 
-        vertexsCalculated = true;
+        roi->addPoint(pos);
     }
 
     pixelIndexes.clear();
 }
 
-void ROI::draw()
+ROI* ROIManager::getFaceROI(int face)
 {
-    if(GPU_BUFFER)
-        if(!bufferInitialized)
-            createBuffer();
+    if(hasROI(face))
+        return faceROI[face];
 
-    glColor3f(1.0, 0.0, 0.0);
-
-    if(GPU_BUFFER)
-    {
-        glEnableClientState(GL_VERTEX_ARRAY);
-
-        glColor3f(1.0, 0.0, 0.0);
-
-        vertexBuffer->bind();
-        glVertexPointer(3, GL_FLOAT, 0, BUFFER_OFFSET(0));
-
-        glDrawArrays(GL_QUADS, 0, 4*totalPoints);
-
-        vertexBuffer->release();
-
-        glDisableClientState(GL_VERTEX_ARRAY);
-    }
-    else
-    {
-        // use normal draw - very slow!!
-        std::set<int>::iterator pixelIT;
-        FaceVertices* factory = FaceVertices::instance();
-
-        for(pixelIT=pixelIndexes.begin(); pixelIT!=pixelIndexes.end(); pixelIT++)
-        {
-            QVector<Vertice> pixelVertices = factory->getPixelVertices(*pixelIT, nside);
-
-            QVector<Vertice>::iterator verticesIT;
-
-            glBegin(GL_QUADS);
-            for(verticesIT=pixelVertices.begin(); verticesIT!=pixelVertices.end(); verticesIT++)
-            {
-                verticesIT->draw();
-            }
-            glEnd();
-        }
-    }
-
-    glColor3f(1.0, 1.0, 1.0);
+    return NULL;
 }
 
-/* create opengl buffers */
+bool ROIManager::hasROI(int face)
+{
+    return faceROI.contains(face);
+}
+
+void ROIManager::clear()
+{
+    QMap<int, ROI*>::iterator it;
+    for(it=faceROI.begin(); it!=faceROI.end(); it++)
+    {
+        delete it.value();
+    }
+    faceROI.clear();
+}
+
+
+ROI::ROI(int faceNumber, int nside)
+{
+    this->faceNumber = faceNumber;
+    this->nside = nside;
+
+    created = false;
+    valuesLoaded = false;
+
+    /* create empty array mask */
+    int tot = nside*nside;
+    mask = new unsigned char[tot];
+    std::fill_n(mask, tot, 255);
+}
+
+ROI::~ROI()
+{
+    if(mask!=NULL)
+    {
+        delete[] mask;
+    }
+
+    glDeleteTextures(1, &textureId);
+}
+
+void ROI::addPoint(long pos)
+{
+    mask[pos] = 100;
+    pixelSetChanged = true;
+}
+
+void ROI::build()
+{
+
+}
+
+
 void ROI::createBuffer()
 {
-    createVertexs();
+    glActiveTexture(GL_TEXTURE1);
+    glEnable(GL_TEXTURE_2D);
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, nside, nside, 0, GL_ALPHA, GL_UNSIGNED_BYTE, mask);
+    glBindTexture(GL_TEXTURE_2D, NULL);
 
-    vertexBuffer = new QGLBuffer(QGLBuffer::VertexBuffer);
-    vertexBuffer->create();
+    created = true;
+}
 
-    vertexBuffer->bind();
-    vertexBuffer->setUsagePattern(QGLBuffer::StaticDraw);
-    vertexBuffer->allocate(vertexs, 4*3*totalPoints*sizeof(GLfloat));
-    vertexBuffer->release();
+void ROI::updateBuffer()
+{
+    glActiveTexture(GL_TEXTURE1);
+    glEnable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, nside, nside, GL_ALPHA, GL_UNSIGNED_BYTE, mask);
+    glBindTexture(GL_TEXTURE_2D, NULL);
+}
 
-    delete[] vertexs;
+void ROI::draw()
+{
+    if(!created)
+        createBuffer();
+    else if(pixelSetChanged)
+        updateBuffer();
 
-    bufferInitialized = true;
+    glActiveTexture(GL_TEXTURE1);
+    glEnable(GL_TEXTURE_2D);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+
+    pixelSetChanged = false;
+}
+
+
+void ROI::unbind()
+{
+    glBindTexture(GL_TEXTURE_2D, NULL);
 }

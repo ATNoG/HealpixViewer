@@ -30,7 +30,8 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     this->pvectorsNsideFactor = PVECTORS_NSIDE_FACTOR;
     this->tesselationNside = TESSELATION_DEFAULT_NSIDE;
 
-    selectionType = SINGLE_POINT;
+    //selectionType = SINGLE_POINT;
+    selectionType = DISC;
     firstPix = -1;
 }
 
@@ -82,10 +83,15 @@ void MapViewer::draw()
 
         if(displayInfo)
         {
+            glDisable(GL_TEXTURE_2D);
+            glDisable(GL_BLEND);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+            glColor3f(1.0, 1.0, 1.0);
             drawText(10, 12, QString("Nside: %1").arg(currentNside), QFont("Arial", 9));
             drawText(10, 22, QString("Zoom: %1").arg(zoom), QFont("Arial", 9));
             if(showPVectors)
                 drawText(10, 32, QString("P.Vectors: %1").arg(currentVectorsNside), QFont("Arial", 9));
+            glEnable(GL_TEXTURE_2D);
         }
     }
 }

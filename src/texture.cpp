@@ -38,6 +38,9 @@ Texture::~Texture()
 
 void Texture::buildTexture(float* data, float minv, float maxv)
 {
+    // TODO: receive the default nullpix color to use
+    QColor NULLPIX_COLOR(128, 128, 128);
+
     float v = 0.0;
     long texk = 0;
     QColor color;
@@ -68,7 +71,6 @@ void Texture::buildTexture(float* data, float minv, float maxv)
         texture[texk++] = color.red();
         texture[texk++] = color.green();
         texture[texk++] = color.blue();
-        //texture[texk++] = 255;
     }
 
     delete[] data;
@@ -77,6 +79,8 @@ void Texture::buildTexture(float* data, float minv, float maxv)
 
 void Texture::create()
 {
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
     glGenTextures(1, &textureId);
     glBindTexture(GL_TEXTURE_2D, textureId);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -103,6 +107,8 @@ void Texture::draw()
     if(!created)
         create();
 
+    glActiveTexture(GL_TEXTURE0);
+    glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, textureId);
 }
 
@@ -110,4 +116,6 @@ void Texture::draw()
 void Texture::unbind()
 {
     glBindTexture(GL_TEXTURE_2D, NULL);
+    //glActiveTexture(GL_TEXTURE0);
+    //glClientActiveTexture(GL_TEXTURE0);
 }

@@ -5,12 +5,10 @@
 #include <QFile>
 #include <QTextStream>
 #include <stdio.h>
-#include "healpixutil.h"
+#include "pixellutcache.h"
 
 using namespace std;
 
-typedef vector<long> PixelLUT;
-typedef map<int, PixLUT* > PixelLUTCache;
 
 class FieldMap
 {
@@ -30,9 +28,7 @@ private:
     void convertToNest();
     float* orderMap(float* values, int nside);
 
-    PixelLUT* getLut(int nside);
-
-    PixelLUTCache lut_cache;
+    PixelLUTCache* lut_cache;
 
     int degradePixel(int pixel, int oldNside, int newNside);
     void saveFieldMap(QString filepath, float* values, int nvalues);

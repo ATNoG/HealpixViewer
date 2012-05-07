@@ -12,6 +12,8 @@ FieldMap::FieldMap(float* map, int nside, bool nest)
     if(!nest)
         convertToNest();
 
+    lut_cache = PixelLUTCache::getInstance();
+
     // orderMap();
 }
 
@@ -170,7 +172,7 @@ float* FieldMap::orderMap(float *values, int nside)
     outputFile.close();
     */
 
-    PixelLUT *lut = getLut(nside);
+    PixelLUT *lut = lut_cache->getLut(nside);
 
     float *orderedValues;
     long npixels = nside2npix(nside);
@@ -196,49 +198,6 @@ float* FieldMap::orderMap(float *values, int nside)
 
     return orderedValues;
 }
-
-
-/* lut per face to translate from nest to texture coordinates */
-PixLUT* FieldMap::getLut(int nside)
-{
-    PixLUT *lut;
-
-    /* if lut already constructed for wanted nside return it */
-    if(lut_cache.find(nside)!=lut_cache.end())
-        lut = lut_cache[nside];
-    else
-    {
-        lut = new PixLUT;
-
-        lut->resize(nside2npix(nside));
-        int  face = 0, x = 0, y = 0;
-        long dy = nside;
-        long pix;
-        long k = 0;
-        for(face = 0; face < 12; face++)
-        {
-            long xo = 0;//currentNside*(face % 4);
-            long yo = 0;//currentNside*(face / 4);
-            long face_offset = face*nside*nside;
-            for(y = 0; y < nside; y++)
-            {
-                for(x = 0; x < nside; x++)
-                {
-                    k = x + xo + (y+yo)*dy + face_offset;
-                    pix = xy2pix(x,y)  + face_offset;
-                    if (!nest)
-                        nest2ring(nside,pix,&pix);
-                    lut->at(pix) = k;
-                }
-            }
-        }
-
-        lut_cache[nside] = lut;
-    }
-
-    return lut;
-}
-
 
 
 void FieldMap::generateDowngrades(QString path, QString prefix, int minNside)

@@ -83,6 +83,7 @@ private:
     OverlayCache* overlayCache;
     QVector<int> facesv;
     QVector<Face*> visibleFaces;
+    ROIManager* manager;
 
     std::set<int> selectedPixels;
 

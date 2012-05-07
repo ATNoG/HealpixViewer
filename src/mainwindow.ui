@@ -226,8 +226,16 @@
     <property name="title">
      <string>Select</string>
     </property>
+    <widget class="QMenu" name="menuPixel_Selection">
+     <property name="title">
+      <string>Pixel Selection</string>
+     </property>
+     <addaction name="actionSingleSelection"/>
+     <addaction name="actionDiscSelection"/>
+    </widget>
     <addaction name="actionSelectAllViewports"/>
     <addaction name="actionClearViewportSelection"/>
+    <addaction name="menuPixel_Selection"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -509,7 +517,7 @@
   </action>
   <action name="actionClearViewportSelection">
    <property name="text">
-    <string>Clear selection</string>
+    <string>Deselect Viewports</string>
    </property>
   </action>
   <action name="action3D_Sphere">
@@ -520,6 +528,16 @@
   <action name="actionMollweide">
    <property name="text">
     <string>Mollweide</string>
+   </property>
+  </action>
+  <action name="actionSingleSelection">
+   <property name="text">
+    <string>Single Selection</string>
+   </property>
+  </action>
+  <action name="actionDiscSelection">
+   <property name="text">
+    <string>Disc Selection</string>
    </property>
   </action>
  </widget>

@@ -8,8 +8,6 @@
 
 using namespace std;
 
-QColor NULLPIX_COLOR(128, 128, 128);
-
 class Texture
 {
 public:
