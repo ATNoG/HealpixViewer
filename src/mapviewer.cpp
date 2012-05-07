@@ -84,6 +84,7 @@ void MapViewer::draw()
         if(displayInfo)
         {
             glDisable(GL_TEXTURE_2D);
+            glClientActiveTexture(GL_TEXTURE0);
             glColor3f(1.0, 1.0, 1.0);
             drawText(10, 12, QString("Nside: %1").arg(currentNside), QFont("Arial", 9));
             drawText(10, 22, QString("Zoom: %1").arg(zoom), QFont("Arial", 9));
@@ -203,7 +204,6 @@ void MapViewer::init()
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
     glCullFace(GL_BACK);
-
 
     setHandlerKeyboardModifiers(QGLViewer::FRAME,  Qt::NoModifier);
 
