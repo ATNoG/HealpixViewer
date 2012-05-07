@@ -84,8 +84,6 @@ void MapViewer::draw()
         if(displayInfo)
         {
             glDisable(GL_TEXTURE_2D);
-            glDisable(GL_BLEND);
-            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
             glColor3f(1.0, 1.0, 1.0);
             drawText(10, 12, QString("Nside: %1").arg(currentNside), QFont("Arial", 9));
             drawText(10, 22, QString("Zoom: %1").arg(zoom), QFont("Arial", 9));
@@ -179,8 +177,6 @@ void MapViewer::init()
         General configuration.
     */
     setBackgroundColor(QColor(0,0,0));	// Black background.
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     /*
         Define the lighting.
@@ -199,7 +195,6 @@ void MapViewer::init()
     /*
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-    glEnable( GL_TEXTURE_2D );
     */
                     // Nice texture coordinate interpolation
     glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );

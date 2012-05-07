@@ -129,7 +129,7 @@ void Tesselation::draw()
             if(hasROI)
             {
                 glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_DST_COLOR);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             }
 
             texture = textureCache->getFace(facesv[i], textureNside);

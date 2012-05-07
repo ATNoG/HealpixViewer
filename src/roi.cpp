@@ -110,7 +110,7 @@ void ROI::createBuffer()
     glBindTexture(GL_TEXTURE_2D, textureId);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, nside, nside, 0, GL_ALPHA, GL_UNSIGNED_BYTE, mask);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, nside, nside, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, mask);
     glBindTexture(GL_TEXTURE_2D, NULL);
 
     created = true;
@@ -121,7 +121,7 @@ void ROI::updateBuffer()
     glActiveTexture(GL_TEXTURE1);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, textureId);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, nside, nside, GL_ALPHA, GL_UNSIGNED_BYTE, mask);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, nside, nside, GL_LUMINANCE, GL_UNSIGNED_BYTE, mask);
     glBindTexture(GL_TEXTURE_2D, NULL);
 }
 
@@ -143,5 +143,6 @@ void ROI::draw()
 
 void ROI::unbind()
 {
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, NULL);
 }
