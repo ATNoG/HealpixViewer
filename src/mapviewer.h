@@ -20,7 +20,7 @@
 
 using namespace qglviewer;
 
-enum SelectionType { SINGLE_POINT, DISC, TRIANGLE };
+enum SelectionType { SINGLE_POINT, DISC, TRIANGLE, POLYGON };
 
 struct mapOptions
 {
@@ -157,7 +157,8 @@ private:
     void updateMouseSensitivity();
 
     SelectionType selectionType;
-    int firstPix;
+    int firstPix, secondPix;
+    std::vector<int> polygonPixels;
 
     QMap<int, QVector<Vec> > faceBoundaries;
     QVector<int> visibleFaces;

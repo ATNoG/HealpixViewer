@@ -31,8 +31,11 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     this->tesselationNside = TESSELATION_DEFAULT_NSIDE;
 
     //selectionType = SINGLE_POINT;
-    selectionType = DISC;
+    //selectionType = DISC;
+    selectionType = TRIANGLE;
+    //selectionType = POLYGON;
     firstPix = -1;
+    secondPix = -1;
 }
 
 MapViewer::~MapViewer()
@@ -327,8 +330,13 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
         case Qt::Key_T:
             selectionType = TRIANGLE;
             break;
+        case Qt::Key_P:
+            selectionType = POLYGON;
+            break;
         case Qt::Key_C:
             tesselation->clearROI();
+            polygonPixels.clear();
+            selectedPixels.clear();
             updateGL();
             break;
     }
@@ -455,7 +463,6 @@ void MapViewer::postSelection (const QPoint &point)
 
     pix = int(p);
 
-
     if(pix>=0)
     {
         // TODO: verify if is a good selection        
@@ -478,7 +485,57 @@ void MapViewer::postSelection (const QPoint &point)
                     firstPix = -1;
                 }
                 break;
+
+            case TRIANGLE:
+                if(firstPix==-1)
+                {
+                    firstPix = pix;
+                    selectedPixels.clear();
+                    selectedPixels.insert(pix);
+                }
+                else if(secondPix==-1)
+                {
+                    secondPix = pix;
+                    selectedPixels.clear();
+                    selectedPixels.insert(firstPix);
+                    selectedPixels.insert(pix);
+                }
+                else
+                {
+                    qDebug() << "query_triangle(" << firstPix << "," << secondPix << "," << pix << ")";
+                    selectedPixels = healpixMap->query_triangle(firstPix, secondPix, pix, currentNside);
+                    firstPix = -1;
+                    secondPix = -1;
+                }
+                break;
+
+            case POLYGON:
+                /* check if shape is closed */
+                std::vector<int>::iterator it;
+                bool draw = false;
+                for(it=polygonPixels.begin(); it!=polygonPixels.end(); it++)
+                {
+                    if((*it) == pix)
+                        draw = true;
+                }
+                if(!draw)
+                {
+                    polygonPixels.push_back(pix);
+                    selectedPixels.insert(pix);
+                }
+                else
+                {
+                    selectedPixels = healpixMap->query_polygon(polygonPixels, currentNside);
+                    polygonPixels.clear();
+                }
+                break;
         }
+
+        std::set<int>::iterator it;
+        /*
+        for(it=selectedPixels.begin(); it!=selectedPixels.end(); it++)
+            qDebug() << *it;*/
+        qDebug() << "Total selected pixels = " << selectedPixels.size();
 
         tesselation->selectPixels(selectedPixels);
     }
