@@ -1199,3 +1199,501 @@ std::set<int> HealpixMap::query_disc(int pixel1, int pixel2, int nside)
 
     return result;
 }
+
+std::set<int> HealpixMap::query_triangle(int pixel1, int pixel2, int pixel3, int nside)
+{
+    std::set<int> result;
+
+    Healpix_Base* hp = new Healpix_Base(nside, NEST , SET_NSIDE);
+
+    long npix, iz, irmin, irmax, n12, n123a, n123b, ndom = 0;
+    bool test1, test2, test3;
+    double dth1, dth2, determ, sdet;
+    double zmax, zmin, z1max, z1min, z2max, z2min, z3max, z3min;
+    double z, tgth, st, offset, sin_off;
+    double phi_pos, phi_neg;
+    std::vector<vec3> vv(3);
+    std::vector<vec3> vo(3);
+    double sprod[3];
+    double sto[3];
+    double phi0i[3];
+    double tgthi[3];
+    double dc[3];
+    double dom[3][2];
+    double dom12[4];
+    double dom123a[4];
+    double dom123b[4];
+    double alldom[6];
+    double a_i, b_i, phi0, dphiring;
+    long idom;
+    long nsidesq = nside * nside;
+
+    double M_PI2 = 2*M_PI;
+
+    npix = nside2npix(nside);
+
+    bool do_nest = true;
+
+    vv[0] = hp->pix2vec(pixel1);
+    vv[1] = hp->pix2vec(pixel2);
+    vv[2] = hp->pix2vec(pixel3);
+
+    dth1 = 1.0 / ( 3.0 * nsidesq );
+    dth2 = 2.0 / ( 3.0 * nside );
+
+    /*
+     * determ = (v1 X v2) . v3 determines the left ( <0) or right (>0)
+     * handedness of the triangle
+     */
+
+    vec3 vt = crossprod(vv[0], vv[1]);
+    determ = dotprod(vt, vv[2]);
+
+    if(abs(determ) < 1.0e-20)
+        qDebug("error: the triangle is degenerated");
+
+    if(determ >= 0.)
+        sdet = 1.0;
+    else
+        sdet = -1.0;
+
+    sprod[0] = dotprod(vv[1], vv[2]);
+    sprod[1] = dotprod(vv[2], vv[0]);
+    sprod[2] = dotprod(vv[0], vv[1]);
+    /* vector ortogonal to the great circle containing the vertex doublet */
+
+    vo[0] = crossprod(vv[1], vv[2]);
+    vo[1] = crossprod(vv[2], vv[0]);
+    vo[2] = crossprod(vv[0], vv[1]);
+    vo[0].Normalize();
+    vo[1].Normalize();
+    vo[2].Normalize();
+
+    /* test presence of poles in the triangle */
+    zmax = -1.0;
+    zmin = 1.0;
+    test1 = ( vo[0].z * sdet >= 0.0 ); // north pole in hemisphere
+    // defined
+    // by
+    // 2-3
+    test2 = ( vo[1].z * sdet >= 0.0 ); // north pole in the hemisphere
+    // defined
+    // by 1-2
+    test3 = ( vo[2].z * sdet >= 0.0 ); // north pole in hemisphere
+    // defined
+    // by
+    // 1-3
+    if ( test1 && test2 && test3 )
+            zmax = 1.0; // north pole in the triangle
+    if ( ( !test1 ) && ( !test2 ) && ( !test3 ) )
+            zmin = -1.0; // south pole in the triangle
+    /* look for northenest and southernest points in the triangle */
+    // ! look for northernest and southernest points in the triangle
+    // ! node(1,2) = vector of norm=1, in the plane defined by (1,2) and
+    // with z=0
+
+    bool test1a = ((vv[2].z - sprod[0] * vv[1].z) >= 0.0); //
+    bool test1b = ((vv[1].z - sprod[0] * vv[2].z) >= 0.0);
+    bool test2a = ((vv[2].z - sprod[1] * vv[0].z) >= 0.0); //
+    bool test2b = ((vv[0].z - sprod[1] * vv[2].z) >= 0.0);
+    bool test3a = ((vv[1].z - sprod[2] * vv[0].z) >= 0.0); //
+    bool test3b = ((vv[0].z - sprod[2] * vv[1].z) >= 0.0);
+
+    /* sin of theta for orthogonal vector */
+    for ( int i = 0; i < 3; i++ ) {
+        sto[i] = sqrt(( 1.0 - vo[i].z ) * ( 1.0 + vo[i].z ));
+    }
+
+    /*
+     * for each segment ( side of the triangle ) the extrema are either -
+     * -the 2 vertices
+     * - one of the vertices and a point within the segment
+     */
+    z1max = vv[1].z;
+    z1min = vv[2].z;
+    double zz;
+
+    // segment 2-3
+    if ( test1a == test1b )
+    {
+        zz = sto[0];
+        if ( ( vv[1].z + vv[2].z ) >= 0.0 )
+        {
+            z1max = zz;
+        }
+        else
+        {
+            z1min = -zz;
+        }
+    }
+    // segment 1-3
+    z2max = vv[2].z;
+    z2min = vv[0].z;
+    if ( test2a == test2b )
+    {
+        zz = sto[1];
+        if ( ( vv[0].z + vv[2].z ) >= 0.0 )
+        {
+            z2max = zz;
+        }
+        else
+        {
+            z2min = -zz;
+        }
+    }
+    // segment 1-2
+    z3max = vv[0].z;
+    z3min = vv[1].z;
+    if ( test3a == test3b )
+    {
+        zz = sto[2];
+        if ( ( vv[0].z + vv[1].z ) >= 0.0 )
+        {
+            z3max = zz;
+        }
+        else
+        {
+            z3min = -zz;
+        }
+    }
+
+
+    zmax = std::max(std::max(z1max, z2max), std::max(z3max, zmax));
+    zmin = std::min(std::min(z1min, z2min), std::min(z3min, zmin));
+
+    offset = 0.0;
+    sin_off = 0.0;
+
+    irmin = ringNum(nside, zmax);
+    irmax = ringNum(nside, zmin);
+
+    /* loop on the rings */
+    for ( int i = 0; i < 3; i++ )
+    {
+        tgthi[i] = -1.0e30 * vo[i].z;
+        phi0i[i] = 0.0;
+    }
+    for ( int j = 0; j < 3; j++ )
+    {
+        if ( sto[j] > 1.0e-10 )
+        {
+            tgthi[j] = -vo[j].z / sto[j]; // - cotan(theta_orth)
+
+            phi0i[j] = atan2(vo[j].y, vo[j].x); // Should make
+            // it
+            // 0-2pi
+            // ?
+            /* Bring the phi0i to the [0,2pi] domain if need */
+
+            if ( phi0i[j] < 0.)
+            {
+                phi0i[j] = MODULO(( atan2(vo[j].y, vo[j].x) + M_PI2 ), M_PI2); // [0-2pi]
+            }
+        }
+    }
+
+    // ---------------------------------------
+
+    //MOD(ATAN2(X,Y) + TWOPI, TWOPI) : ATAN2 in 0-2pi
+    /*
+     * the triangle boundaries are geodesics: intersection of the sphere
+     * with plans going through (0,0,0) if we are inclusive, the boundaries
+     * are the intersection of the sphere with plains pushed outward by
+     * sin(offset)
+     */
+    bool found = false;
+    for ( iz = irmin; iz <= irmax; iz++ )
+    {
+        found = false;
+        if ( iz <= nside - 1 ) { // North polar cap
+            z = 1.0 - iz * iz * dth1;
+        } else if ( iz <= 3 * nside ) { // tropical band + equator
+            z = ( 2.0 * nside - iz ) * dth2;
+        } else {
+            z = -1.0 + ( 4.0 * nside - iz ) * ( 4.0 * nside - iz ) * dth1;
+        }
+
+        /* computes the 3 intervals described by the 3 great circles */
+        st = sqrt(( 1.0 - z ) * ( 1.0 + z ));
+        tgth = z / st; // cotan(theta_ring)
+        for ( int j = 0; j < 3; j++ )
+        {
+            dc[j] = tgthi[j] * tgth - sdet * sin_off / ( ( sto[j] + 1.0e-30 ) * st ) ;
+        }
+        for ( int k = 0; k < 3; k++ )
+        {
+            if ( dc[k] * sdet <= -1.0 ) { // the whole iso-latitude ring
+                // is on
+                // right side of the great circle
+                dom[k][0] = 0.0;
+                dom[k][1] = M_PI2;
+            } else if ( dc[k] * sdet >= 1.0 ) { // all on the wrong side
+                dom[k][0] = -1.000001 * ( k + 1 );
+                dom[k][1] = -1.0 * ( k + 1 );
+            } else { // some is good some is bad
+                phi_neg = phi0i[k] - ( acos(dc[k]) * sdet );
+                phi_pos = phi0i[k] + ( acos(dc[k]) * sdet );
+                //
+                 if ( phi_pos < 0. )
+                        phi_pos += M_PI2;
+                if ( phi_neg < 0. )
+                        phi_neg += M_PI2;
+                //
+                dom[k][0] = MODULO(phi_neg, M_PI2);
+                dom[k][1] = MODULO(phi_pos, M_PI2);
+            }
+        }
+
+        /* identify the intersections (0,1,2 or 3) of the 3 intervals */
+
+        int dom12length, dom123alength, dom123blength;
+
+        dom12length = 0;
+        intrs_intrv(dom12, dom[0], dom[1], dom12length);
+
+        n12 = dom12length / 2;
+        if ( n12 != 0 )
+        {
+            if ( n12 == 1 )
+            {
+                dom123alength = 0;
+                intrs_intrv(dom123a, dom[2], dom12, dom123alength);
+                n123a = dom123alength / 2;
+
+                if ( n123a == 0 )
+                    found = true;
+                if ( !found )
+                {
+                    for ( int l = 0; l < dom123alength; l++ )
+                    {
+                        alldom[l] = dom123a[l];
+                    }
+
+                    ndom = n123a; // 1 or 2
+                }
+            }
+            if ( !found )
+            {
+                if ( n12 == 2 )
+                {
+                    dom123alength = 0;
+                    dom123blength = 0;
+                    double tmp[] = { dom12[0], dom12[1] };
+                    intrs_intrv(dom123a, dom[2], tmp, dom123alength);
+                    double tmp1[] = { dom12[2], dom12[3] };
+                    intrs_intrv(dom123b, dom[2], tmp1, dom123blength);
+                    n123a = dom123alength / 2;
+                    n123b = dom123blength / 2;
+                    ndom = n123a + n123b; // 0, 1, 2 or 3
+
+                    if ( ndom == 0 )
+                        found = true;
+                    if ( !found )
+                    {
+                        if ( n123a != 0 )
+                        {
+                            for ( int l = 0; l < 2 * n123a; l++ )
+                            {
+                                alldom[l] = dom123a[l];
+                            }
+                        }
+                        if ( n123b != 0 )
+                        {
+                            for ( int l = 0; l < 2 * n123b; l++ )
+                            {
+                                int x = (int) ( l + 2 * n123a );
+                                alldom[x] = dom123b[l];
+                            }
+                        }
+                        if ( ndom > 3 )
+                        {
+                            qDebug("Error: too many intervals found");
+                        }
+                    }
+                }
+            }
+            if ( !found )
+            {
+                for ( idom = 0; idom < ndom; idom++ )
+                {
+                    a_i = alldom[(int) ( 2 * idom )];
+                    b_i = alldom[(int) ( 2 * idom + 1 )];
+                    phi0 = ( a_i + b_i ) * 0.5;
+                    dphiring = (b_i - a_i) * 0.5;
+                    if ( dphiring < 0.0 )
+                    {
+                        phi0 += M_PI;
+                        dphiring += M_PI;
+                    }
+                    /* finds pixels in the triangle on that ring */
+//						listir = inRing( iz, phi0, dphiring, do_nest);
+//						ArrayList<Long> listir2 = InRing(nside, iz, phi0, dphiring, do_nest);
+//						res.addAll(listir);
+
+
+                    std::set<int> aux;
+                    aux = inRing(iz, phi0, dphiring, nside);
+
+                    //qDebug() << "inRing(" << iz << "," << phi0 << "," << dphiring << ") - " << aux.size();
+
+                    if(do_nest)
+                    {
+                        std::set<int>::iterator it;
+                        long ipixNest;
+                        for(it=aux.begin(); it!=aux.end(); it++)
+                        {
+                            ring2nest(nside, *it, &ipixNest);
+                            result.insert(ipixNest);
+                        }
+                    }
+                    else
+                        result.insert(aux.begin(), aux.end());
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
+std::set<int> HealpixMap::query_polygon(std::vector<int> points, int nside)
+{
+    std::set<int> res;
+    std::vector<vec3> vectors;
+
+    int nv = points.size();
+
+    Healpix_Base* hp = new Healpix_Base(nside, NEST , SET_NSIDE);
+
+    for(int i=0; i<nv; i++)
+    {
+        vec3 v = hp->pix2vec(points.at(i));
+        vectors.push_back(v);
+    }
+
+    vec3 vp0, vp1, vp2, vo;
+    int p0, p1, p2;
+    double hand;
+    std::vector<double> ss;
+    ss.resize(nv);
+    long npix;
+    int ix = 0;
+    int n_remain, np, nm, nlow;
+
+    // Start polygon
+    for ( int k = 0; k < nv; k++ )
+        ss[k] = 0.;
+    /* -------------------------------------- */
+    n_remain = nv;
+    if ( n_remain < 3 )
+    {
+        qDebug(" Number of vertices should be >= 3");
+        return res;
+    }
+
+    /*---------------------------------------------------------------- */
+    /* Check that the poligon is convex or has only one concave vertex */
+    /*---------------------------------------------------------------- */
+    int i0 = 0;
+    int i2 = 0;
+    if ( n_remain > 3 )
+    {
+        // a triangle is always convex
+        for ( int i1 = 1; i1 <= n_remain - 1; i1++ )
+        {
+            // in [0,n_remain-1]
+            i0 = (int) MODULO(i1 - 1, n_remain);
+            i2 = (int) MODULO(i1 + 1, n_remain);
+            vp0 = vectors.at(i0); // select vertices by 3
+            // neighbour
+            vp1 = vectors.at(i1);
+            vp2 = vectors.at(i2);
+            // computes handedness (v0 x v2) . v1 for each vertex v1
+            vo = crossprod(vp0, vp2);
+            hand = dotprod(vo, vp1);
+            if ( hand >= 0. )
+                ss[i1] = 1.0;
+            else
+                ss[i1] = -1.0;
+        }
+        np = 0; // number of vert. with positive handedness
+        for ( int i = 0; i < nv; i++ )
+        {
+            if ( ss[i] > 0. )
+                np++;
+        }
+        nm = n_remain - np;
+
+        nlow = std::min(np, nm);
+
+        if ( nlow != 0 )
+        {
+            if ( nlow == 1 )
+            {
+                // only one concave vertex
+                if ( np == 1 )
+                {
+                    // ix index of the vertex in the list
+                    for ( int k = 0; k < nv - 1; k++ )
+                    {
+                        if ( abs(ss[k] - 1.0) <= 1.e-12 )
+                        {
+                            ix = k;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    for ( int k = 0; k < nv - 1; k++ )
+                    {
+                        if ( abs(ss[k] + 1.0) <= 1.e-12 )
+                        {
+                            ix = k;
+                            break;
+                        }
+                    }
+                }
+
+                // rotate pixel list to put that vertex in #0
+                int n_rot = vectors.size() - ix;
+                int ilast = vectors.size() - 1;
+                for ( int k = 0; k < n_rot; k++ )
+                {
+                    vec3 temp = vectors[ilast];
+                    int temppos = points[ilast];
+                    vectors.erase(vectors.begin()+ilast);
+                    points.erase(points.begin()+ilast);
+                    vectors.insert(vectors.begin(), temp);
+                    points.insert(points.begin(), temppos);
+                }
+            }
+            if ( nlow > 1 )
+            {
+                // more than 1concave vertex
+                qDebug(" The polygon has more than one concave vertex");
+            }
+        }
+    }
+    /* fill the poligon, one triangle at a time */
+    npix = (long) nside2npix(nside);
+    while ( n_remain >= 3 )
+    {
+        vp0 = vectors[0];
+        vp1 = vectors[n_remain - 2];
+        vp2 = vectors[n_remain - 1];
+
+        p0 = points[0];
+        p1 = points[n_remain - 2];
+        p2 = points[n_remain - 1];
+
+        /* find pixels within the triangle */
+        std::set<int> aux = query_triangle(p0, p1, p2, nside);
+
+        res.insert(aux.begin(), aux.end());
+        aux.clear();
+        n_remain--;
+    }
+
+    return res;
+}

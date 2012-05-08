@@ -75,6 +75,8 @@ public:
     void angle2pix(double theta, double phi, int nside, long &pix);
 
     std::set<int> query_disc(int pixel1, int pixel2, int nside);
+    std::set<int> query_triangle(int pixel1, int pixel2, int pixel3, int nside);
+    std::set<int> query_polygon(std::vector<int> points, int nside);
 
 private:
     QString path;
