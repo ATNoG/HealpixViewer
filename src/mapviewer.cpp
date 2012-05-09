@@ -30,10 +30,7 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     this->pvectorsNsideFactor = PVECTORS_NSIDE_FACTOR;
     this->tesselationNside = TESSELATION_DEFAULT_NSIDE;
 
-    //selectionType = SINGLE_POINT;
-    //selectionType = DISC;
-    selectionType = TRIANGLE;
-    //selectionType = POLYGON;
+    selectionType = SINGLE_POINT;
     firstPix = -1;
     secondPix = -1;
 }
@@ -61,33 +58,21 @@ void MapViewer::draw()
 {
     if(initialized)
     {
-
-        // Save the current model view matrix (not needed here in fact)
-        //glPushMatrix();
-
         // Multiply matrix to get in the frame coordinate system.
-
-        /*
-        glPushMatrix();
-        glTranslatef(0.0, 1.4, -0.9);
-        glMultMatrixd(manipulatedFrame()->matrix());
-        drawAxis(0.2);
-        glPopMatrix();
-        */
-
         glMultMatrixd(manipulatedFrame()->matrix());
 
+        /* draw map */
         tesselation->draw();
-
-        // Restore the original (world) coordinate system
-        //glPopMatrix();
-
-        int zoom = floor(fabs(cameraPosition-maxCameraX)*100);
 
         if(displayInfo)
         {
+            int zoom = floor(fabs(cameraPosition-maxCameraX)*100);
             glDisable(GL_TEXTURE_2D);
+
             glClientActiveTexture(GL_TEXTURE0);
+            glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+            glDisableClientState(GL_VERTEX_ARRAY);
+
             glColor3f(1.0, 1.0, 1.0);
             drawText(10, 12, QString("Nside: %1").arg(currentNside), QFont("Arial", 9));
             drawText(10, 22, QString("Zoom: %1").arg(zoom), QFont("Arial", 9));
@@ -97,7 +82,6 @@ void MapViewer::draw()
         }
     }
 }
-
 
 bool MapViewer::loadMap(QString fitsfile)
 {
@@ -342,11 +326,21 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
         case Qt::Key_Enter:
             if(selectionType == POLYGON)
             {
-                selectedPixels = healpixMap->query_polygon(polygonPixels, currentNside);
-                polygonPixels.clear();
-                highlightSelectedArea();
-                update();
+                if(polygonPixels.size() >= 3)
+                {
+                    selectedPixels = healpixMap->query_polygon(polygonPixels, currentNside);
+                    polygonPixels.clear();
+                    highlightSelectedArea();
+                    update();
+                }
+                else
+                {
+                    QMessageBox msgBox;
+                    msgBox.setText("At least 3 vertices should be picked before close the polygon");
+                    msgBox.exec();
+                }
             }
+            break;
     }
 }
 

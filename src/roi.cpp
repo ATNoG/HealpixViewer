@@ -19,7 +19,7 @@ void ROIManager::addPoints(std::set<int> pixelIndexes, int nside)
     set<int>::iterator it;
     for(it=pixelIndexes.begin(); it!=pixelIndexes.end(); it++)
     {
-        /* use LUT */
+        // use LUT
         long texturepos = lut->at(*it);
         int face = texturepos / pixelsPerFace;
         long pos = texturepos % pixelsPerFace;
@@ -134,7 +134,7 @@ void ROI::draw()
 
     glActiveTexture(GL_TEXTURE1);
     glEnable(GL_TEXTURE_2D);
-    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    //glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glBindTexture(GL_TEXTURE_2D, textureId);
 
     pixelSetChanged = false;

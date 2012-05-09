@@ -121,18 +121,22 @@ void Tesselation::draw()
     for(int i=0; i<totalFaces; i++)
     {
         face = faceCache->getFace(facesv[i], tesselationNside, mollview);
+
         bool hasROI = manager->hasROI(facesv[i]);
 
         /* display texture */
         if(DISPLAY_TEXTURE)
         {
+            /*
             if(hasROI)
             {
                 glEnable(GL_BLEND);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             }
+            */
 
             texture = textureCache->getFace(facesv[i], textureNside);
+
             texture->draw();
 
             if(hasROI)
@@ -158,6 +162,7 @@ void Tesselation::draw()
             polVectors = (PolarizationVectors*)overlayCache->getFace(facesv[i], vectorsNside, mollview, MapOverlay::POLARIZATION_VECTORS);
             polVectors->draw();
         }
+
     }
 
 
@@ -219,6 +224,5 @@ void Tesselation::selectPixels(std::set<int> pixelIndexes)
 
 void Tesselation::clearROI()
 {
-    qDebug() << "CLEAR!";
     manager->clear();
 }

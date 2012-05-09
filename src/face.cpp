@@ -140,12 +140,12 @@ void Face::draw()
         textureBuffer->bind();
 
         glClientActiveTexture(GL_TEXTURE0);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glTexCoordPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
-        glDisableClientState(GL_TEXTURE0);
 
         glClientActiveTexture(GL_TEXTURE1);
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
         glTexCoordPointer(2, GL_FLOAT, 0, BUFFER_OFFSET(0));
-        glDisableClientState(GL_TEXTURE1);
 
         if(!(mollweide && faceNumber==6))
         {

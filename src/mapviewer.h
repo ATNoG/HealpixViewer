@@ -10,6 +10,7 @@
 #include <QtConcurrentRun>
 #include <QGLBuffer>
 #include <QFileDialog>
+#include <QDialog>
 #include <math.h>
 #include "healpixmap.h"
 #include "tesselation.h"
