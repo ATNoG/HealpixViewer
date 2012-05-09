@@ -155,6 +155,7 @@ private:
     void sceneUpdated(bool update=true);
     void changeProjectionConstraints();
     void updateMouseSensitivity();
+    void highlightSelectedArea();
 
     SelectionType selectionType;
     int firstPix, secondPix;

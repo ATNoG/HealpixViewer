@@ -339,6 +339,14 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
             selectedPixels.clear();
             updateGL();
             break;
+        case Qt::Key_Enter:
+            if(selectionType == POLYGON)
+            {
+                selectedPixels = healpixMap->query_polygon(polygonPixels, currentNside);
+                polygonPixels.clear();
+                highlightSelectedArea();
+                update();
+            }
     }
 }
 
@@ -512,36 +520,20 @@ void MapViewer::postSelection (const QPoint &point)
             case POLYGON:
                 /* check if shape is closed */
                 std::vector<int>::iterator it;
-                bool draw = false;
-                for(it=polygonPixels.begin(); it!=polygonPixels.end(); it++)
-                {
-                    if((*it) == pix)
-                        draw = true;
-                }
-                if(!draw)
-                {
-                    polygonPixels.push_back(pix);
-                    selectedPixels.insert(pix);
-                }
-                else
-                {
-                    selectedPixels = healpixMap->query_polygon(polygonPixels, currentNside);
-                    polygonPixels.clear();
-                }
+                polygonPixels.push_back(pix);
+                selectedPixels.insert(pix);
                 break;
         }
 
-        std::set<int>::iterator it;
-        /*
-        for(it=selectedPixels.begin(); it!=selectedPixels.end(); it++)
-            qDebug() << *it;*/
-        qDebug() << "Total selected pixels = " << selectedPixels.size();
-
-        tesselation->selectPixels(selectedPixels);
+        highlightSelectedArea();
     }
 
 }
 
+void MapViewer::highlightSelectedArea()
+{
+    tesselation->selectPixels(selectedPixels);
+}
 
 void MapViewer::mouseMoveEvent(QMouseEvent* e)
 {
