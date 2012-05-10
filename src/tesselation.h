@@ -61,6 +61,7 @@ public:
     void changeToMollweide();
 
     void selectPixels(std::set<int> pixelIndexes);
+    void unselectPixels(std::set<int> pixelIndexes);
     void clearROI();
 
 private:

@@ -222,6 +222,11 @@ void Tesselation::selectPixels(std::set<int> pixelIndexes)
     manager->addPoints(pixelIndexes, this->textureNside);
 }
 
+void Tesselation::unselectPixels(std::set<int> pixelIndexes)
+{
+    manager->removePoints(pixelIndexes, this->textureNside);
+}
+
 void Tesselation::clearROI()
 {
     manager->clear();

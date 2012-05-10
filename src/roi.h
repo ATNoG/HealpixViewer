@@ -23,6 +23,7 @@ class ROI
         void build();
         void unbind();
         void addPoint(long pos);
+        void removePoint(long pos);
 
     private:
         int nside;
@@ -44,6 +45,7 @@ class ROIManager
         ROIManager();
         ~ROIManager();
         void addPoints(std::set<int> pixelIndexes, int nside);
+        void removePoints(std::set<int> pixelIndexes, int nside);
         ROI* getFaceROI(int face);
         bool hasROI(int face);
         void clear();

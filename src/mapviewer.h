@@ -156,12 +156,15 @@ private:
     void sceneUpdated(bool update=true);
     void changeProjectionConstraints();
     void updateMouseSensitivity();
-    void highlightSelectedArea();
+    void addPixelsToSelection(std::set<int>);
+    void removePixelsFromSelection(std::set<int>);
     void changeSelectionType(SelectionType);
+    int calculatePixelIndex(const QPoint &point);
 
     SelectionType selectionType;
     int firstPix, secondPix;
     std::vector<int> polygonPixels;
+    bool unselectSelection;
 
     QMap<int, QVector<Vec> > faceBoundaries;
     QVector<int> visibleFaces;

@@ -42,6 +42,31 @@ void ROIManager::addPoints(std::set<int> pixelIndexes, int nside)
     pixelIndexes.clear();
 }
 
+void ROIManager::removePoints(std::set<int> pixelIndexes, int nside)
+{
+    long pixelsPerFace = nside2npix(nside)/12;
+    PixelLUT *lut = lut_cache->getLut(nside);
+
+    set<int>::iterator it;
+    for(it=pixelIndexes.begin(); it!=pixelIndexes.end(); it++)
+    {
+        // use LUT
+        long texturepos = lut->at(*it);
+        int face = texturepos / pixelsPerFace;
+        long pos = texturepos % pixelsPerFace;
+
+        ROI* roi;
+
+        if(faceROI.contains(face))
+        {
+            roi = faceROI[face];
+            roi->removePoint(pos);
+        }
+    }
+
+    pixelIndexes.clear();
+}
+
 ROI* ROIManager::getFaceROI(int face)
 {
     if(hasROI(face))
@@ -93,6 +118,12 @@ ROI::~ROI()
 void ROI::addPoint(long pos)
 {
     mask[pos] = 100;
+    pixelSetChanged = true;
+}
+
+void ROI::removePoint(long pos)
+{
+    mask[pos] = 255;
     pixelSetChanged = true;
 }
 

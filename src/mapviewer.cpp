@@ -33,6 +33,8 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     selectionType = SINGLE_POINT;
     firstPix = -1;
     secondPix = -1;
+
+    unselectSelection = false;
 }
 
 MapViewer::~MapViewer()
@@ -328,10 +330,17 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
             {
                 if(polygonPixels.size() >= 3)
                 {
-                    selectedPixels = healpixMap->query_polygon(polygonPixels, currentNside);
+                    displayMessage("Calculating polygon", 10000);
+                    std::set<int> pixels = healpixMap->query_polygon(polygonPixels, currentNside);
                     polygonPixels.clear();
-                    highlightSelectedArea();
+
+                    if(!unselectSelection)
+                        addPixelsToSelection(pixels);
+                    else
+                        removePixelsFromSelection(pixels);
+
                     update();
+                    displayMessage("", 0);
                 }
                 else
                 {
@@ -347,6 +356,13 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
             setSnapshotQuality(100);
             grabFrameBuffer();
             saveSnapshot();
+            break;
+        case Qt::Key_E:
+            if(unselectSelection)
+                displayMessage("Selection enabled");
+            else
+                displayMessage("Unselection enabled");
+            unselectSelection = !unselectSelection;
     }
 }
 
@@ -440,14 +456,12 @@ void MapViewer::mouseReleaseEvent(QMouseEvent *e)
     preloadFaces();
 }
 
-
-void MapViewer::postSelection (const QPoint &point)
+int MapViewer::calculatePixelIndex(const QPoint &point)
 {
-    //qDebug() << "Clicked point " << point.x() << "," << point.y();
     Vec d, v, o;
     camera()->convertClickToLine(point, o, d);
 
-    int pix;
+    int pix = -1;
     long p;
 
     if(!mollweide)
@@ -459,21 +473,25 @@ void MapViewer::postSelection (const QPoint &point)
         od = o * d;
         dd = d * d;
         sqrtterm = (od * od) - (dd * (oo - srad2));
-        if (sqrtterm < 0) qDebug("error");
-        t1 = (-od - sqrt(sqrtterm))/(dd);
-        t2 = (-od + sqrt(sqrtterm))/(dd);
-        t = (t1 < t2) ? t1 : t2;
-        v = o + t*d;
+        if (sqrtterm < 0)
+            qDebug("error calculating selected pixel");
+        else
+        {
+            t1 = (-od - sqrt(sqrtterm))/(dd);
+            t2 = (-od + sqrt(sqrtterm))/(dd);
+            t = (t1 < t2) ? t1 : t2;
+            v = o + t*d;
 
-        Vec r = manipulatedFrame()->coordinatesOf(v);
+            Vec r = manipulatedFrame()->coordinatesOf(v);
 
-        double lambda, phi;
-        phi    = acos(r.z);
-        lambda = atan2(r.y, r.x);
+            double lambda, phi;
+            phi    = acos(r.z);
+            lambda = atan2(r.y, r.x);
 
-        healpixMap->angle2pix(phi, lambda, currentNside, p);
+            healpixMap->angle2pix(phi, lambda, currentNside, p);
 
-        pix = int(p);
+            pix = int(p);
+        }
     }
     else
     {
@@ -496,32 +514,42 @@ void MapViewer::postSelection (const QPoint &point)
         v[1] = sz*sin(phi);
         v[2] = z;
         vec2pix_nest(currentNside, v, &p);
+
+        pix = int(p);
     }
 
-    pix = int(p);
+    return pix;
+}
 
+
+void MapViewer::postSelection (const QPoint &point)
+{
+    int pix = calculatePixelIndex(point);
+
+    std::set<int> pixels;
 
     if(pix>=0)
     {
-        // TODO: verify if is a good selection        
+        // TODO: verify if is a good selection
         switch(selectionType)
         {
             case SINGLE_POINT:
-                selectedPixels.insert(pix);
+                pixels.insert(pix);
                 break;
 
             case DISC:
                 if(firstPix==-1)
                 {
                     firstPix = pix;
-                    selectedPixels.clear();
-                    selectedPixels.insert(pix);
+                    pixels.insert(pix);
                     displayMessage("Select second point");
                 }
                 else
                 {
-                    selectedPixels = healpixMap->query_disc(firstPix, pix, currentNside);
+                    displayMessage("Calculating disc", 10000);
+                    pixels = healpixMap->query_disc(firstPix, pix, currentNside);
                     firstPix = -1;
+                    displayMessage("", 0);
                 }
                 break;
 
@@ -529,24 +557,23 @@ void MapViewer::postSelection (const QPoint &point)
                 if(firstPix==-1)
                 {
                     firstPix = pix;
-                    selectedPixels.clear();
-                    selectedPixels.insert(pix);
+                    pixels.insert(pix);
                     displayMessage("Select second point");
                 }
                 else if(secondPix==-1)
                 {
                     secondPix = pix;
-                    selectedPixels.clear();
-                    selectedPixels.insert(firstPix);
-                    selectedPixels.insert(pix);
+                    pixels.insert(pix);
                     displayMessage("Select last point");
                 }
                 else
                 {
                     //qDebug() << "query_triangle(" << firstPix << "," << secondPix << "," << pix << ")";
-                    selectedPixels = healpixMap->query_triangle(firstPix, secondPix, pix, currentNside);
+                    displayMessage("Calculating triangle", 10000);
+                    pixels = healpixMap->query_triangle(firstPix, secondPix, pix, currentNside);
                     firstPix = -1;
                     secondPix = -1;
+                    displayMessage("", 0);
                 }
                 break;
 
@@ -554,7 +581,7 @@ void MapViewer::postSelection (const QPoint &point)
                 /* check if shape is closed */
                 std::vector<int>::iterator it;
                 polygonPixels.push_back(pix);
-                selectedPixels.insert(pix);
+                pixels.insert(pix);
                 if(polygonPixels.size()>=3)
                     displayMessage("Select another point or <enter> to close the polygon");
                 else
@@ -562,14 +589,26 @@ void MapViewer::postSelection (const QPoint &point)
                 break;
         }
 
-        highlightSelectedArea();
+        if(!unselectSelection)
+            addPixelsToSelection(pixels);
+        else
+            removePixelsFromSelection(pixels);
     }
+    else
+        displayMessage("Invalid point");
 
 }
 
-void MapViewer::highlightSelectedArea()
+void MapViewer::addPixelsToSelection(std::set<int> pixels)
 {
-    tesselation->selectPixels(selectedPixels);
+    tesselation->selectPixels(pixels);
+    pixels.clear();
+}
+
+void MapViewer::removePixelsFromSelection(std::set<int> pixels)
+{
+    tesselation->unselectPixels(pixels);
+    pixels.clear();
 }
 
 void MapViewer::changeSelectionType(SelectionType stype)
