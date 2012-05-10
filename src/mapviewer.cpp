@@ -306,16 +306,16 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
             updateVectorsNside(max(currentVectorsNside/2, MIN_NSIDE), true);
             break;
         case Qt::Key_S:
-            selectionType = SINGLE_POINT;
+            changeSelectionType(SINGLE_POINT);
             break;
         case Qt::Key_D:
-            selectionType = DISC;
+            changeSelectionType(DISC);
             break;
         case Qt::Key_T:
-            selectionType = TRIANGLE;
+            changeSelectionType(TRIANGLE);
             break;
         case Qt::Key_P:
-            selectionType = POLYGON;
+            changeSelectionType(POLYGON);
             break;
         case Qt::Key_C:
             tesselation->clearROI();
@@ -341,6 +341,12 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
                 }
             }
             break;
+        case Qt::Key_Q:
+            qDebug("Save snapshot");
+            setSnapshotFormat("PNG");
+            setSnapshotQuality(100);
+            grabFrameBuffer();
+            saveSnapshot();
     }
 }
 
@@ -437,33 +443,63 @@ void MapViewer::mouseReleaseEvent(QMouseEvent *e)
 
 void MapViewer::postSelection (const QPoint &point)
 {
+    //qDebug() << "Clicked point " << point.x() << "," << point.y();
     Vec d, v, o;
     camera()->convertClickToLine(point, o, d);
 
-    const float srad2 = 1.;						// Radius^2 of the 3D sphere.
-
-    float sqrtterm, t1, t2, oo, od, dd, t;
-    oo = o * o;
-    od = o * d;
-    dd = d * d;
-    sqrtterm = (od * od) - (dd * (oo - srad2));
-    if (sqrtterm < 0) qDebug("error");
-    t1 = (-od - sqrt(sqrtterm))/(dd);
-    t2 = (-od + sqrt(sqrtterm))/(dd);
-    t = (t1 < t2) ? t1 : t2;
-    v = o + t*d;
-
-    Vec r = manipulatedFrame()->coordinatesOf(v);
-
-    double lambda, phi;
-    phi    = acos(r.z);
-    lambda = atan2(r.y, r.x);
-
     int pix;
     long p;
-    healpixMap->angle2pix(phi, lambda, currentNside, p);
+
+    if(!mollweide)
+    {
+        const float srad2 = 1.;						// Radius^2 of the 3D sphere.
+
+        float sqrtterm, t1, t2, oo, od, dd, t;
+        oo = o * o;
+        od = o * d;
+        dd = d * d;
+        sqrtterm = (od * od) - (dd * (oo - srad2));
+        if (sqrtterm < 0) qDebug("error");
+        t1 = (-od - sqrt(sqrtterm))/(dd);
+        t2 = (-od + sqrt(sqrtterm))/(dd);
+        t = (t1 < t2) ? t1 : t2;
+        v = o + t*d;
+
+        Vec r = manipulatedFrame()->coordinatesOf(v);
+
+        double lambda, phi;
+        phi    = acos(r.z);
+        lambda = atan2(r.y, r.x);
+
+        healpixMap->angle2pix(phi, lambda, currentNside, p);
+
+        pix = int(p);
+    }
+    else
+    {
+        bool found;
+        Vec k = camera()->pointUnderPixel(point, found);
+        Vec r = manipulatedFrame()->coordinatesOf(k);
+
+        double v1, u1, s1, a1, z, phi, sz;
+        v1 = r.z;
+        u1 = r.y;
+        s1 = sqrt((1.-v1)*(1.+v1));
+        a1 = asin(v1);
+
+        z = 2. / M_PI * (a1+v1*s1);
+        phi = (M_PI/2.) * u1/s1;
+        sz = sqrt((1.-z)*(1.+z));
+
+        double *v = new double[3];
+        v[0] = sz*cos(phi);
+        v[1] = sz*sin(phi);
+        v[2] = z;
+        vec2pix_nest(currentNside, v, &p);
+    }
 
     pix = int(p);
+
 
     if(pix>=0)
     {
@@ -480,6 +516,7 @@ void MapViewer::postSelection (const QPoint &point)
                     firstPix = pix;
                     selectedPixels.clear();
                     selectedPixels.insert(pix);
+                    displayMessage("Select second point");
                 }
                 else
                 {
@@ -494,6 +531,7 @@ void MapViewer::postSelection (const QPoint &point)
                     firstPix = pix;
                     selectedPixels.clear();
                     selectedPixels.insert(pix);
+                    displayMessage("Select second point");
                 }
                 else if(secondPix==-1)
                 {
@@ -501,10 +539,11 @@ void MapViewer::postSelection (const QPoint &point)
                     selectedPixels.clear();
                     selectedPixels.insert(firstPix);
                     selectedPixels.insert(pix);
+                    displayMessage("Select last point");
                 }
                 else
                 {
-                    qDebug() << "query_triangle(" << firstPix << "," << secondPix << "," << pix << ")";
+                    //qDebug() << "query_triangle(" << firstPix << "," << secondPix << "," << pix << ")";
                     selectedPixels = healpixMap->query_triangle(firstPix, secondPix, pix, currentNside);
                     firstPix = -1;
                     secondPix = -1;
@@ -516,6 +555,10 @@ void MapViewer::postSelection (const QPoint &point)
                 std::vector<int>::iterator it;
                 polygonPixels.push_back(pix);
                 selectedPixels.insert(pix);
+                if(polygonPixels.size()>=3)
+                    displayMessage("Select another point or <enter> to close the polygon");
+                else
+                    displayMessage("Select another point");
                 break;
         }
 
@@ -527,6 +570,41 @@ void MapViewer::postSelection (const QPoint &point)
 void MapViewer::highlightSelectedArea()
 {
     tesselation->selectPixels(selectedPixels);
+}
+
+void MapViewer::changeSelectionType(SelectionType stype)
+{
+    selectionType = stype;
+
+    /* clear status */
+    switch(selectionType)
+    {
+        case DISC:
+            firstPix = -1;
+            break;
+        case TRIANGLE:
+            firstPix = secondPix = -1;
+            break;
+        case POLYGON:
+            polygonPixels.clear();
+            break;
+    }
+
+    switch(stype)
+    {
+        case SINGLE_POINT:
+            displayMessage("Selection changed to single point");
+            break;
+        case DISC:
+            displayMessage("Selection changed to disc");
+            break;
+        case TRIANGLE:
+            displayMessage("Selection changed to triangle");
+            break;
+        case POLYGON:
+            displayMessage("Selection changed to polygon");
+            break;
+    }
 }
 
 void MapViewer::mouseMoveEvent(QMouseEvent* e)

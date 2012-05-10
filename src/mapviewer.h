@@ -157,6 +157,7 @@ private:
     void changeProjectionConstraints();
     void updateMouseSensitivity();
     void highlightSelectedArea();
+    void changeSelectionType(SelectionType);
 
     SelectionType selectionType;
     int firstPix, secondPix;

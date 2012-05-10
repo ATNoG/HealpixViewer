@@ -18,7 +18,7 @@
 
 
 #define CAMERA_3D_MAX_X 1.02
-#define CAMERA_MOLL_MAX_X 0.02
+#define CAMERA_MOLL_MAX_X 0.03
 
 // mapviewer
 #define MIN_NSIDE 64
