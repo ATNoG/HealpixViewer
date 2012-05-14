@@ -18,6 +18,14 @@
 #include "maploader.h"
 #include "configs.h"
 
+#include <fitsio2.h>
+#include <healpix_base.h>
+#include <healpix_map.h>
+#include <healpix_map_fitsio.h>
+#include <fitshandle.h>
+#include <cxxutils.h>
+
+
 
 using namespace qglviewer;
 
@@ -54,6 +62,7 @@ struct mapInfo
     double maxMag;
     bool hasPolarization;
     ColorMap *colorMap;
+    QColor sentinelColor;
 };
 
 class MapViewport;
@@ -76,7 +85,7 @@ public:
     void showPolarizationVectors(bool show=true);
     void showGrid(bool show=true);
 
-    void updateThreshold(ColorMap* colorMap, float min, float max);
+    void updateThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor);
     void changeMapField(HealpixMap::MapType field);
     void applyOptions(mapOptions *options);
 
@@ -160,6 +169,8 @@ private:
     void removePixelsFromSelection(std::set<int>);
     void changeSelectionType(SelectionType);
     int calculatePixelIndex(const QPoint &point);
+
+    void exportSelectedArea();
 
     SelectionType selectionType;
     int firstPix, secondPix;

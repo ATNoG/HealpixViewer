@@ -317,10 +317,10 @@ void MapViewport::showPolarizationVectors(bool show)
 }
 
 
-void MapViewport::updateThreshold(ColorMap* colorMap, float min, float max)
+void MapViewport::updateThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor)
 {
     //qDebug() << "Updating threshold from " << title << " to " << min << "," << max;
-    mapviewer->updateThreshold(colorMap, min, max);
+    mapviewer->updateThreshold(colorMap, min, max, sentinelColor);
 }
 
 

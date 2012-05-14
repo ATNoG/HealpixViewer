@@ -363,6 +363,10 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
             else
                 displayMessage("Unselection enabled");
             unselectSelection = !unselectSelection;
+            break;
+        case Qt::Key_O:
+            exportSelectedArea();
+            break;
     }
 }
 
@@ -601,14 +605,67 @@ void MapViewer::postSelection (const QPoint &point)
 
 void MapViewer::addPixelsToSelection(std::set<int> pixels)
 {
+    selectedPixels.insert(pixels.begin(), pixels.end());
     tesselation->selectPixels(pixels);
     pixels.clear();
 }
 
 void MapViewer::removePixelsFromSelection(std::set<int> pixels)
 {
+    std::set<int>::iterator it;
+    for(it=pixels.begin(); it!=pixels.end(); it++)
+        selectedPixels.erase(*it);
     tesselation->unselectPixels(pixels);
     pixels.clear();
+}
+
+void MapViewer::exportSelectedArea()
+{
+    qDebug() << "Total pixels: " << selectedPixels.size();
+
+    string infile = "wmap_imap_r10_yr1_K1_v4.fits";
+    string outfile = "!teste1.fits";
+
+    Healpix_Map<float> inmap;
+    read_Healpix_map_from_fits(infile,inmap,1,2);
+
+    Healpix_Map<float> newMap(inmap.Nside(), inmap.Scheme(), nside_dummy());
+    //newMap.Import(inmap, false);
+    newMap.fill(Healpix_undef);
+
+
+    std::set<int>::iterator it;
+    for(it=selectedPixels.begin(); it!=selectedPixels.end(); it++)
+    {
+        //qDebug() << "inmap[" << *it << "] = " << inmap[*it];
+        newMap[*it] = inmap[*it];
+    }
+
+
+    write_Healpix_map_to_fits(outfile, newMap, planckType<float>());
+
+
+    /*
+    string infile = "wmap_imap_r10_yr1_K1_v4.fits";
+    string outfile = "!teste1.fits";
+
+    Healpix_Map<float> inmap;
+    read_Healpix_map_from_fits(infile,inmap,1,2);
+    Healpix_Map<float> outmap (inmap.Nside(), inmap.Scheme(), nside_dummy());
+
+    //outmap.Import(inmap, false);
+    write_Healpix_map_to_fits (outfile,outmap,planckType<float>());
+    */
+
+    /*
+    Healpix_Map<float> inmap;
+    read_Healpix_map_from_fits("wmap_imap_r10_yr1_K1_v4.fits",inmap,1,2);
+
+    Healpix_Map<float> outmap;
+    outmap.Set(inmap.Order(), inmap.Scheme());
+    write_Healpix_map_to_fits ("!teste.fits",outmap,PLANCK_FLOAT32);
+
+    */
 }
 
 void MapViewer::changeSelectionType(SelectionType stype)
@@ -1089,9 +1146,9 @@ void MapViewer::showPolarizationVectors(bool show)
 }
 
 
-void MapViewer::updateThreshold(ColorMap* colorMap, float min, float max)
+void MapViewer::updateThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor)
 {
-    tesselation->updateTextureThreshold(colorMap, min, max);
+    tesselation->updateTextureThreshold(colorMap, min, max, sentinelColor);
 
     /* force redraw */
     updateGL();
@@ -1126,6 +1183,7 @@ mapInfo* MapViewer::getMapInfo()
     info->availableFields = healpixMap->getAvailableMaps();
     info->hasPolarization = healpixMap->hasPolarization();
     info->colorMap = ColorMapManager::instance()->getDefaultColorMap();
+    info->sentinelColor = QColor(DEFAULT_SENTINEL_COLOR);
     info->minNside = MIN_NSIDE;
     info->maxNside = maxNside;
 

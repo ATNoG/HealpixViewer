@@ -8,6 +8,7 @@
 #include "histogramviewer.h"
 #include "mapviewer.h"
 #include "colormap.h"
+#include "configs.h"
 
 
 namespace Ui {
@@ -40,9 +41,11 @@ private slots:
     void updateMap();
     /* called when colormap selector changes */
     void colorMapUpdate(int idx);
+    /* update the color used to sentinel pixels */
+    void sentinelColorUpdate();
 
 signals:
-    void histogramUpdated(ColorMap* colorMap, float min, float max);
+    void histogramUpdated(ColorMap* colorMap, float min, float max, QColor sentinelColor);
 
 private:
     Ui::HistogramWidget *ui;
@@ -56,6 +59,7 @@ private:
 
     void fillColorMaps();
     void updateColorMap(ColorMap* cm);
+    void updateSentinelColor(QColor color);
     void updateColorMapSelector(ColorMap *colorMap);
 
     ColorMap* getSelectedColorMap();
@@ -63,6 +67,7 @@ private:
     /* called when a single map is selected */
     void setThresholds(float min, float max);
 
+    QColor currentSentinelColor;
     QMap<int, mapInfo*> mapsInformation;
     QList<int> selectedViewports;
 };

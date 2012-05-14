@@ -232,6 +232,8 @@
      </property>
      <addaction name="actionSingleSelection"/>
      <addaction name="actionDiscSelection"/>
+     <addaction name="actionTriangleSelection"/>
+     <addaction name="actionPolygonSelection"/>
     </widget>
     <addaction name="actionSelectAllViewports"/>
     <addaction name="actionClearViewportSelection"/>
@@ -537,7 +539,17 @@
   </action>
   <action name="actionDiscSelection">
    <property name="text">
-    <string>Disc Selection</string>
+    <string>Disc</string>
+   </property>
+  </action>
+  <action name="actionTriangleSelection">
+   <property name="text">
+    <string>Triangle</string>
+   </property>
+  </action>
+  <action name="actionPolygonSelection">
+   <property name="text">
+    <string>Polygon</string>
    </property>
   </action>
  </widget>

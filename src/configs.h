@@ -55,7 +55,7 @@
 #define DEFAULT_VIEW_3D true
 #define FIT_CONTENT_RESIZE true
 
-
+#define DEFAULT_SENTINEL_COLOR "#c3c3c3"
 
 // viewportManager
 // max number of viewports open

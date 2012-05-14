@@ -30,7 +30,7 @@ public slots:
     /* called when open button pressed */
     void openFiles();
     /* called when threshold updated in histogramWidget */
-    void updateThresholds(ColorMap* colorMap, float min, float max);
+    void updateThresholds(ColorMap* colorMap, float min, float max, QColor sentinelColor);
     //void updateColorTable()
     void viewportSelectionChanged(int viewportId, bool selected);
     /* apply map options */

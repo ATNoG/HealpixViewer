@@ -32,7 +32,7 @@ public:
     bool isSynchronized();
     bool isMollweide();
 
-    void updateThreshold(ColorMap* colorMap, float min, float max);
+    void updateThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor);
     void setWorkspace(WorkSpace *workspace);
 
     mapInfo* getMapInfo();

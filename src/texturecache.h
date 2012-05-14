@@ -42,7 +42,7 @@ public:
     /* discard old faces on cache */
     bool cleanCache(int minSpace=0);
 
-    void updateTextureThreshold(ColorMap* colorMap, float min, float max);
+    void updateTextureThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor);
     void changeMapField(HealpixMap::MapType field);
 
     void getTextureMinMax(float &min, float &max);
@@ -90,6 +90,7 @@ private:
 
     float minTex, maxTex;
     ColorMap* colorMap;
+    QColor sentinelColor;
 };
 
 #endif // TEXTURECACHE_H

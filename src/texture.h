@@ -5,6 +5,8 @@
 #include <QDebug>
 #include "colormap.h"
 #include <chealpix.h>
+#include <healpix_map.h>
+#include "configs.h"
 
 using namespace std;
 
@@ -12,7 +14,7 @@ class Texture
 {
 public:
     Texture(int faceNumber, int nside);
-    Texture(int faceNumber, int nside, ColorMap* colorMap);
+    Texture(int faceNumber, int nside, ColorMap* colorMap, QColor sentinelColor);
     ~Texture();
 
     void draw();
@@ -26,6 +28,7 @@ private:
     unsigned char* texture;
     GLuint textureId;
     ColorMap *colorMap;
+    QColor sentinelColor;
 
     bool created;
 

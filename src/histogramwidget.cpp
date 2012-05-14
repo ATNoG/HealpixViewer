@@ -9,11 +9,18 @@ HistogramWidget::HistogramWidget(QWidget *parent) :
 
     histogram = NULL;
 
+    /* udpate default sentinel pixel color */
+    currentSentinelColor = QColor(DEFAULT_SENTINEL_COLOR);
+    QStyle* style = new QWindowsStyle;
+    ui->selectSentinelColor->setStyle(style);
+    ui->selectSentinelColor->setPalette(QPalette(currentSentinelColor));
+
     /* connect spinboxs and apply button */
     connect(ui->lowerThreshold, SIGNAL(valueChanged(double)), this, SLOT(updateLowerThreshold(double)));
     connect(ui->higherThreshold, SIGNAL(valueChanged(double)), this, SLOT(updateHigherThreshold(double)));
     connect(ui->applyHistogram, SIGNAL(released()), this, SLOT(updateMap()));
     connect(ui->colorMapSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(colorMapUpdate(int)));
+    connect(ui->selectSentinelColor, SIGNAL(released()), this, SLOT(sentinelColorUpdate()));
 
     fillColorMaps();
 }
@@ -41,6 +48,16 @@ void HistogramWidget::colorMapUpdate(int)
     updateColorMap(currentColorMap);
 }
 
+void HistogramWidget::sentinelColorUpdate()
+{
+    QColor selectedColor = QColorDialog::getColor(currentSentinelColor);
+    if(selectedColor.isValid())
+    {
+        currentSentinelColor = selectedColor;
+        ui->selectSentinelColor->setPalette(QPalette(currentSentinelColor));
+    }
+}
+
 /* called when lower threshold spinbox changes */
 void HistogramWidget::updateLowerThreshold(double value)
 {
@@ -66,10 +83,11 @@ void HistogramWidget::updateMap()
         mapsInformation[selectedViewports[i]]->min = min;
         mapsInformation[selectedViewports[i]]->max = max;
         mapsInformation[selectedViewports[i]]->colorMap = currentColorMap;
+        mapsInformation[selectedViewports[i]]->sentinelColor = currentSentinelColor;
     }
 
     /* update threshold values for selected viewports */
-    emit(histogramUpdated(currentColorMap, min, max));
+    emit(histogramUpdated(currentColorMap, min, max, currentSentinelColor));
 }
 
 
@@ -113,7 +131,9 @@ void HistogramWidget::updateHistogram()
         mapMaxAbs = mapsInformation[selectedViewports[0]]->max;
 
         ColorMap *colorMapToUse = mapsInformation[selectedViewports[0]]->colorMap;
+        QColor sentinelColorToUse = mapsInformation[selectedViewports[0]]->sentinelColor;
         bool usingSameColorMap = true;
+        bool usingSameSentinelColor = true;
 
         /* get min and max for each map */
         for(int i=0; i<selectedViewports.size(); i++)
@@ -130,6 +150,9 @@ void HistogramWidget::updateHistogram()
 
             if(colorMapToUse!=info->colorMap)
                 usingSameColorMap = false;
+
+            if(sentinelColorToUse!=info->sentinelColor)
+                usingSameSentinelColor = false;
         }
 
         if(usingSameColorMap)
@@ -137,6 +160,11 @@ void HistogramWidget::updateHistogram()
         else
             currentColorMap = ColorMapManager::instance()->getDefaultColorMap();
         updateColorMap(currentColorMap);
+
+        if(usingSameSentinelColor)
+            updateSentinelColor(sentinelColorToUse);
+        else
+            updateSentinelColor(QColor(DEFAULT_SENTINEL_COLOR));
 
         /* update thresholds */
         setThresholds(mapMinAbs, mapMaxAbs);
@@ -148,6 +176,7 @@ void HistogramWidget::updateHistogram()
         ui->higherThreshold->setDisabled(true);
         ui->applyHistogram->setDisabled(true);
         ui->colorMapSelector->setDisabled(true);
+        ui->selectSentinelColor->setDisabled(true);
     }
 }
 
@@ -258,6 +287,7 @@ void HistogramWidget::setThresholds(float _min, float _max)
     ui->higherThreshold->setEnabled(true);
     ui->applyHistogram->setEnabled(true);
     ui->colorMapSelector->setEnabled(true);
+    ui->selectSentinelColor->setEnabled(true);
 }
 
 
@@ -298,4 +328,10 @@ void HistogramWidget::updateColorMap(ColorMap* cm)
 
     /* update colormap selector */
     updateColorMapSelector(cm);
+}
+
+void HistogramWidget::updateSentinelColor(QColor color)
+{
+    currentSentinelColor = color;
+    ui->selectSentinelColor->setPalette(QPalette(currentSentinelColor));
 }

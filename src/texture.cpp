@@ -5,17 +5,19 @@ Texture::Texture(int faceNumber, int nside)
     this->faceNumber = faceNumber;
     this->nside = nside;
     this->colorMap = ColorMapManager::instance()->getDefaultColorMap();
+    this->sentinelColor = QColor(DEFAULT_SENTINEL_COLOR);
     this->texture = NULL;
 
     created = false;
 }
 
 
-Texture::Texture(int faceNumber, int nside, ColorMap* colorMap)
+Texture::Texture(int faceNumber, int nside, ColorMap* colorMap, QColor sentinelColor)
 {
     this->faceNumber = faceNumber;
     this->nside = nside;
     this->colorMap = colorMap;
+    this->sentinelColor = sentinelColor;
     this->texture = NULL;
 
     created = false;
@@ -38,9 +40,6 @@ Texture::~Texture()
 
 void Texture::buildTexture(float* data, float minv, float maxv)
 {
-    // TODO: receive the default nullpix color to use
-    QColor NULLPIX_COLOR(128, 128, 128);
-
     float v = 0.0;
     long texk = 0;
     QColor color;
@@ -54,9 +53,9 @@ void Texture::buildTexture(float* data, float minv, float maxv)
     {
         v = data[pix];
 
-        if(v==HEALPIX_NULLVAL)
+        if(approx<double>(v,Healpix_undef))
         {
-            color = NULLPIX_COLOR;
+            color = sentinelColor;
         }
         else
         {

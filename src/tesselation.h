@@ -54,7 +54,7 @@ public:
     void showPolarizationVectors(bool show=true);
     void showGrid(bool show=true);
 
-    void updateTextureThreshold(ColorMap* colorMap, float min, float max);
+    void updateTextureThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor);
     void changeMapField(HealpixMap::MapType field);
 
     void changeTo3D();

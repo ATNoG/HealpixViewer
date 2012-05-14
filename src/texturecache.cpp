@@ -7,6 +7,7 @@ TextureCache::TextureCache(HealpixMap* map, int minNside, int maxNside, int maxT
     this->maxTiles = maxTiles;
     this->availableTiles = maxTiles;
     this->colorMap = ColorMapManager::instance()->getDefaultColorMap();
+    this->sentinelColor = QColor(DEFAULT_SENTINEL_COLOR);
 
     marginTilesSpace = CACHE_MARGIN;
 
@@ -126,7 +127,7 @@ Texture* TextureCache::loadFace(int faceNumber, int nside)
 {
     //REMOVE qDebug()<< "TextureCache: loading face " << faceNumber << "(" << nside << ")";
 
-    Texture* texture = new Texture(faceNumber, nside, colorMap);
+    Texture* texture = new Texture(faceNumber, nside, colorMap, sentinelColor);
 
 #if DEBUG > 0
     if(texture==NULL)
@@ -403,13 +404,14 @@ int TextureCache::calculateFaceTiles(int nside)
 
 
 
-void TextureCache::updateTextureThreshold(ColorMap* cm, float min, float max)
+void TextureCache::updateTextureThreshold(ColorMap* cm, float min, float max, QColor scolor)
 {
-    if(minTex!=min || maxTex!=max || colorMap!=cm)
+    if(minTex!=min || maxTex!=max || colorMap!=cm || sentinelColor!=scolor)
     {
         minTex = min;
         maxTex = max;
         colorMap = cm;
+        sentinelColor = scolor;
 
         //qDebug("\n\n=============Regenerating texture for new threshold==================");
 
