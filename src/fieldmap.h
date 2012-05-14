@@ -6,6 +6,7 @@
 #include <QTextStream>
 #include <stdio.h>
 #include "pixellutcache.h"
+#include <healpix_map.h>
 
 using namespace std;
 

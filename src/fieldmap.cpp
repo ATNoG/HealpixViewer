@@ -102,15 +102,21 @@ float* FieldMap::downgradeMap(int newNside)
 
     for(long i=0; i<nPixels; i++)
     {
-        long newPos = degradePixel(i, oldNside, newNside);
-        newMap[newPos] += map[i];
+        if(!approx<double>(map[i],Healpix_undef))
+        {
+            long newPos = degradePixel(i, oldNside, newNside);
+            newMap[newPos] += map[i];
 
-        count[newPos]++;
+            count[newPos]++;
+        }
     }
 
     for(long i=0; i<newNpixels; i++)
     {
-        newMap[i] = newMap[i]/count[i];
+        if(count[i]>0)
+            newMap[i] = newMap[i]/count[i];
+        else
+            newMap[i] = Healpix_undef;
     }
 
     delete[] count;
