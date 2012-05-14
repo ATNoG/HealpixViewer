@@ -131,13 +131,18 @@ void Histogram::calculateMinMax()
 {
     /* calculate min and max values */
     float min, max;
-    min = max = values[0];
+    min = 99999999999;
+    max = Healpix_undef;
+
     for(long i=0; i<totalValues; i++)
     {
-        if(values[i]>max)
-            max = values[i];
-        else if(values[i]<min && values[i]!=HEALPIX_NULLVAL)
-            min = values[i];
+        if(!approx<double>(values[i],Healpix_undef))
+        {
+            if(values[i]>max)
+                max = values[i];
+            else if(values[i]<min)
+                min = values[i];
+        }
     }
 
     minValue = min;

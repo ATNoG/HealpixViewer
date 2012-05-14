@@ -6,6 +6,8 @@
 #include "configs.h"
 #include "unique_ptr.hpp"
 #include <chealpix.h>
+#include <cxxutils.h>
+#include <healpix_map.h>
 
 class Histogram
 {
