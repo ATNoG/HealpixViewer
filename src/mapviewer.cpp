@@ -97,6 +97,7 @@ bool MapViewer::loadMap(QString fitsfile)
         /* open fits file */
         try
         {
+            filename = fitsfile;
             healpixMap = new HealpixMap(fitsfile, MIN_NSIDE);
             mapCreated = true;
         }
@@ -623,27 +624,30 @@ void MapViewer::exportSelectedArea()
 {
     qDebug() << "Total pixels: " << selectedPixels.size();
 
-    string infile = "wmap_imap_r10_yr1_K1_v4.fits";
-    string outfile = "!teste1.fits";
+    QString outfile = QFileDialog::getSaveFileName(this, "Export as", "", "Fits Files (*.fits)");
+
+    if(!outfile.endsWith(".fits"))
+        outfile.append(".fits");
+
+    /* overwrite permission was already given */
+    outfile = "!" + outfile;
 
     Healpix_Map<float> inmap;
-    read_Healpix_map_from_fits(infile,inmap,1,2);
+    read_Healpix_map_from_fits(filename.toUtf8().constData(),inmap,1,2);
 
     Healpix_Map<float> newMap(inmap.Nside(), inmap.Scheme(), nside_dummy());
     //newMap.Import(inmap, false);
     newMap.fill(Healpix_undef);
 
-
     std::set<int>::iterator it;
     for(it=selectedPixels.begin(); it!=selectedPixels.end(); it++)
     {
-        //qDebug() << "inmap[" << *it << "] = " << inmap[*it];
         newMap[*it] = inmap[*it];
     }
 
+    write_Healpix_map_to_fits(outfile.toUtf8().constData(), newMap, planckType<float>());
 
-    write_Healpix_map_to_fits(outfile, newMap, planckType<float>());
-
+    displayMessage("Extraction done with success");
 
     /*
     string infile = "wmap_imap_r10_yr1_K1_v4.fits";
@@ -664,7 +668,6 @@ void MapViewer::exportSelectedArea()
     Healpix_Map<float> outmap;
     outmap.Set(inmap.Order(), inmap.Scheme());
     write_Healpix_map_to_fits ("!teste.fits",outmap,PLANCK_FLOAT32);
-
     */
 }
 

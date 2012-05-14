@@ -187,6 +187,7 @@ private:
     PolarizationVectors* polVectors;
 
     std::set<int> selectedPixels;
+    QString filename;
 };
 
 #endif // MAPVIEWER_H
