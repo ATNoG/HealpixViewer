@@ -20,6 +20,7 @@ public:
     float* getFaceValues(int faceNumber);
     float* downgradeMap(int newNside);
     void generateDowngrades(QString path, QString prefix, int minNside);
+    static int degradePixel(int pixel, int oldNside, int newNside);
 
 private:
     float* map;
@@ -30,8 +31,6 @@ private:
     float* orderMap(float* values, int nside);
 
     PixelLUTCache* lut_cache;
-
-    int degradePixel(int pixel, int oldNside, int newNside);
     void saveFieldMap(QString filepath, float* values, int nvalues);
 };
 

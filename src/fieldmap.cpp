@@ -132,10 +132,14 @@ int FieldMap::degradePixel(int pixel, int oldNside, int newNside)
     // TODO: get map ordering
 
     /* convert nest to nest needed ? */
+    /*
     if(!nest)
         ring2nest(oldNside, pixel, &npixel);
     else
         npixel = pixel;
+    */
+
+    npixel = pixel;
 
     int newpos;
     double scaleDown = double(newNside)/double(oldNside);

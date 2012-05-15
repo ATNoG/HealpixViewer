@@ -1,9 +1,10 @@
 #include "roi.h"
 
 
-ROIManager::ROIManager()
+ROIManager::ROIManager(int maxNside)
 {
     lut_cache = PixelLUTCache::getInstance();
+    this->maxNside = maxNside;
 }
 
 ROIManager::~ROIManager()
@@ -13,10 +14,36 @@ ROIManager::~ROIManager()
 
 void ROIManager::addPoints(std::set<int> pixelIndexes, int nside)
 {
-    long pixelsPerFace = nside2npix(nside)/12;
-    PixelLUT *lut = lut_cache->getLut(nside);
+    if(nside < maxNside)
+    {
+        std::set<int> allPixelIndexes;
+        int factor = pow(maxNside/nside, 2);
+
+        set<int>::iterator it;
+        for(it=pixelIndexes.begin(); it!=pixelIndexes.end(); it++)
+        {
+            /* calculte pixels in maxNside */
+            uint begin = (*it)*factor;
+            for(uint pix=begin; pix<begin+factor; pix++)
+            {
+                allPixelIndexes.insert(pix);
+            }
+        }
+        processPoints(allPixelIndexes);
+    }
+    else
+    {
+        processPoints(pixelIndexes);
+    }
+}
+
+void ROIManager::processPoints(std::set<int> pixelIndexes)
+{
+    long pixelsPerFace = nside2npix(maxNside)/12;
+    PixelLUT *lut = lut_cache->getLut(maxNside);
 
     set<int>::iterator it;
+
     for(it=pixelIndexes.begin(); it!=pixelIndexes.end(); it++)
     {
         // use LUT
@@ -32,7 +59,7 @@ void ROIManager::addPoints(std::set<int> pixelIndexes, int nside)
         }
         else
         {
-            roi = new ROI(face, nside);
+            roi = new ROI(face, maxNside);
             faceROI.insert(face, roi);
         }
 

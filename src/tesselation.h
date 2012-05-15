@@ -29,7 +29,7 @@ struct faceInfo
 };
 
 public:
-    Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache);
+    Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache, int maxNside);
     ~Tesselation();
     void draw();
     void drawAllFaces();
@@ -60,7 +60,7 @@ public:
     void changeTo3D();
     void changeToMollweide();
 
-    void selectPixels(std::set<int> pixelIndexes);
+    void selectPixels(std::set<int> pixelIndexes, int nside);
     void unselectPixels(std::set<int> pixelIndexes);
     void clearROI();
 

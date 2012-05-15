@@ -42,7 +42,7 @@ class ROI
 class ROIManager
 {
     public:
-        ROIManager();
+        ROIManager(int maxNside);
         ~ROIManager();
         void addPoints(std::set<int> pixelIndexes, int nside);
         void removePoints(std::set<int> pixelIndexes, int nside);
@@ -50,8 +50,10 @@ class ROIManager
         bool hasROI(int face);
         void clear();
     private:
+        void processPoints(std::set<int> pixelIndexes);
         QMap<int, ROI*> faceROI;
         PixelLUTCache* lut_cache;
+        int maxNside;
 };
 
 #endif // ROI_H

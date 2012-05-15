@@ -17,6 +17,7 @@
 #include "facevertices.h"
 #include "maploader.h"
 #include "configs.h"
+#include "fieldmap.h"
 
 #include <fitsio2.h>
 #include <healpix_base.h>
@@ -165,16 +166,18 @@ private:
     void sceneUpdated(bool update=true);
     void changeProjectionConstraints();
     void updateMouseSensitivity();
-    void addPixelsToSelection(std::set<int>);
+    void addPixelsToSelection(std::set<int>, int nside);
     void removePixelsFromSelection(std::set<int>);
     void changeSelectionType(SelectionType);
     int calculatePixelIndex(const QPoint &point);
+    int transformSameNside(std::vector<int>& pixels, std::vector<int> nsides);
 
     void exportSelectedArea();
 
     SelectionType selectionType;
-    int firstPix, secondPix;
-    std::vector<int> polygonPixels;
+
+    std::vector<int> auxiliarPixels;
+    std::vector<int> auxiliarNsides;
     bool unselectSelection;
 
     QMap<int, QVector<Vec> > faceBoundaries;

@@ -31,8 +31,6 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     this->tesselationNside = TESSELATION_DEFAULT_NSIDE;
 
     selectionType = SINGLE_POINT;
-    firstPix = -1;
-    secondPix = -1;
 
     unselectSelection = false;
 }
@@ -140,10 +138,8 @@ bool MapViewer::loadMap(QString fitsfile)
                 QObject::connect(textureCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
                 QObject::connect(overlayCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
 
-                qDebug() << "Max nside for this map is " << healpixMap->getMaxNside();
-
                 /* create the sphere tesselation */
-                tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache);
+                tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache, maxNside);
                 tesselation->setMap(healpixMap);
 
                 /* preload next faces */
@@ -322,21 +318,22 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
             break;
         case Qt::Key_C:
             tesselation->clearROI();
-            polygonPixels.clear();
+            auxiliarPixels.clear();
             selectedPixels.clear();
             updateGL();
             break;
         case Qt::Key_Enter:
             if(selectionType == POLYGON)
             {
-                if(polygonPixels.size() >= 3)
+                if(auxiliarPixels.size() >= 3)
                 {
                     displayMessage("Calculating polygon", 10000);
-                    std::set<int> pixels = healpixMap->query_polygon(polygonPixels, currentNside);
-                    polygonPixels.clear();
+                    int nsideToUse = transformSameNside(auxiliarPixels, auxiliarNsides);
+                    std::set<int> pixels = healpixMap->query_polygon(auxiliarPixels, nsideToUse);
+                    auxiliarPixels.clear();
 
                     if(!unselectSelection)
-                        addPixelsToSelection(pixels);
+                        addPixelsToSelection(pixels, nsideToUse);
                     else
                         removePixelsFromSelection(pixels);
 
@@ -530,6 +527,7 @@ int MapViewer::calculatePixelIndex(const QPoint &point)
 void MapViewer::postSelection (const QPoint &point)
 {
     int pix = calculatePixelIndex(point);
+    int nsideToUse = currentNside;
 
     std::set<int> pixels;
 
@@ -543,51 +541,54 @@ void MapViewer::postSelection (const QPoint &point)
                 break;
 
             case DISC:
-                if(firstPix==-1)
+                auxiliarPixels.push_back(pix);
+                auxiliarNsides.push_back(currentNside);
+                if(auxiliarPixels.size()==1)
                 {
-                    firstPix = pix;
                     pixels.insert(pix);
                     displayMessage("Select second point");
                 }
                 else
                 {
                     displayMessage("Calculating disc", 10000);
-                    pixels = healpixMap->query_disc(firstPix, pix, currentNside);
-                    firstPix = -1;
+                    nsideToUse = transformSameNside(auxiliarPixels, auxiliarNsides);
+                    pixels = healpixMap->query_disc(auxiliarPixels[0], auxiliarPixels[1], nsideToUse);
+                    auxiliarPixels.clear();
+                    auxiliarNsides.clear();
                     displayMessage("", 0);
                 }
                 break;
 
             case TRIANGLE:
-                if(firstPix==-1)
+                auxiliarPixels.push_back(pix);
+                auxiliarNsides.push_back(currentNside);
+                if(auxiliarPixels.size()==1)
                 {
-                    firstPix = pix;
                     pixels.insert(pix);
                     displayMessage("Select second point");
                 }
-                else if(secondPix==-1)
+                else if(auxiliarPixels.size()==2)
                 {
-                    secondPix = pix;
                     pixels.insert(pix);
                     displayMessage("Select last point");
                 }
                 else
                 {
-                    //qDebug() << "query_triangle(" << firstPix << "," << secondPix << "," << pix << ")";
                     displayMessage("Calculating triangle", 10000);
-                    pixels = healpixMap->query_triangle(firstPix, secondPix, pix, currentNside);
-                    firstPix = -1;
-                    secondPix = -1;
+                    nsideToUse = transformSameNside(auxiliarPixels, auxiliarNsides);
+                    pixels = healpixMap->query_triangle(auxiliarPixels[0], auxiliarPixels[1], auxiliarPixels[2], nsideToUse);
+                    auxiliarPixels.clear();
+                    auxiliarNsides.clear();
                     displayMessage("", 0);
                 }
                 break;
 
             case POLYGON:
                 /* check if shape is closed */
-                std::vector<int>::iterator it;
-                polygonPixels.push_back(pix);
+                auxiliarPixels.push_back(pix);
+                auxiliarNsides.push_back(currentNside);
                 pixels.insert(pix);
-                if(polygonPixels.size()>=3)
+                if(auxiliarPixels.size()>=3)
                     displayMessage("Select another point or <enter> to close the polygon");
                 else
                     displayMessage("Select another point");
@@ -595,7 +596,7 @@ void MapViewer::postSelection (const QPoint &point)
         }
 
         if(!unselectSelection)
-            addPixelsToSelection(pixels);
+            addPixelsToSelection(pixels, nsideToUse);
         else
             removePixelsFromSelection(pixels);
     }
@@ -604,10 +605,34 @@ void MapViewer::postSelection (const QPoint &point)
 
 }
 
-void MapViewer::addPixelsToSelection(std::set<int> pixels)
+int MapViewer::transformSameNside(std::vector<int>& pixels, std::vector<int> nsides)
+{
+    int min_nside = nsides[0];
+
+    std::vector<int>::iterator it;
+    for(it=nsides.begin(); it!=nsides.end(); it++)
+    {
+        if(*it<min_nside)
+            min_nside = *it;
+    }
+
+    for(int i=0; i<pixels.size(); i++)
+    {
+        if(nsides[i]!=min_nside)
+        {
+            pixels[i] = FieldMap::degradePixel(pixels[i], nsides[i], min_nside);
+        }
+    }
+
+    return min_nside;
+}
+
+void MapViewer::addPixelsToSelection(std::set<int> pixels, int nside)
 {
     selectedPixels.insert(pixels.begin(), pixels.end());
-    tesselation->selectPixels(pixels);
+
+    if(pixels.size()>=1)
+        tesselation->selectPixels(pixels, nside);
     pixels.clear();
 }
 
@@ -678,19 +703,6 @@ void MapViewer::changeSelectionType(SelectionType stype)
     /* clear status */
     switch(selectionType)
     {
-        case DISC:
-            firstPix = -1;
-            break;
-        case TRIANGLE:
-            firstPix = secondPix = -1;
-            break;
-        case POLYGON:
-            polygonPixels.clear();
-            break;
-    }
-
-    switch(stype)
-    {
         case SINGLE_POINT:
             displayMessage("Selection changed to single point");
             break;
@@ -704,6 +716,9 @@ void MapViewer::changeSelectionType(SelectionType stype)
             displayMessage("Selection changed to polygon");
             break;
     }
+
+    auxiliarPixels.clear();
+    auxiliarNsides.clear();
 }
 
 void MapViewer::mouseMoveEvent(QMouseEvent* e)

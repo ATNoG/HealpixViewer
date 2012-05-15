@@ -1,6 +1,6 @@
 #include "tesselation.h"
 
-Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache)
+Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache, int maxNside)
 {
     textureNside = _textureNside;
     vectorsNside = _pVecNside;
@@ -17,7 +17,7 @@ Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool
     //this->mapType = mapType;
     this->roi = NULL;
 
-    this->manager = new ROIManager();
+    this->manager = new ROIManager(maxNside);
 
     createInitialTesselation();
 
@@ -216,10 +216,10 @@ void Tesselation::changeToMollweide()
         mollview = true;
 }
 
-void Tesselation::selectPixels(std::set<int> pixelIndexes)
+void Tesselation::selectPixels(std::set<int> pixelIndexes, int nside)
 {    
     /* split pixels indexes into faces */
-    manager->addPoints(pixelIndexes, this->textureNside);
+    manager->addPoints(pixelIndexes, nside);
 }
 
 void Tesselation::unselectPixels(std::set<int> pixelIndexes)

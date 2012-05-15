@@ -33,8 +33,6 @@ void MapOptions::updateSelectedMaps(QList<int> selectedViewports)
 
 void MapOptions::updateMapInfo(int viewportId, mapInfo* info)
 {
-    qDebug() << "update map info called";
-
     if(viewportOptions.contains(viewportId))
     {
         delete viewportOptions[viewportId];
