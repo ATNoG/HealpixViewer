@@ -221,6 +221,11 @@ void Face::createVertexs()
             vertexs[i+1] = verticesIT->y;
             vertexs[i+2] = verticesIT->z;
             i+=3;
+            /*
+            // Flipped: T and S changed!
+            textureCoords[j] = verticesIT->t;
+            textureCoords[j+1] = verticesIT->s;
+            */
             textureCoords[j] = verticesIT->s;
             textureCoords[j+1] = verticesIT->t;
             j+=2;

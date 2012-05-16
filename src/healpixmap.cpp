@@ -691,6 +691,19 @@ float* HealpixMap::getFaceValues(int faceNumber, int nside)
 {
     int pixelsPerFace = nside2npix(nside)/12;
 
+    /*
+     * Flipped!
+    if(faceNumber==5) faceNumber=7;
+    else if(faceNumber==7) faceNumber=5;
+    else if(faceNumber==2) faceNumber=1;
+    else if(faceNumber==1) faceNumber=2;
+    else if(faceNumber==0) faceNumber=3;
+    else if(faceNumber==3) faceNumber=0;
+    else if(faceNumber==8) faceNumber=11;
+    else if(faceNumber==11) faceNumber=8;
+    else if(faceNumber==10) faceNumber=9;
+    else if(faceNumber==9) faceNumber=10;
+    */
     float *values = readMapCache(nside, currentMapType, faceNumber*pixelsPerFace, pixelsPerFace);
     return values;
 }
