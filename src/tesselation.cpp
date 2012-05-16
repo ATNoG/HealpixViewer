@@ -182,9 +182,9 @@ void Tesselation::showPolarizationVectors(bool show)
 }
 
 
-void Tesselation::updateTextureThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor)
+void Tesselation::updateTextureThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor, ScaleType scale, float factor, float offset)
 {
-    textureCache->updateTextureThreshold(colorMap, min, max, sentinelColor);
+    textureCache->updateTextureThreshold(colorMap, min, max, sentinelColor, scale, factor, offset);
 }
 
 

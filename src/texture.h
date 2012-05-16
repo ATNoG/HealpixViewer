@@ -7,6 +7,7 @@
 #include <chealpix.h>
 #include <healpix_map.h>
 #include "configs.h"
+#include "types.h"
 
 using namespace std;
 
@@ -14,7 +15,7 @@ class Texture
 {
 public:
     Texture(int faceNumber, int nside);
-    Texture(int faceNumber, int nside, ColorMap* colorMap, QColor sentinelColor);
+    Texture(int faceNumber, int nside, ColorMap* colorMap, QColor sentinelColor, ScaleType scale, float factor, float offset);
     ~Texture();
 
     void draw();
@@ -29,6 +30,8 @@ private:
     GLuint textureId;
     ColorMap *colorMap;
     QColor sentinelColor;
+    ScaleType scale;
+    float factor, offset;
 
     bool created;
 

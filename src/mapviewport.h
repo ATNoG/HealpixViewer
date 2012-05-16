@@ -12,6 +12,7 @@
 #include "mapviewer.h"
 #include "histogramwidget.h"
 #include "configs.h"
+#include "types.h"
 
 
 
@@ -32,7 +33,7 @@ public:
     bool isSynchronized();
     bool isMollweide();
 
-    void updateThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor);
+    void updateThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor, ScaleType scale, float factor, float offset);
     void setWorkspace(WorkSpace *workspace);
 
     mapInfo* getMapInfo();

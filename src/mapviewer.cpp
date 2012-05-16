@@ -1164,9 +1164,9 @@ void MapViewer::showPolarizationVectors(bool show)
 }
 
 
-void MapViewer::updateThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor)
+void MapViewer::updateThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor, ScaleType scale, float factor, float offset)
 {
-    tesselation->updateTextureThreshold(colorMap, min, max, sentinelColor);
+    tesselation->updateTextureThreshold(colorMap, min, max, sentinelColor, scale, factor, offset);
 
     /* force redraw */
     updateGL();
@@ -1204,6 +1204,9 @@ mapInfo* MapViewer::getMapInfo()
     info->sentinelColor = QColor(DEFAULT_SENTINEL_COLOR);
     info->minNside = MIN_NSIDE;
     info->maxNside = maxNside;
+    info->scale = LINEAR;
+    info->factor = 1.0;
+    info->offset = 0.0;
 
     double minMag, maxMag;
     healpixMap->getMagMinMax(minMag, maxMag);

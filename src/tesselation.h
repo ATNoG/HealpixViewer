@@ -17,6 +17,7 @@
 #include "healpixmap.h"
 #include "grid.h"
 #include "configs.h"
+#include "types.h"
 #include <set>
 
 class Tesselation
@@ -54,7 +55,7 @@ public:
     void showPolarizationVectors(bool show=true);
     void showGrid(bool show=true);
 
-    void updateTextureThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor);
+    void updateTextureThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor, ScaleType scale, float factor, float offset);
     void changeMapField(HealpixMap::MapType field);
 
     void changeTo3D();

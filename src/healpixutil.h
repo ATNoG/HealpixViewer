@@ -404,4 +404,17 @@ inline std::set<int> inRing(long iz, double phi0, double dphi, int nside, bool c
     return res;
 }
 
+
+inline double asinh(double value)
+{
+    double returned;
+
+    if(value>0)
+       returned = log(value + sqrt(value * value + 1));
+    else
+       returned = -log(-value + sqrt(value * value + 1));
+
+    return(returned);
+}
+
 #endif // HEALPIXUTIL_H

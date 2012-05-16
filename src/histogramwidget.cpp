@@ -21,8 +21,13 @@ HistogramWidget::HistogramWidget(QWidget *parent) :
     connect(ui->applyHistogram, SIGNAL(released()), this, SLOT(updateMap()));
     connect(ui->colorMapSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(colorMapUpdate(int)));
     connect(ui->selectSentinelColor, SIGNAL(released()), this, SLOT(sentinelColorUpdate()));
+    connect(ui->scaleSelector, SIGNAL(currentIndexChanged(int)), this, SLOT(scaleUpdate(int)));
 
     fillColorMaps();
+    fillScaleOptions();
+
+    factor = 1.0;
+    offset = 0.0;
 }
 
 
@@ -46,6 +51,12 @@ void HistogramWidget::colorMapUpdate(int)
     currentColorMap = getSelectedColorMap();
 
     updateColorMap(currentColorMap);
+}
+
+void HistogramWidget::scaleUpdate(int)
+{
+    currentScale = (ScaleType)ui->scaleSelector->itemData(ui->scaleSelector->currentIndex()).toInt();
+    updateScale(currentScale);
 }
 
 void HistogramWidget::sentinelColorUpdate()
@@ -83,11 +94,14 @@ void HistogramWidget::updateMap()
         mapsInformation[selectedViewports[i]]->min = min;
         mapsInformation[selectedViewports[i]]->max = max;
         mapsInformation[selectedViewports[i]]->colorMap = currentColorMap;
+        mapsInformation[selectedViewports[i]]->scale = currentScale;
         mapsInformation[selectedViewports[i]]->sentinelColor = currentSentinelColor;
+        mapsInformation[selectedViewports[i]]->factor = factor;
+        mapsInformation[selectedViewports[i]]->offset = offset;
     }
 
     /* update threshold values for selected viewports */
-    emit(histogramUpdated(currentColorMap, min, max, currentSentinelColor));
+    emit(histogramUpdated(currentColorMap, min, max, currentSentinelColor, currentScale, factor, offset));
 }
 
 
@@ -132,8 +146,10 @@ void HistogramWidget::updateHistogram()
 
         ColorMap *colorMapToUse = mapsInformation[selectedViewports[0]]->colorMap;
         QColor sentinelColorToUse = mapsInformation[selectedViewports[0]]->sentinelColor;
+        ScaleType scaleToUse = mapsInformation[selectedViewports[0]]->scale;
         bool usingSameColorMap = true;
         bool usingSameSentinelColor = true;
+        bool usingSameScale = true;
 
         /* get min and max for each map */
         for(int i=0; i<selectedViewports.size(); i++)
@@ -153,6 +169,9 @@ void HistogramWidget::updateHistogram()
 
             if(sentinelColorToUse!=info->sentinelColor)
                 usingSameSentinelColor = false;
+
+            if(scaleToUse!=info->scale)
+                usingSameScale = false;
         }
 
         if(usingSameColorMap)
@@ -166,6 +185,14 @@ void HistogramWidget::updateHistogram()
         else
             updateSentinelColor(QColor(DEFAULT_SENTINEL_COLOR));
 
+        if(usingSameScale)
+            updateScale(scaleToUse);
+        else
+            updateScale(LINEAR);
+
+        updateFactor(1.0);
+        updateOffset(0.0);
+
         /* update thresholds */
         setThresholds(mapMinAbs, mapMaxAbs);
     }
@@ -177,6 +204,7 @@ void HistogramWidget::updateHistogram()
         ui->applyHistogram->setDisabled(true);
         ui->colorMapSelector->setDisabled(true);
         ui->selectSentinelColor->setDisabled(true);
+        ui->scaleSelector->setDisabled(true);
     }
 }
 
@@ -288,6 +316,7 @@ void HistogramWidget::setThresholds(float _min, float _max)
     ui->applyHistogram->setEnabled(true);
     ui->colorMapSelector->setEnabled(true);
     ui->selectSentinelColor->setEnabled(true);
+    ui->scaleSelector->setEnabled(true);
 }
 
 
@@ -313,11 +342,33 @@ void HistogramWidget::fillColorMaps()
 }
 
 
+void HistogramWidget::fillScaleOptions()
+{
+    ui->scaleSelector->blockSignals(true);
+
+    ui->scaleSelector->clear();
+    ui->scaleSelector->insertItem(0, "Linear", LINEAR);
+    ui->scaleSelector->insertItem(1, "asinh", ASINH);
+    ui->scaleSelector->insertItem(2, "Logarithmic", LOGARITHMIC);
+
+    /* change current item to default scale */
+    ui->scaleSelector->setCurrentIndex(0);
+    ui->scaleSelector->blockSignals(false);
+}
+
+
 void HistogramWidget::updateColorMapSelector(ColorMap *colorMap)
 {
     ui->colorMapSelector->blockSignals(true);
     ui->colorMapSelector->setCurrentIndex(colorMap->getId());
     ui->colorMapSelector->blockSignals(false);
+}
+
+void HistogramWidget::updateScaleSelector(ScaleType scale)
+{
+    ui->scaleSelector->blockSignals(true);
+    ui->scaleSelector->setCurrentIndex(scale);
+    ui->scaleSelector->blockSignals(false);
 }
 
 
@@ -330,8 +381,25 @@ void HistogramWidget::updateColorMap(ColorMap* cm)
     updateColorMapSelector(cm);
 }
 
+
+void HistogramWidget::updateScale(ScaleType scale)
+{
+    /* update scale selector */
+    updateScaleSelector(scale);
+}
+
 void HistogramWidget::updateSentinelColor(QColor color)
 {
     currentSentinelColor = color;
     ui->selectSentinelColor->setPalette(QPalette(currentSentinelColor));
+}
+
+void HistogramWidget::updateFactor(float factor)
+{
+
+}
+
+void HistogramWidget::updateOffset(float offset)
+{
+
 }

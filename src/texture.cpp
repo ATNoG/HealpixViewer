@@ -12,12 +12,15 @@ Texture::Texture(int faceNumber, int nside)
 }
 
 
-Texture::Texture(int faceNumber, int nside, ColorMap* colorMap, QColor sentinelColor)
+Texture::Texture(int faceNumber, int nside, ColorMap* colorMap, QColor sentinelColor, ScaleType scale, float factor, float offset)
 {
     this->faceNumber = faceNumber;
     this->nside = nside;
     this->colorMap = colorMap;
     this->sentinelColor = sentinelColor;
+    this->scale = scale;
+    this->factor = factor;
+    this->offset = offset;
     this->texture = NULL;
 
     created = false;
@@ -46,8 +49,37 @@ void Texture::buildTexture(float* data, float minv, float maxv)
     texk = 0;
 
     texture = new unsigned char[nside*nside*3];
-
     int npixels = nside*nside;
+
+    double log_min, log_max;
+    log_min = minv;
+    log_max = maxv;
+
+    /* apply thresholds */
+    for(uint pix = 0; pix < npixels; pix++)
+    {
+        /* apply thresholds */
+        if (data[pix] < minv) data[pix] = minv;
+        if (data[pix] > maxv) data[pix] = maxv;
+
+        if(scale == LOGARITHMIC)
+        {
+            data[pix] = log10(max(data[pix], (float)1.e-6*abs(maxv)));
+            /* *1 */
+            /*if(data[pix]<log_min)
+                log_min = data[pix];*/
+        }
+    }
+
+
+    if(scale == LOGARITHMIC)
+    {
+        if(minv>0)
+            log_min = log10(minv);
+        if(maxv>0)
+            log_max = log10(maxv);
+    }
+
 
     for(uint pix = 0; pix < npixels; pix++)
     {
@@ -59,9 +91,22 @@ void Texture::buildTexture(float* data, float minv, float maxv)
         }
         else
         {
-            if (v < minv) v = minv;
-            if (v > maxv) v = maxv;
-            v = (v-minv)/(maxv-minv);
+            if(scale == LOGARITHMIC)
+            {
+                v = (v-log_min)/(log_max-log_min);
+            }
+            else if(scale == ASINH)
+            {
+                double asinh_min, asinh_max;
+                asinh_min = asinh(minv);
+                asinh_max = asinh(maxv);
+                v = (asinh(v)-asinh_min)/(asinh_max-asinh_min);
+            }
+            else
+            {
+                v = (v-minv)/(maxv-minv);
+            }
+
             color = (*colorMap)(v);
         }
 

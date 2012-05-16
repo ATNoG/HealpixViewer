@@ -11,6 +11,7 @@
 #include <QtConcurrentRun>
 #include <QGLWidget>
 #include "texture.h"
+#include "types.h"
 #include "healpixmap.h"
 
 #define CACHE_MARGIN 5200//0//3000//12498
@@ -42,7 +43,7 @@ public:
     /* discard old faces on cache */
     bool cleanCache(int minSpace=0);
 
-    void updateTextureThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor);
+    void updateTextureThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor, ScaleType scale, float factor, float offset);
     void changeMapField(HealpixMap::MapType field);
 
     void getTextureMinMax(float &min, float &max);
@@ -91,6 +92,8 @@ private:
     float minTex, maxTex;
     ColorMap* colorMap;
     QColor sentinelColor;
+    ScaleType scale;
+    float factor, offset;
 };
 
 #endif // TEXTURECACHE_H

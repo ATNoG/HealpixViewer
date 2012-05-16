@@ -147,7 +147,7 @@ void ViewportManager::openFiles()
 
 
 /* update threshold for the selected maps */
-void ViewportManager::updateThresholds(ColorMap* colorMap, float min, float max, QColor sentinelColor)
+void ViewportManager::updateThresholds(ColorMap* colorMap, float min, float max, QColor sentinelColor, ScaleType scale, float factor, float offset)
 {
     // TODO: if map is not in workspace update threshold too ?
 
@@ -157,7 +157,7 @@ void ViewportManager::updateThresholds(ColorMap* colorMap, float min, float max,
         int viewportId = viewportIds[i];
         // check if it exists
         if(viewports.contains(viewportId))
-            viewports[viewportId]->updateThreshold(colorMap, min, max, sentinelColor);
+            viewports[viewportId]->updateThreshold(colorMap, min, max, sentinelColor, scale, factor, offset);
     }
 }
 

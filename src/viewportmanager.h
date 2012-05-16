@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QSignalMapper>
 #include "mapviewport.h"
+#include "types.h"
 #include "configs.h"
 
 namespace Ui {
@@ -30,7 +31,7 @@ public slots:
     /* called when open button pressed */
     void openFiles();
     /* called when threshold updated in histogramWidget */
-    void updateThresholds(ColorMap* colorMap, float min, float max, QColor sentinelColor);
+    void updateThresholds(ColorMap* colorMap, float min, float max, QColor sentinelColor, ScaleType scale, float factor, float offset);
     //void updateColorTable()
     void viewportSelectionChanged(int viewportId, bool selected);
     /* apply map options */

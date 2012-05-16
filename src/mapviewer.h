@@ -25,7 +25,7 @@
 #include <healpix_map_fitsio.h>
 #include <fitshandle.h>
 #include <cxxutils.h>
-
+#include "types.h"
 
 
 using namespace qglviewer;
@@ -64,6 +64,9 @@ struct mapInfo
     bool hasPolarization;
     ColorMap *colorMap;
     QColor sentinelColor;
+    ScaleType scale;
+    float factor;
+    float offset;
 };
 
 class MapViewport;
@@ -86,7 +89,7 @@ public:
     void showPolarizationVectors(bool show=true);
     void showGrid(bool show=true);
 
-    void updateThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor);
+    void updateThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor, ScaleType scale, float factor, float offset);
     void changeMapField(HealpixMap::MapType field);
     void applyOptions(mapOptions *options);
 

@@ -41,26 +41,35 @@ private slots:
     void updateMap();
     /* called when colormap selector changes */
     void colorMapUpdate(int idx);
+    /* called when scale selector changes */
+    void scaleUpdate(int idx);
     /* update the color used to sentinel pixels */
     void sentinelColorUpdate();
 
 signals:
-    void histogramUpdated(ColorMap* colorMap, float min, float max, QColor sentinelColor);
+    void histogramUpdated(ColorMap* colorMap, float min, float max, QColor sentinelColor, ScaleType scale, float factor, float offset);
 
 private:
     Ui::HistogramWidget *ui;
     Histogram *histogram;
     ColorMap *currentColorMap;
+    ScaleType currentScale;
 
     float min, max;
+    float factor, offset;
 
     /* rebuild histogram with new threshold */
     void updateHistogramThreshold();
 
     void fillColorMaps();
+    void fillScaleOptions();
     void updateColorMap(ColorMap* cm);
+    void updateScale(ScaleType scale);
     void updateSentinelColor(QColor color);
     void updateColorMapSelector(ColorMap *colorMap);
+    void updateScaleSelector(ScaleType scale);
+    void updateFactor(float factor);
+    void updateOffset(float offset);
 
     ColorMap* getSelectedColorMap();
 
