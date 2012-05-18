@@ -5,7 +5,7 @@
 #include <map>
 #include <set>
 #include <chealpix.h>
-#include <math.h>
+#include <cmath>
 #include <QDebug>
 #include <stdio.h>
 #include <stdlib.h>

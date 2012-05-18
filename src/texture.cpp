@@ -55,19 +55,24 @@ void Texture::buildTexture(float* data, float minv, float maxv)
     log_min = minv;
     log_max = maxv;
 
+
     /* apply thresholds */
     for(uint pix = 0; pix < npixels; pix++)
     {
-        /* apply thresholds */
-        if (data[pix] < minv) data[pix] = minv;
-        if (data[pix] > maxv) data[pix] = maxv;
-
-        if(scale == LOGARITHMIC)
+        if(!approx<double>(data[pix],Healpix_undef))
         {
-            data[pix] = log10(max(data[pix], (float)1.e-6*abs(maxv)));
-            /* *1 */
-            /*if(data[pix]<log_min)
-                log_min = data[pix];*/
+
+            /* apply thresholds */
+            if (data[pix] < minv) data[pix] = minv;
+            if (data[pix] > maxv) data[pix] = maxv;
+
+            if(scale == LOGARITHMIC)
+            {
+                data[pix] = log10(max(data[pix], (float)1.e-6*abs(maxv)));
+                /* *1 */
+                if(data[pix]<log_min)
+                    log_min = data[pix];
+            }
         }
     }
 
