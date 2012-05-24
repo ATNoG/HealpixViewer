@@ -72,6 +72,7 @@ void HistogramWidget::sentinelColorUpdate()
 /* called when lower threshold spinbox changes */
 void HistogramWidget::updateLowerThreshold(double value)
 {
+    //qDebug() << "updating lower threshold";
     min = value;
     ui->higherThreshold->setMinimum(min+ui->higherThreshold->singleStep());
     updateHistogramThreshold();
@@ -80,6 +81,7 @@ void HistogramWidget::updateLowerThreshold(double value)
 /* called when higher threshold spinbox changes */
 void HistogramWidget::updateHigherThreshold(double value)
 {
+    //qDebug() << "updating higher threshold";
     max = value;
     ui->lowerThreshold->setMaximum(max-ui->higherThreshold->singleStep());
     updateHistogramThreshold();
@@ -101,7 +103,16 @@ void HistogramWidget::updateMap()
     }
 
     /* update threshold values for selected viewports */
-    emit(histogramUpdated(currentColorMap, min, max, currentSentinelColor, currentScale, factor, offset));
+    if(currentScale==LOGARITHMIC)
+    {
+        float logmin;
+        logmin = min<=0 ? histogram->getMinLog() : log10(min);
+        emit(histogramUpdated(currentColorMap, logmin, max, currentSentinelColor, currentScale, factor, offset));
+    }
+    else
+    {
+        emit(histogramUpdated(currentColorMap, min, max, currentSentinelColor, currentScale, factor, offset));
+    }
 }
 
 
@@ -111,12 +122,15 @@ void HistogramWidget::updateMap()
 /* Update histogram after selection changed */
 void HistogramWidget::updateHistogram(QList<int> selectedViewports)
 {
+    //qDebug("Viewport selection changed");
     this->selectedViewports = selectedViewports;
     updateHistogram();
 }
 
 void HistogramWidget::updateHistogram()
 {
+    //qDebug() << "--- update histogram";
+
     if(selectedViewports.size()>0)
     {
         /* construct new histogram */
@@ -178,6 +192,7 @@ void HistogramWidget::updateHistogram()
             currentColorMap = colorMapToUse;
         else
             currentColorMap = ColorMapManager::instance()->getDefaultColorMap();
+
         updateColorMap(currentColorMap);
 
         if(usingSameSentinelColor)
@@ -198,6 +213,7 @@ void HistogramWidget::updateHistogram()
     }
     else
     {
+        //qDebug() << "no viewports selected";
         ui->histogram->cleanupHistogram();
         ui->lowerThreshold->setDisabled(true);
         ui->higherThreshold->setDisabled(true);
@@ -217,6 +233,7 @@ void HistogramWidget::updateMapInfo(int viewportId, mapInfo* info)
 
     mapsInformation.insert(viewportId, info);
 
+    //qDebug() << "-update map info";
     updateHistogram();
 }
 
@@ -244,6 +261,8 @@ ColorMap* HistogramWidget::getSelectedColorMap()
 /* redrwa histogram using new threshold */
 void HistogramWidget::updateHistogramThreshold()
 {
+    //qDebug("HistogramWidget::updateHistogramThreshold");
+
     /* rebuild histogram */
     ui->histogram->rebuildHistogram(min, max);
 
@@ -384,6 +403,9 @@ void HistogramWidget::updateColorMap(ColorMap* cm)
 
 void HistogramWidget::updateScale(ScaleType scale)
 {
+    /* changes the scale used in histogram */
+    ui->histogram->updateScale(scale);
+
     /* update scale selector */
     updateScaleSelector(scale);
 }

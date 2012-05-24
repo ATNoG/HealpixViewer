@@ -9,6 +9,7 @@
 #include "mapviewer.h"
 #include "colormap.h"
 #include "configs.h"
+#include "types.h"
 
 
 namespace Ui {

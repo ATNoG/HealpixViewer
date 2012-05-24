@@ -104,6 +104,7 @@ void ViewportManager::histogramSelectionChanged(QTreeWidgetItem*, int)
     QList<int> selectedViewports = getHistogramActiveViewports();
 
     /* emit signal to histogram update */
+    qDebug() << "histogramViewportsSelectedUpdated";
     emit(histogramViewportsSelectedUpdated(selectedViewports));
 }
 

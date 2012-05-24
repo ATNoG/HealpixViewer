@@ -17,6 +17,9 @@ MapViewport::MapViewport(QWidget *parent, QString title, int viewportId, const Q
     this->hasPolarization = false;
     this->synchronized = false;
 
+    actAsSource = false;
+    actAsDestination = false;
+
     /* configure the user interface */
     configureUI();
 
@@ -97,10 +100,11 @@ void MapViewport::configureUI()
     actionSync = new QAction(QIcon(":/sync.gif"), "Sync", toolbar);
     action3D = new QAction(QIcon(":/3dview.gif"), "3D", toolbar);
     actionMollweide = new QAction(QIcon(":/mollview.gif"), "Mollweide", toolbar);
+    QAction *actionActAs = new QAction("Act as", toolbar);
+
     actionGrid->setCheckable(true);
     actionPvectors->setCheckable(true);
     actionSync->setCheckable(true);
-
     actionPvectors->setEnabled(false);
 
     /* connect actions to buttons */
@@ -120,11 +124,15 @@ void MapViewport::configureUI()
     /* create field selector menu */
     fieldMenu = new QMenu;
 
+    /* create "act as" menu */
+    actAsMenu = new QMenu;
+
     /* add actions to toolbars */
     toolbar->addAction(action3D);
     toolbar->addAction(actionMollweide);
     toolbar->addAction(actionGrid);
     toolbar->addAction(actionPvectors);
+    toolbar->addAction(actionActAs);
     toolbar->addAction(actionField);
     toolbar->addAction(actionReset);
     toolbar->addAction(actionSync);
@@ -142,6 +150,9 @@ void MapViewport::configureUI()
 
     /* add actions to menu */
     actionField->setMenu(fieldMenu);
+    actionActAs->setMenu(actAsMenu);
+
+    fillActAsMenu();
 
     checkbox = new QCheckBox;
     //checkbox->setEnabled(true);
@@ -168,6 +179,11 @@ void MapViewport::configureUI()
 bool MapViewport::isSelected()
 {
     return selected;
+}
+
+void MapViewport::syncPixelSelection(std::set<int> pixels, int nside, bool add)
+{
+    mapviewer->updateSelection(pixels, nside, add);
 }
 
 void MapViewport::selectViewport(bool changeCheckbox)
@@ -358,8 +374,40 @@ void MapViewport::showGrid(bool show)
     mapviewer->showGrid(show);
 }
 
+void MapViewport::fillActAsMenu()
+{
+    actAsActionGroup = new QActionGroup(actAsMenu);
+
+    QAction* actionSelSource = new QAction("Source", actAsMenu);
+    actionSelSource->setCheckable(true);
+
+    QAction* actionSelDestination = new QAction("Destination", actAsMenu);
+    actionSelDestination->setCheckable(true);
+
+    actAsActionGroup->addAction(actionSelSource);
+    actAsActionGroup->addAction(actionSelDestination);
+
+    actAsMenu->addAction(actionSelSource);
+    actAsMenu->addAction(actionSelDestination);
+
+    actAsActionGroup->setExclusive(true);
+
+    connect(actionSelSource, SIGNAL(triggered()), this, SLOT(activeSelectionAsSource()));
+    connect(actionSelDestination, SIGNAL(triggered()), this, SLOT(activeSelectionAsDestination()));
+}
 
 
+void MapViewport::activeSelectionAsSource()
+{
+    actAsSource = true;
+    actAsDestination = false;
+}
+
+void MapViewport::activeSelectionAsDestination()
+{
+    actAsSource = false;
+    actAsDestination = true;
+}
 
 void MapViewport::fillMapField()
 {
@@ -440,11 +488,12 @@ void MapViewport::enableSynchronization(bool on)
         connect(mapviewer, SIGNAL(signalPositionChanged(Vec,MapViewer*)), workspace, SLOT(syncPosition(Vec,MapViewer*)));
         connect(mapviewer, SIGNAL(signalRotationChanged(Quaternion,MapViewer*)), workspace, SLOT(syncRotation(Quaternion,MapViewer*)));
         connect(mapviewer, SIGNAL(signalKeyPressed(QKeyEvent*,MapViewer*)), workspace, SLOT(syncKeyPress(QKeyEvent*,MapViewer*)));
+        connect(mapviewer, SIGNAL(signalSelectionChanged(std::set<int>,int,bool)), this, SLOT(pixelSelectionChanged(std::set<int>,int,bool)));
+
         connect(workspace, SIGNAL(signalSyncZoom(float,MapViewer*)), this, SLOT(updateCameraPosition(float,MapViewer*)));
         connect(workspace, SIGNAL(signalSyncPosition(Vec,MapViewer*)), this, SLOT(updatePosition(Vec,MapViewer*)));
         connect(workspace, SIGNAL(signalSyncRotation(Quaternion,MapViewer*)), this, SLOT(updateRotation(Quaternion,MapViewer*)));
         connect(workspace, SIGNAL(signalSyncKeyPress(QKeyEvent*,MapViewer*)), this, SLOT(updateKeyPress(QKeyEvent*,MapViewer*)));
-
     }
     else
     {
@@ -453,11 +502,29 @@ void MapViewport::enableSynchronization(bool on)
         disconnect(mapviewer, SIGNAL(signalPositionChanged(Vec,MapViewer*)), workspace, SLOT(syncPosition(Vec,MapViewer*)));
         disconnect(mapviewer, SIGNAL(signalRotationChanged(Quaternion,MapViewer*)), workspace, SLOT(syncRotation(Quaternion,MapViewer*)));
         disconnect(mapviewer, SIGNAL(signalKeyPressed(QKeyEvent*,MapViewer*)), workspace, SLOT(syncKeyPress(QKeyEvent*,MapViewer*)));
+        disconnect(mapviewer, SIGNAL(signalSelectionChanged(std::set<int>,int,bool,MapViewer*)), workspace, SLOT(syncPixelSelection(std::set<int>,int,bool,MapViewer*)));
+
         disconnect(workspace, SIGNAL(signalSyncZoom(float,MapViewer*)), this, SLOT(updateCameraPosition(float,MapViewer*)));
         disconnect(workspace, SIGNAL(signalSyncPosition(Vec,MapViewer*)), this, SLOT(updatePosition(Vec,MapViewer*)));
         disconnect(workspace, SIGNAL(signalSyncRotation(Quaternion,MapViewer*)), this, SLOT(updateRotation(Quaternion,MapViewer*)));
         disconnect(workspace, SIGNAL(signalSyncKeyPress(QKeyEvent*,MapViewer*)), this, SLOT(updateKeyPress(QKeyEvent*,MapViewer*)));
     }
+}
+
+void MapViewport::pixelSelectionChanged(std::set<int> pixels, int nside, bool add)
+{
+    if(actAsSource)
+        workspace->syncPixelSelection(pixels, nside, add);
+}
+
+bool MapViewport::isSelectionSource()
+{
+    return actAsSource;
+}
+
+bool MapViewport::isSelectionDestination()
+{
+    return actAsDestination;
 }
 
 void MapViewport::disconnectFromWorkspace()

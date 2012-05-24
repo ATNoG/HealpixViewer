@@ -41,6 +41,10 @@ public:
     void disconnectFromWorkspace();
 
     void applyOptions(mapOptions *options);
+    void syncPixelSelection(std::set<int> pixels, int nside, bool add);
+
+    bool isSelectionSource();
+    bool isSelectionDestination();
 
 
 signals:
@@ -77,6 +81,10 @@ private slots:
     void updatePosition(Vec position, MapViewer *viewer);
     void updateRotation(Quaternion rotation, MapViewer *viewer);
     void updateKeyPress(QKeyEvent *e, MapViewer *viewer);
+    void pixelSelectionChanged(std::set<int> pixels, int nside, bool add);
+
+    void activeSelectionAsSource();
+    void activeSelectionAsDestination();
 
 
 private:
@@ -89,21 +97,26 @@ private:
     MapViewer* mapviewer;
     WorkSpace* workspace;
     QMenu* fieldMenu;
+    QMenu* actAsMenu;
     QMap<HealpixMap::MapType, QAction*> mapFieldsActions;
     QSignalMapper* signalMapper;
     QAction *actionMaximize, *actionRestore, *actionSync, *actionGrid, *actionPvectors, *action3D, *actionMollweide;
     QActionGroup* fieldsActionGroup;
+    QActionGroup* actAsActionGroup;
     mapInfo* info;
     const QGLWidget* shareWidget;
     bool hasPolarization;
     bool synchronized;
 
     void fillMapField();
+    void fillActAsMenu();
     void updateMapField(HealpixMap::MapType field);
 
     bool loaded;
     bool selected;
     bool mollview;
+
+    bool actAsSource, actAsDestination;
 
     int viewportId;
 

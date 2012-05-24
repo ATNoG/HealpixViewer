@@ -57,12 +57,14 @@ public slots:
     void maximize(int viewportId);
     void restore();
 
+    void multipleSelection();
+
     /* synchronization */
     void syncZoom(float camPosition, MapViewer *viewer);
     void syncPosition(Vec position, MapViewer *viewer);
     void syncRotation(Quaternion rotation, MapViewer *viewer);
     void syncKeyPress(QKeyEvent *e, MapViewer *viewer);
-
+    void syncPixelSelection(std::set<int> pixels, int nside, bool add);
 
 private:
     int numberViewports;

@@ -29,6 +29,9 @@ public:
     /* update histogram color map */
     void updateColorMap(ColorMap *colorMap);
 
+    /* udpdate scale used in histogram */
+    void updateScale(ScaleType scale);
+
 
 signals:
 
@@ -37,6 +40,7 @@ private:
 
     ColorMap *ct;
     Histogram *histogram;
+    ScaleType scale;
 
     void paintEvent(QPaintEvent *event);
 };

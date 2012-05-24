@@ -330,7 +330,8 @@ void HealpixMap::processFile(QString path, bool generateMaps)
                 status = 0;
                 fits_close_file(fptr, &status);
                 abort();
-                delete[] values;
+                // TODO: delete values. if deleted here a seg. fault will occur
+                //delete[] values;
                 throw HealpixMapException(e.what());
             }
 
@@ -1246,6 +1247,7 @@ std::set<int> HealpixMap::query_triangle(int pixel1, int pixel2, int pixel3, int
     npix = nside2npix(nside);
 
     bool do_nest = true;
+    bool do_inclusive = false;
 
     vv[0] = hp->pix2vec(pixel1);
     vv[1] = hp->pix2vec(pixel2);
@@ -1376,6 +1378,14 @@ std::set<int> HealpixMap::query_triangle(int pixel1, int pixel2, int pixel3, int
 
     offset = 0.0;
     sin_off = 0.0;
+
+    if ( do_inclusive )
+    {
+        offset = M_PI / ( 4.0 * nside ); // half pixel size
+        sin_off = sin(offset);
+        zmax = std::min(1.0, cos(acos(zmax) - offset));
+        zmin = std::max(-1.0, cos(acos(zmin) + offset));
+    }
 
     irmin = ringNum(nside, zmax);
     irmax = ringNum(nside, zmin);

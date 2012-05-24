@@ -70,20 +70,26 @@ void Texture::buildTexture(float* data, float minv, float maxv)
             {
                 data[pix] = log10(max(data[pix], (float)1.e-6*abs(maxv)));
                 /* *1 */
-                if(data[pix]<log_min)
-                    log_min = data[pix];
+                //if(data[pix]<log_min)
+                //    log_min = data[pix];
             }
         }
     }
 
-
     if(scale == LOGARITHMIC)
     {
+        /*
         if(minv>0)
             log_min = log10(minv);
+            */
+
         if(maxv>0)
             log_max = log10(maxv);
+
+        //qDebug() << "(face " << faceNumber << " " << nside << ") use log_min: " << log_min;
     }
+
+    //qDebug() << "Texture, using thresholds: " << log_min << "," << log_max;
 
 
     for(uint pix = 0; pix < npixels; pix++)

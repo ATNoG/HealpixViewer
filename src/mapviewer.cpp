@@ -280,30 +280,40 @@ void MapViewer::updateRotation(Quaternion rotation)
     updateGL();
 }
 
-void MapViewer::updateKeyPress(QKeyEvent *e)
+bool MapViewer::updateKeyPress(QKeyEvent *e)
 {
     switch(e->key())
     {
         case Qt::Key_I:
             displayInfo = !displayInfo;
             updateGL();
+            return true;
             break;
+
         case Qt::Key_Plus:
             automaticTextureNside = false;
             updateNside(min(currentNside*2, maxNside), true);
+            return true;
             break;
+
         case Qt::Key_Minus:
             automaticTextureNside = false;
             updateNside(max(currentNside/2, MIN_NSIDE), true);
+            return true;
             break;
+
         case Qt::Key_Z:
             automaticPVectorsNside = false;
             updateVectorsNside(min(currentVectorsNside*2, maxNside), true);
+            return true;
             break;
+
         case Qt::Key_A:
             automaticPVectorsNside = false;
             updateVectorsNside(max(currentVectorsNside/2, MIN_NSIDE), true);
+            return true;
             break;
+
         case Qt::Key_S:
             changeSelectionType(SINGLE_POINT);
             break;
@@ -365,7 +375,12 @@ void MapViewer::updateKeyPress(QKeyEvent *e)
         case Qt::Key_O:
             exportSelectedArea();
             break;
+        case Qt::Key_M:
+            exportSelectedAreaAsMask();
+            break;
     }
+
+    return false;
 }
 
 
@@ -443,8 +458,8 @@ void MapViewer::changeTo3D()
 
 void MapViewer::keyPressEvent(QKeyEvent *e)
 {
-    updateKeyPress(e);
-    emit(signalKeyPressed(e, this));
+    if(updateKeyPress(e))
+        emit(signalKeyPressed(e, this));
 }
 
 
@@ -537,6 +552,7 @@ void MapViewer::postSelection (const QPoint &point)
         switch(selectionType)
         {
             case SINGLE_POINT:
+                //qDebug() << "Selected pixel: " << pix;
                 pixels.insert(pix);
                 break;
 
@@ -576,7 +592,15 @@ void MapViewer::postSelection (const QPoint &point)
                 {
                     displayMessage("Calculating triangle", 10000);
                     nsideToUse = transformSameNside(auxiliarPixels, auxiliarNsides);
+                    //qDebug() << "Pixels: " << auxiliarPixels[0] << "," << auxiliarPixels[1] << "," << auxiliarPixels[2] << "with nside " << nsideToUse;
                     pixels = healpixMap->query_triangle(auxiliarPixels[0], auxiliarPixels[1], auxiliarPixels[2], nsideToUse);
+
+                    /*
+                    std::set<int>::iterator it;
+                    for(it=pixels.begin(); it!=pixels.end(); it++)
+                        qDebug() << *it;
+                    qDebug() << "Pixels selected: " << pixels.size();
+                    */
                     auxiliarPixels.clear();
                     auxiliarNsides.clear();
                     displayMessage("", 0);
@@ -627,12 +651,33 @@ int MapViewer::transformSameNside(std::vector<int>& pixels, std::vector<int> nsi
     return min_nside;
 }
 
+void MapViewer::updateSelection(std::set<int> pixels, int nside, bool add)
+{
+    if(add)
+    {
+        selectedPixels.insert(pixels.begin(), pixels.end());
+        if(pixels.size()>=1)
+            tesselation->selectPixels(pixels, nside);
+    }
+    else
+    {
+        std::set<int>::iterator it;
+        for(it=pixels.begin(); it!=pixels.end(); it++)
+            selectedPixels.erase(*it);
+        tesselation->unselectPixels(pixels);
+    }
+
+    update();
+}
+
 void MapViewer::addPixelsToSelection(std::set<int> pixels, int nside)
 {
     selectedPixels.insert(pixels.begin(), pixels.end());
 
     if(pixels.size()>=1)
         tesselation->selectPixels(pixels, nside);
+
+    emit(signalSelectionChanged(pixels, nside, true));
     pixels.clear();
 }
 
@@ -642,6 +687,8 @@ void MapViewer::removePixelsFromSelection(std::set<int> pixels)
     for(it=pixels.begin(); it!=pixels.end(); it++)
         selectedPixels.erase(*it);
     tesselation->unselectPixels(pixels);
+
+    emit(signalSelectionChanged(pixels, currentNside, false));
     pixels.clear();
 }
 
@@ -694,6 +741,36 @@ void MapViewer::exportSelectedArea()
     outmap.Set(inmap.Order(), inmap.Scheme());
     write_Healpix_map_to_fits ("!teste.fits",outmap,PLANCK_FLOAT32);
     */
+}
+
+void MapViewer::exportSelectedAreaAsMask()
+{
+    qDebug() << "Total pixels: " << selectedPixels.size();
+
+    QString outfile = QFileDialog::getSaveFileName(this, "Export mask as", "", "Fits Files (*.fits)");
+
+    if(!outfile.endsWith(".fits"))
+        outfile.append(".fits");
+
+    /* overwrite permission was already given */
+    outfile = "!" + outfile;
+
+    Healpix_Map<float> inmap;
+    read_Healpix_map_from_fits(filename.toUtf8().constData(),inmap,1,2);
+
+    Healpix_Map<float> newMap(inmap.Nside(), inmap.Scheme(), nside_dummy());
+    //newMap.Import(inmap, false);
+    newMap.fill(0);
+
+    std::set<int>::iterator it;
+    for(it=selectedPixels.begin(); it!=selectedPixels.end(); it++)
+    {
+        newMap[*it] = 1;
+    }
+
+    write_Healpix_map_to_fits(outfile.toUtf8().constData(), newMap, planckType<float>());
+
+    displayMessage("Mask created with success");
 }
 
 void MapViewer::changeSelectionType(SelectionType stype)

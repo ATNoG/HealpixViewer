@@ -97,7 +97,8 @@ public:
     void updateCameraPosition(float pos, bool signal=false, bool update=true);
     void updatePosition(Vec position);
     void updateRotation(Quaternion rotation);
-    void updateKeyPress(QKeyEvent *e);
+    bool updateKeyPress(QKeyEvent *e);
+    void updateSelection(std::set<int> pixels, int nside, bool add);
 
     //void checkForUpdates();
 
@@ -108,6 +109,7 @@ signals:
     void signalRotationChanged(Quaternion rotation, MapViewer *viewer);
     void signalPositionChanged(Vec position, MapViewer *viewer);
     void signalKeyPressed(QKeyEvent* e, MapViewer* viewer);
+    void signalSelectionChanged(std::set<int> pixels, int nside, bool add);
 
     void mapFieldChanged(mapInfo *info);
     void textureNsideUpdated(int nside);
@@ -176,6 +178,7 @@ private:
     int transformSameNside(std::vector<int>& pixels, std::vector<int> nsides);
 
     void exportSelectedArea();
+    void exportSelectedAreaAsMask();
 
     SelectionType selectionType;
 

@@ -8,6 +8,7 @@
 #include <chealpix.h>
 #include <cxxutils.h>
 #include <healpix_map.h>
+#include "types.h"
 
 class Histogram
 {
@@ -22,13 +23,23 @@ public:
     /* rebuild histogram using new min and max thresholds */
     void configureThresholds(float min, float max);
 
+    /* change the used scale */
+    void updateScale(ScaleType scale);
+
     float getHistogramValue(float pos1, float pos2);
 
     void getMinMax(float &min, float &max);
+    float getMinLog();
 
 private:
+    float minThreshold, minThresholdOriginal;
+    float maxThreshold, maxThresholdOriginal;
     float minValue;
     float maxValue;
+    float minLog;
+    ScaleType scale;
+    QList<float*> valuesList;
+    QList<int> nValues;
 
     hv::unique_array<int> histogram;
 
@@ -41,11 +52,13 @@ private:
     bool composite;
 
     /* setup histogram with new values */
-    void setupHistogram(hv::unique_array<float> values, int totalValues);
+    void setupHistogram(hv::unique_array<float> values, int totalValues, bool calculateExtremes=false);
 
     void calculateMinMax();
 
     void buildHistogram();
+
+    void computeValues(bool calculateExtremes=false);
 };
 
 #endif // HISTOGRAM_H

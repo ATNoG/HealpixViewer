@@ -63,6 +63,7 @@ void HistogramViewer::paintEvent(QPaintEvent*)
 
 void HistogramViewer::cleanupHistogram()
 {
+    //qDebug() << "cleaning up histogram";
     if(histogram!=NULL)
     {
         delete histogram;
@@ -74,6 +75,7 @@ void HistogramViewer::cleanupHistogram()
 
 void HistogramViewer::rebuildHistogram(float min, float max)
 {
+    //qDebug("HistogramViewer::rebuildHistogram");
     if(histogram!=NULL)
         histogram->configureThresholds(min, max);
     update();
@@ -84,5 +86,12 @@ void HistogramViewer::rebuildHistogram(float min, float max)
 void HistogramViewer::updateColorMap(ColorMap *colorMap)
 {
     this->ct = colorMap;
+    update();
+}
+
+void HistogramViewer::updateScale(ScaleType scale)
+{
+    if(histogram!=NULL)
+        histogram->updateScale(scale);
     update();
 }
