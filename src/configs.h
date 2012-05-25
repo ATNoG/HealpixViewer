@@ -82,5 +82,7 @@
 
 #define REALTIME_TEXTURES false
 
+#define DEFAULT_COLOR_MAP 4
+
 
 #endif // CONFIGS_H

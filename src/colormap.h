@@ -4,43 +4,33 @@
 
 #include <QString>
 #include <QColor>
+#include <QDir>
+#include <QStringList>
+#include <QDebug>
 #include <QPixmap>
 #include <vector>
+#include "configs.h"
+
+
+using namespace std;
 
 
 class ColorMap
 {
 public:
-        ColorMap();
-        ColorMap(int id);
-        QColor operator[](unsigned int ind) const;
+        ColorMap(int id, QString file);
         QColor operator[](float v) const;
-        QColor operator()(float v) const;
-        int getSize (void) const;
         QString getName();
-        QPixmap getPixmap();
         int getId();
-protected:
-        QString name;			//!< Name of the table.
-        int id;
-        unsigned int ncols;		//!< Number of colors in this table
-        std::vector<QColor> table;	//!< The color table
+
 private:
-        void define_table (float intab[][3]);
+        QString name;
+        int id;
+        unsigned int ncolors;
+        std::vector<QColor> table;
+
+        void readTable(QString file);
 };
-
-
-
-inline QColor ColorMap::operator[](unsigned int ind) const
-{
-        return table[(ind >= ncols) ? (ncols - 1) : ind];
-}
-
-
-inline QColor ColorMap::operator()(float v) const
-{
-        return operator[](v);
-}
 
 
 
@@ -64,7 +54,7 @@ public:
 
 private:
     static ColorMapManager *s_instance;
-    QList<ColorMap*> colorMaps;
+    QMap<int, ColorMap*> colorMaps;
 
     void readColorMaps();
 };
