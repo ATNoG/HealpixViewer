@@ -1,7 +1,8 @@
 #include "grid.h"
 
-Grid::Grid(int dlong, int dlat)
+Grid::Grid(QGLViewer* viewer, int dlong, int dlat)
 {
+    this->viewer = viewer;
     setConfiguration(dlong, dlat);
 }
 
@@ -20,6 +21,10 @@ void Grid::setConfiguration(int dlong, int dlat)
 
 void Grid::draw()
 {
+    glClientActiveTexture(GL_TEXTURE0);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
+
     float phi, theta;
     float cosphi, sinphi, costheta, sintheta;
     float x, y;
@@ -69,5 +74,41 @@ void Grid::draw()
             glVertex3f(x*radius, y*radius, costheta*radius);
         }
         glEnd();
+    }
+
+    /* draw coordinates */
+    float labelRadius = radius+0.02;
+
+    glColor3f(1.0, 1.0, 1.0);
+    for(int i=1; i<nparal; i++)
+    {
+        theta = (float) i*M_PI / nparal;
+        costheta = cos(theta);
+        sintheta = sin(theta);
+        for(int j=0; j<4; j++)
+        {
+            phi = j*(M_PI/2) + (2*M_PI/nmerid)/4;
+            x = -sintheta*sin(phi);
+            y = sintheta*cos(phi);
+            //float degrees = -(theta * 180 / M_PI - 90);
+            float degrees = - (i*180 / nparal - 90);
+            viewer->renderText(x*labelRadius, y*labelRadius, costheta*labelRadius, QString("%1").arg(degrees).append(QString::fromUtf8("º")), QFont("Arial", 9));
+        }
+    }
+
+    theta = M_PI/2 - (2*M_PI/nparal)/4;
+    costheta = cos(theta);
+    sintheta = sin(theta);
+
+    for(int i=0; i<nmerid*2; i++)
+    {
+        phi = (float) i*M_PI / nmerid;
+
+        sinphi = sin(phi);
+
+        x = -sintheta*sinphi;
+        y = sintheta*cos(phi);
+        float degrees = - (i*180 / nparal - 180) + 90;
+        viewer->renderText(x*labelRadius, y*labelRadius, costheta*labelRadius, QString("%1").arg(degrees).append(QString::fromUtf8("º")), QFont("Arial", 9));
     }
 }

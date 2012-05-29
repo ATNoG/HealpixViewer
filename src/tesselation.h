@@ -30,7 +30,7 @@ struct faceInfo
 };
 
 public:
-    Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache, int maxNside);
+    Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache, Grid* grid, int maxNside);
     ~Tesselation();
     void draw();
     void drawAllFaces();

@@ -1,11 +1,12 @@
 #include "tesselation.h"
 
-Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache, int maxNside)
+Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache, Grid* _grid, int maxNside)
 {
     textureNside = _textureNside;
     vectorsNside = _pVecNside;
     tesselationNside = _tessNside;
     mollview = _mollview;
+    grid = _grid;
 
     /* by default dont show the polarization vectors neither grid */
     displayPolarizationVectors = false;
@@ -20,9 +21,6 @@ Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool
     this->manager = new ROIManager(maxNside);
 
     createInitialTesselation();
-
-    /* create grid */
-    grid = new Grid(30, 30);
 }
 
 Tesselation::~Tesselation()

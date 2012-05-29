@@ -3,12 +3,13 @@
 
 #include <math.h>
 #include <GL/gl.h>
+#include <QGLViewer/qglviewer.h>
 #include <QDebug>
 
 class Grid
 {
 public:
-    Grid(int dlong, int dlat);
+    Grid(QGLViewer* viewer, int dlong, int dlat);
     ~Grid();
 
     void setConfiguration(int dlong, int dlat);
@@ -17,6 +18,7 @@ public:
 private:
     int dlong;
     int dlat;
+    QGLViewer* viewer;
 };
 
 #endif // GRID_H

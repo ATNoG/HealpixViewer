@@ -138,8 +138,11 @@ bool MapViewer::loadMap(QString fitsfile)
                 QObject::connect(textureCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
                 QObject::connect(overlayCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
 
+                /* create grid */
+                Grid* grid = new Grid(this, 30, 30);
+
                 /* create the sphere tesselation */
-                tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache, maxNside);
+                tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache, grid, maxNside);
                 tesselation->setMap(healpixMap);
 
                 /* preload next faces */
