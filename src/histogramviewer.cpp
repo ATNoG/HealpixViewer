@@ -51,7 +51,7 @@ void HistogramViewer::paintEvent(QPaintEvent*)
             float value = histogram->getHistogramValue(pos1, pos2);
             float color = (float)i/(float)_width;
 
-            painter.setPen((*ct)(color));
+            painter.setPen((*ct)[color]);
             //qDebug() << "Value for pos " << i << " = " << (int)(_height*(1-value))-yMargin;
 
             if(value>0.0)

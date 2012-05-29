@@ -118,7 +118,7 @@ void Texture::buildTexture(float* data, float minv, float maxv)
                 v = (v-minv)/(maxv-minv);
             }
 
-            color = (*colorMap)(v);
+            color = (*colorMap)[v];
         }
 
         texk = pix*3;
