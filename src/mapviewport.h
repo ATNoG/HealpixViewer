@@ -27,7 +27,7 @@ public:
     ~MapViewport();
 
     bool isSelected();
-    bool openMap(QString fitsfile);
+    bool openMap(QString fitsfile, HealpixMap::MapType type);
     void selectViewport(bool changeCheckbox);
     void deselectViewport(bool changeCheckbox);
     bool isSynchronized();

@@ -248,12 +248,12 @@ void MapViewport::resetViewport()
 }
 
 
-bool MapViewport::openMap(QString fitsfile)
+bool MapViewport::openMap(QString fitsfile, HealpixMap::MapType type)
 {
     qDebug() << "Opening " << fitsfile << " on " << title;
 
     /* load the map into viewport */
-    bool _loaded = mapviewer->loadMap(fitsfile);
+    bool _loaded = mapviewer->loadMap(fitsfile, type);
 
     if(_loaded)
     {

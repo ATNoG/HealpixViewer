@@ -1,5 +1,6 @@
 #include "viewportmanager.h"
 #include "ui_viewportmanager.h"
+#include "exceptions.h"
 
 ViewportManager::ViewportManager(QWidget *parent) :
     QWidget(parent),
@@ -239,14 +240,60 @@ void ViewportManager::openFiles(QStringList filenames)
 {
     foreach(QString fitsfile, filenames)
     {
-        /* no viewports free to open new map */
-        if(usedViewports!=MAXVIEWPORTS)
+        HealpixMap* healpixMap;
+
+        /* open fits file */
+        bool mapCreated;
+        try
+        {
+            healpixMap = new HealpixMap(fitsfile, MIN_NSIDE);
+            mapCreated = true;
+        }
+        catch(HealpixMapException e)
+        {
+            qDebug() << e.what();
+            mapCreated = false;
+        }
+        catch(std::bad_alloc e)
+        {
+            qDebug() << "Not enough memory";
+            mapCreated = false;
+        }
+
+        if(mapCreated)
+        {
+            /* get available maps */
+            QList<HealpixMap::MapType> availableMaps = healpixMap->getAvailableMaps();
+
+            MapLoader* mapLoader = new MapLoader(this, fitsfile, availableMaps);
+            if(mapLoader->exec())
+            {
+                QSet<HealpixMap::MapType> maptypes = mapLoader->getSelectedMapTypes();
+
+                if(maptypes.size()>0)
+                    openInViewports(fitsfile, maptypes);
+                else
+                    QMessageBox::warning (this, "HealpixViewer", "No fields were selected for map " + fitsfile);
+            }
+            delete mapLoader;
+        }
+
+        delete healpixMap;
+    }
+}
+
+
+void ViewportManager::openInViewports(QString fitsfile, QSet<HealpixMap::MapType> mapTypes)
+{
+    /* no viewports free to open new map */
+    if(usedViewports+mapTypes.size() != MAXVIEWPORTS)
+    {
+        foreach(HealpixMap::MapType mapType, mapTypes)
         {
             QString title = defaultTitle.arg(viewportIdx);
 
-
             MapViewport *viewport = new MapViewport(0, title, viewportIdx, shareWidget);
-            bool opened = viewport->openMap(fitsfile);
+            bool opened = viewport->openMap(fitsfile, mapType);
 
             if(opened)
             {
@@ -281,14 +328,14 @@ void ViewportManager::openFiles(QStringList filenames)
             else
             {
                 /* show warning dialog */
-                QMessageBox::warning (this, "HealpixViewer", "Error opening map " + fitsfile);
+                QMessageBox::warning (this, "HealpixViewer", "Error opening map " + fitsfile + "(" + HealpixMap::mapTypeToString(mapType) + ")");
             }
         }
-        else
-        {
-            /* show warning dialog */
-            QMessageBox::warning (this, "HealpixViewer", "No more viewports available to open a new map. Please close some map first");
-        }
+    }
+    else
+    {
+        /* show warning dialog */
+        QMessageBox::warning (this, "HealpixViewer", "No more viewports available to open all maps. Please close some map first");
     }
 }
 

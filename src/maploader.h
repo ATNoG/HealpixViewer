@@ -5,8 +5,11 @@
 #include <QDialog>
 #include <QVBoxLayout>
 #include <QLabel>
-#include <QComboBox>
+#include <QGroupBox>
+#include <QCheckBox>
+#include <QSet>
 #include <QPushButton>
+#include <QVector>
 #include "healpixmap.h"
 
 class MapLoader : public QDialog
@@ -17,13 +20,15 @@ public:
     explicit MapLoader(QWidget *parent, QString filename, QList<HealpixMap::MapType> availableMaps);
     ~MapLoader();
     HealpixMap::MapType getSelectedMapType();
+    QSet<HealpixMap::MapType> getSelectedMapTypes();
 
 private:
     QList<HealpixMap::MapType> availableMaps;
-    QComboBox* comboBox;
+    QGroupBox *groupBox;
     QVBoxLayout* vboxlayout;
     QLabel* lbltitle;
     QPushButton* openButton;
+    QVector<QCheckBox*> checkboxs;
 };
 
 #endif // MAPLOADER_H

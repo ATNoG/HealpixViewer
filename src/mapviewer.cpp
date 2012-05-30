@@ -83,10 +83,9 @@ void MapViewer::draw()
     }
 }
 
-bool MapViewer::loadMap(QString fitsfile)
+bool MapViewer::loadMap(QString fitsfile, HealpixMap::MapType mapType)
 {
     currentVectorsNside = currentNside = MIN_NSIDE;
-    qDebug() << "Loading on mapviewer: " << fitsfile;
 
     if(!initialized)
     {
@@ -96,6 +95,7 @@ bool MapViewer::loadMap(QString fitsfile)
         try
         {
             filename = fitsfile;
+            this->mapType = mapType;
             healpixMap = new HealpixMap(fitsfile, MIN_NSIDE);
             mapCreated = true;
         }
@@ -112,48 +112,37 @@ bool MapViewer::loadMap(QString fitsfile)
 
         if(mapCreated)
         {
-            /* get available maps */
-            QList<HealpixMap::MapType> availableMaps = healpixMap->getAvailableMaps();
+            #if DEBUG > 0
+                qDebug() << "Opening map with type: " << HealpixMap::mapTypeToString(mapType);
+            #endif
 
-            MapLoader* mapLoader = new MapLoader(this, fitsfile, availableMaps);
-            if(mapLoader->exec())
-            {
-                mapType = mapLoader->getSelectedMapType();
+            healpixMap->changeCurrentMap(mapType);
 
-                #if DEBUG > 0
-                    qDebug() << "Opening map with type: " << HealpixMap::mapTypeToString(mapType);
-                #endif
+            /* calculate max nside */
+            maxNside = min(healpixMap->getMaxNside(), MAX_NSIDE);
 
-                healpixMap->changeCurrentMap(mapType);
+            /* get face cache */
+            faceCache = FaceCache::instance(MIN_NSIDE, MAX_NSIDE);          // TODO: correct ? MAX_NSIDE is used because facecache is shared
+            textureCache = new TextureCache(healpixMap, MIN_NSIDE, maxNside);
+            overlayCache = new OverlayCache(healpixMap, MIN_NSIDE, maxNside);
 
-                /* calculate max nside */
-                maxNside = min(healpixMap->getMaxNside(), MAX_NSIDE);
+            QObject::connect(faceCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
+            QObject::connect(textureCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
+            QObject::connect(overlayCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
 
-                /* get face cache */
-                faceCache = FaceCache::instance(MIN_NSIDE, MAX_NSIDE);          // TODO: correct ? MAX_NSIDE is used because facecache is shared
-                textureCache = new TextureCache(healpixMap, MIN_NSIDE, maxNside);
-                overlayCache = new OverlayCache(healpixMap, MIN_NSIDE, maxNside);
+            /* create grid */
+            grid = new Grid(this, GRID_MERIDIANS, GRID_PARALLELS);
 
-                QObject::connect(faceCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
-                QObject::connect(textureCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
-                QObject::connect(overlayCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
+            /* create the sphere tesselation */
+            tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache, grid, maxNside);
+            tesselation->setMap(healpixMap);
 
-                /* create grid */
-                grid = new Grid(this, GRID_MERIDIANS, GRID_PARALLELS);
+            /* preload next faces */
+            preloadFaces();
 
-                /* create the sphere tesselation */
-                tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache, grid, maxNside);
-                tesselation->setMap(healpixMap);
+            initialized = true;
 
-                /* preload next faces */
-                preloadFaces();
-
-                initialized = true;
-
-                return true;
-            }
-
-            delete mapLoader;
+            return true;
         }
     }
 

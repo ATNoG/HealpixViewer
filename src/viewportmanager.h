@@ -70,6 +70,7 @@ private:
 
     /* open files and create viewports */
     void openFiles(QStringList filenames);
+    void openInViewports(QString filename, QSet<HealpixMap::MapType>);
     /* load map information for viewport */
     //void loadMapInfo(int viewportId);
     /* return list of histogram checked viewports in treeview */

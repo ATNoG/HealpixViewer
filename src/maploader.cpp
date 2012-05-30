@@ -13,21 +13,27 @@ MapLoader::MapLoader(QWidget *parent, QString filename, QList<HealpixMap::MapTyp
 
     /* create title label */
     lbltitle = new QLabel();
-    lbltitle->setText("Opening " + filename + "\nSelect the wanted map");
+    lbltitle->setText("Opening " + filename);
 
     /* create combobox with available maps */
-    comboBox = new QComboBox();
+    groupBox = new QGroupBox("Select the wanted maps");
+    QVBoxLayout *vbox = new QVBoxLayout;
+
     for(int i=0; i<availableMaps.size(); i++)
     {
-        comboBox->addItem(HealpixMap::mapTypeToString(availableMaps[i]), i);
+        QCheckBox *checkBox = new QCheckBox(HealpixMap::mapTypeToString(availableMaps[i]));
+        checkboxs.append(checkBox);
+        vbox->addWidget(checkBox);
     }
+
+    groupBox->setLayout(vbox);
 
     /* create button */
     openButton = new QPushButton("Open");
 
     /* add widget to layout */
     vboxlayout->addWidget(lbltitle);
-    vboxlayout->addWidget(comboBox);
+    vboxlayout->addWidget(groupBox);
     vboxlayout->addWidget(openButton, 0, Qt::AlignRight);
     setLayout(vboxlayout);
 
@@ -42,7 +48,15 @@ MapLoader::~MapLoader()
     #endif
 }
 
-HealpixMap::MapType MapLoader::getSelectedMapType()
+QSet<HealpixMap::MapType> MapLoader::getSelectedMapTypes()
 {
-    return availableMaps[comboBox->currentIndex()];
+    QSet<HealpixMap::MapType> mapFields;
+
+    for(int i=0; i<checkboxs.size(); i++)
+    {
+        if(checkboxs[i]->isChecked())
+            mapFields.insert(availableMaps[i]);
+    }
+
+    return mapFields;
 }

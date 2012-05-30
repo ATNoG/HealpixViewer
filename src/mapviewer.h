@@ -88,8 +88,7 @@ public:
     ~MapViewer();
     void changeToMollview();
     void changeTo3D();
-    //void loadMap(HealpixMap* map);
-    bool loadMap(QString fitsfile);
+    bool loadMap(QString fitsfile, HealpixMap::MapType type);
     bool zoomIn();
     bool zoomOut();
     void resetView();
