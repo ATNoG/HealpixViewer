@@ -85,4 +85,11 @@
 #define DEFAULT_COLOR_MAP 4
 
 
+// Grid
+#define GRID_MERIDIANS 45
+#define GRID_PARALLELS 45
+#define GRID_LABELING true
+#define GRID_LABEL_SIZE 9
+
+
 #endif // CONFIGS_H

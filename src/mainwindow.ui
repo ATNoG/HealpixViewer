@@ -144,6 +144,33 @@
             </property>
            </widget>
           </widget>
+          <widget class="QWidget" name="gridTab">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <attribute name="title">
+            <string>Grid</string>
+           </attribute>
+           <widget class="GridOptions" name="gridOptions" native="true">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>10</y>
+              <width>280</width>
+              <height>500</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </widget>
          </widget>
         </item>
         <item>
@@ -198,7 +225,7 @@
      <x>0</x>
      <y>0</y>
      <width>679</width>
-     <height>26</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -577,6 +604,12 @@
    <class>WorkSpace</class>
    <extends>QWidget</extends>
    <header>workspace.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>GridOptions</class>
+   <extends>QWidget</extends>
+   <header>gridoptions.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

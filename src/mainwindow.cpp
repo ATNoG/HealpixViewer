@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ViewportManager *viewportManager  = ui->viewportManager;
     HistogramWidget *histogramControl = ui->histogramControl;
     MapOptions *mapOptions = ui->mapOptions;
+    GridOptions *gridOptions = ui->gridOptions;
 
     /* add workspace to splitter */
     ui->splitter->insertWidget(0, workspace);
@@ -66,6 +67,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(viewportManager, SIGNAL(viewportsSelectionUpdated(QList<int>)), mapOptions, SLOT(updateSelectedMaps(QList<int>)));
     connect(mapOptions, SIGNAL(optionsChanged(mapOptions*)), viewportManager, SLOT(applyMapOptions(mapOptions*)));
 
+    /* connect viewportManager to gridOptions */
+    connect(viewportManager, SIGNAL(viewportsSelectionUpdated(QList<int>)), gridOptions, SLOT(updateSelectedMaps(QList<int>)));
+    connect(gridOptions, SIGNAL(gridOptionsChanged(gridOptions*)), viewportManager, SLOT(applyGridOptions(gridOptions*)));
+
     /* connect viewportManager to workspace */
     connect(viewportManager, SIGNAL(viewportShowOn(int,MapViewport*)), workspace, SLOT(addViewport(int,MapViewport*)));
     connect(viewportManager, SIGNAL(viewportShowOff(int)), workspace, SLOT(removeViewport(int)));
@@ -83,7 +88,6 @@ MainWindow::MainWindow(QWidget *parent) :
     /* connect workspace to mapOptions */
     connect(workspace, SIGNAL(textureNsideUpdated(int,int)), mapOptions, SLOT(updateTextureNside(int,int)));
     connect(workspace, SIGNAL(vectorsNsideUpdated(int,int)), mapOptions, SLOT(updateVectorsNside(int,int)));
-
 
     /* open application in fullscreen */
     QWidget::showMaximized();

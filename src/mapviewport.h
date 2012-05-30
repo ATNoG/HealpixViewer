@@ -41,6 +41,7 @@ public:
     void disconnectFromWorkspace();
 
     void applyOptions(mapOptions *options);
+    void applyGridOptions(gridOptions *options);
     void syncPixelSelection(std::set<int> pixels, int nside, bool add);
 
     bool isSelectionSource();

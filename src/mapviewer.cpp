@@ -139,7 +139,7 @@ bool MapViewer::loadMap(QString fitsfile)
                 QObject::connect(overlayCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
 
                 /* create grid */
-                Grid* grid = new Grid(this, 30, 30);
+                grid = new Grid(this, GRID_MERIDIANS, GRID_PARALLELS);
 
                 /* create the sphere tesselation */
                 tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache, grid, maxNside);
@@ -1487,6 +1487,15 @@ void MapViewer::applyOptions(mapOptions *options)
     if(options->minPolThreshold!=-1 && options->maxPolThreshold!=-1)
         overlayCache->setPolarizationMagThreshold(options->minPolThreshold, options->maxPolThreshold);
 
+    updateGL();
+}
+
+
+void MapViewer::applyGridOptions(gridOptions* options)
+{
+    grid->setConfiguration(options->meridians, options->parallels);
+    grid->setLabeling(options->labeling, options->labelSize);
+    grid->setColor(options->color);
     updateGL();
 }
 

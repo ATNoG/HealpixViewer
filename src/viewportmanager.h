@@ -36,6 +36,8 @@ public slots:
     void viewportSelectionChanged(int viewportId, bool selected);
     /* apply map options */
     void applyMapOptions(mapOptions* options);
+    /* apply grid options */
+    void applyGridOptions(gridOptions* options);
 
 private slots:
     /* connected to map field combobox */

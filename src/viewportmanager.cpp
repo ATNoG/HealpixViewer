@@ -104,7 +104,6 @@ void ViewportManager::histogramSelectionChanged(QTreeWidgetItem*, int)
     QList<int> selectedViewports = getHistogramActiveViewports();
 
     /* emit signal to histogram update */
-    qDebug() << "histogramViewportsSelectedUpdated";
     emit(histogramViewportsSelectedUpdated(selectedViewports));
 }
 
@@ -477,5 +476,16 @@ void ViewportManager::applyMapOptions(mapOptions* options)
     foreach(int viewportId, selectedViewports)
     {
         viewports[viewportId]->applyOptions(options);
+    }
+}
+
+/* apply grid options */
+void ViewportManager::applyGridOptions(gridOptions *options)
+{
+    QList<int> selectedViewports = getSelectedViewports();
+
+    foreach(int viewportId, selectedViewports)
+    {
+        viewports[viewportId]->applyGridOptions(options);
     }
 }

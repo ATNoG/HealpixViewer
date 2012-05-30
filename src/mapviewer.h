@@ -48,6 +48,14 @@ struct mapOptions
     int vectorsSpacing;
 };
 
+struct gridOptions
+{
+    int meridians;
+    int parallels;
+    QColor color;
+    bool labeling;
+    int labelSize;
+};
 
 struct mapInfo
 {
@@ -92,6 +100,7 @@ public:
     void updateThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor, ScaleType scale, float factor, float offset);
     void changeMapField(HealpixMap::MapType field);
     void applyOptions(mapOptions *options);
+    void applyGridOptions(gridOptions* options);
 
     /* sync */
     void updateCameraPosition(float pos, bool signal=false, bool update=true);
@@ -197,6 +206,8 @@ private:
 
     std::set<int> selectedPixels;
     QString filename;
+
+    Grid* grid;
 };
 
 #endif // MAPVIEWER_H

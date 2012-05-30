@@ -539,6 +539,12 @@ void MapViewport::applyOptions(mapOptions *options)
 }
 
 
+void MapViewport::applyGridOptions(gridOptions *options)
+{
+    mapviewer->applyGridOptions(options);
+}
+
+
 void MapViewport::updateOptionTextureNside(int nside)
 {
     emit(textureNsideUpdated(nside, viewportId));

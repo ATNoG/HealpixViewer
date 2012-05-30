@@ -4,6 +4,10 @@ Grid::Grid(QGLViewer* viewer, int dlong, int dlat)
 {
     this->viewer = viewer;
     setConfiguration(dlong, dlat);
+
+    color = QColor("white");
+    labeling = GRID_LABELING;
+    labelSize = GRID_LABEL_SIZE;
 }
 
 Grid::~Grid()
@@ -17,6 +21,17 @@ void Grid::setConfiguration(int dlong, int dlat)
 {
     this->dlong = dlong;
     this->dlat  = dlat;
+}
+
+void Grid::setLabeling(bool active, int size)
+{
+    this->labeling = active;
+    this->labelSize = size;
+}
+
+void Grid::setColor(QColor color)
+{
+    this->color = color;
 }
 
 void Grid::draw()
@@ -37,6 +52,11 @@ void Grid::draw()
 
     dtheta = 2.0*M_PI / (float)points;
     dphi = 2.0*M_PI / (float)points;
+
+    /* change color */
+    double r,g,b;
+    color.getRgbF(&r, &g, &b);
+    glColor3d(r, g, b);
 
     /* draw meridians (longitude lines) */
     for (int i=0; i<nmerid; i++)
@@ -76,39 +96,47 @@ void Grid::draw()
         glEnd();
     }
 
-    /* draw coordinates */
-    float labelRadius = radius+0.02;
-
-    glColor3f(1.0, 1.0, 1.0);
-    for(int i=1; i<nparal; i++)
+    if(labeling)
     {
-        theta = (float) i*M_PI / nparal;
+        /* draw parallels coordinates */
+        float labelRadius = radius+0.02;
+
+        for(int i=1; i<nparal; i++)
+        {
+            theta = (float) i*M_PI / nparal;
+            costheta = cos(theta);
+            sintheta = sin(theta);
+            for(int j=0; j<4; j++)
+            {
+                phi = j*(M_PI/2) + (2*M_PI/nmerid)/4;
+                x = -sintheta*sin(phi);
+                y = sintheta*cos(phi);
+                //float degrees = -(theta * 180 / M_PI - 90);
+                float degrees = - (i*180 / nparal - 90);
+                viewer->renderText(x*labelRadius, y*labelRadius, costheta*labelRadius, QString("%1").arg(degrees).append(QString::fromUtf8("º")), QFont("Arial", labelSize));
+            }
+        }
+
+        /* draw meridians coordinates */
+        theta = M_PI/2 - (2*M_PI/nparal)/4;
         costheta = cos(theta);
         sintheta = sin(theta);
-        for(int j=0; j<4; j++)
+
+        for(int i=0; i<nmerid*2; i++)
         {
-            phi = j*(M_PI/2) + (2*M_PI/nmerid)/4;
-            x = -sintheta*sin(phi);
+            phi = (float) - (i*M_PI / nmerid) - M_PI/2;
+
+            sinphi = sin(phi);
+
+            x = -sintheta*sinphi;
             y = sintheta*cos(phi);
-            //float degrees = -(theta * 180 / M_PI - 90);
-            float degrees = - (i*180 / nparal - 90);
-            viewer->renderText(x*labelRadius, y*labelRadius, costheta*labelRadius, QString("%1").arg(degrees).append(QString::fromUtf8("º")), QFont("Arial", 9));
+            float degrees;
+
+            if(i<=nmerid)
+                degrees = (i*180 / nmerid);
+            else
+                degrees = - (nmerid*2-i) * 180 / nmerid;
+            viewer->renderText(x*labelRadius, y*labelRadius, costheta*labelRadius, QString("%1").arg(degrees).append(QString::fromUtf8("º")), QFont("Arial", labelSize));
         }
-    }
-
-    theta = M_PI/2 - (2*M_PI/nparal)/4;
-    costheta = cos(theta);
-    sintheta = sin(theta);
-
-    for(int i=0; i<nmerid*2; i++)
-    {
-        phi = (float) i*M_PI / nmerid;
-
-        sinphi = sin(phi);
-
-        x = -sintheta*sinphi;
-        y = sintheta*cos(phi);
-        float degrees = - (i*180 / nparal - 180) + 90;
-        viewer->renderText(x*labelRadius, y*labelRadius, costheta*labelRadius, QString("%1").arg(degrees).append(QString::fromUtf8("º")), QFont("Arial", 9));
     }
 }
