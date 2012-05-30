@@ -405,6 +405,8 @@ else
 	LIBS="$LIBS -lQGLViewer"
 fi
 
+LIBS="$LIBS -lGLU -lcfitsio"
+
 AC_CHECK_HEADERS([QGLViewer/qglviewer.h],[AC_DEFINE(HAVE_QGLVIEWER_H)],[AC_MSG_ERROR("Could not find qglviewer.h from the QGLViewer package")])
 
 
