@@ -6,7 +6,8 @@ BUILT_SOURCES = \
 	src/ui_histogramwidget.h\
 	src/ui_mainwindow.h \
 	src/ui_mapoptions.h \
-	src/ui_viewportmanager.h
+	src/ui_viewportmanager.h \
+	src/ui_gridoptions.h
 
 healpixviewer_SOURCES = \
 		src/icons.cpp \
@@ -16,6 +17,7 @@ healpixviewer_SOURCES = \
 		src/moc_mainwindow.cpp \
 		src/moc_maploader.cpp \
 		src/moc_mapoptions.cpp \
+		src/moc_gridoptions.cpp \
 		src/moc_mapviewer.cpp \
 		src/moc_mapviewport.cpp \
 		src/moc_overlaycache.cpp \
@@ -37,6 +39,7 @@ healpixviewer_SOURCES = \
 		src/mainwindow.cpp \
 		src/maploader.cpp \
 		src/mapoptions.cpp \
+		src/gridoptions.cpp \
 		src/mapoverlay.cpp \
 		src/mapviewer.cpp \
 		src/mapviewport.cpp \
