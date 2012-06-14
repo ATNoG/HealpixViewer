@@ -1,4 +1,5 @@
 #include "face.h"
+#include <cmath>
 
 
 Face::Face()
@@ -16,6 +17,9 @@ Face::Face(int faceNumber, int nside, bool mollweide)
     bufferInitialized = false;
     vertexBuffer = NULL;
     textureBuffer = NULL;
+
+    xRot = 0;
+    yRot = 0;
 }
 
 
@@ -83,16 +87,16 @@ void Face::draw()
                     glColor3f(0.0, 1.0, 0.5);
                     break;
                 case 8:
-                    glColor3f(0.5, 1.0, 0.5);
+                    glColor3f(0.8549, 0.647058, 0.12549);
                     break;
                 case 9:
-                    glColor3f(0.5, 0.0, 1.0);
+                    glColor3f(0.545098, 0.513725, 0.470588);
                     break;
                 case 10:
-                    glColor3f(1.0, 0.0, 0.5);
+                    glColor3f(1.0, 0.5, 0);
                     break;
                 case 11:
-                    glColor3f(0.5, 0.5, 1.0);
+                    glColor3f(0.5, 0, 0.5);
                     break;
             }
         }
@@ -186,9 +190,6 @@ void Face::draw()
             glEnd();
         }
     }
-
-    //int ms = time1.elapsed();
-    //qDebug() << "Time drawbuffer (nside " << nside << "): " << ms;
 }
 
 
@@ -221,11 +222,7 @@ void Face::createVertexs()
             vertexs[i+1] = verticesIT->y;
             vertexs[i+2] = verticesIT->z;
             i+=3;
-            /*
-            // Flipped: T and S changed!
-            textureCoords[j] = verticesIT->t;
-            textureCoords[j+1] = verticesIT->s;
-            */
+
             textureCoords[j] = verticesIT->s;
             textureCoords[j+1] = verticesIT->t;
             j+=2;
@@ -241,36 +238,50 @@ void Face::createVertexs()
 
 
 /* create opengl buffers */
-void Face::createBuffer()
+void Face::createBuffer(bool rotationUpdated)
 {
-    //QTime time1;
-    //time1.start();
-
     createVertexs();
 
-    vertexBuffer = new QGLBuffer(QGLBuffer::VertexBuffer);
-    textureBuffer = new QGLBuffer(QGLBuffer::VertexBuffer);
+    if(vertexBuffer!=NULL)
+    {
+        vertexBuffer->release();
+        vertexBuffer->destroy();
+        delete vertexBuffer;
+    }
 
+    vertexBuffer = new QGLBuffer(QGLBuffer::VertexBuffer);
     vertexBuffer->create();
-    textureBuffer->create();
 
     vertexBuffer->bind();
     vertexBuffer->setUsagePattern(QGLBuffer::StaticDraw);
     vertexBuffer->allocate(vertexs, 3*totalVertices*sizeof(GLfloat));
     vertexBuffer->release();
 
-    textureBuffer->bind();
-    textureBuffer->setUsagePattern(QGLBuffer::StaticDraw);
-    textureBuffer->allocate(textureCoords, 2*totalVertices*sizeof(GLfloat));
-    textureBuffer->release();
-
     delete[] vertexs;
-    delete[] textureCoords;
+
+
+    /* only udpate texture buffer if is not a mollweide rotation update */
+    if(!rotationUpdated || textureBuffer==NULL)
+    {
+        if(textureBuffer!=NULL)
+        {
+            textureBuffer->release();
+            textureBuffer->destroy();
+            delete textureBuffer;
+        }
+
+        textureBuffer = new QGLBuffer(QGLBuffer::VertexBuffer);
+        textureBuffer->create();
+
+        textureBuffer->bind();
+        textureBuffer->setUsagePattern(QGLBuffer::StaticDraw);
+        textureBuffer->allocate(textureCoords, 2*totalVertices*sizeof(GLfloat));
+        textureBuffer->release();
+
+        delete[] textureCoords;
+    }
 
     bufferInitialized = true;
-
-    //int ms = time1.elapsed();
-    //qDebug() << "Time createBuffer (nside " << nside << "): " << ms;
 }
 
 
@@ -307,6 +318,33 @@ void Face::toMollweide(double rad)
     double lambda;
     double x,y;
 
+    double zRot = 0.;
+
+    xRot = xRot*2*M_PI/360.0;
+    yRot = yRot*2*M_PI/360.0;
+
+    bool do_rot = (xRot!=0 || yRot!=0);
+
+    double euler[3][3];
+
+    if(do_rot)
+    {
+        // calculate euler matrix
+
+        double c1,s1,c2,s2,c3,s3;
+        c1 = cos(xRot); s1 = sin(xRot);
+        c2 = cos(yRot); s2 = sin(yRot);
+        c3 = cos(zRot); s3 = sin(zRot);
+
+        double aux[3][3];
+        double m1[3][3] = {{c1,-s1,0.},{s1,c1,0.},{0.,0.,1.}};
+        double m2[3][3] = {{c2,0.,s2},{0.,1.,0.},{-s2,0.,c2}};
+        double m3[3][3] = {{1.,0.,0.},{0.,c3,-s3},{0.,s3,c3}};
+
+        multiplyMatrices(m2, m1, aux, 3, 3, 3);
+        multiplyMatrices(m3, aux, euler, 3, 3, 3);
+    }
+
     QVector<Strip>::iterator stripIT;
     QVector<Vertice>::iterator verticeIT;
 
@@ -314,8 +352,24 @@ void Face::toMollweide(double rad)
     {
         for(verticeIT=stripIT->begin(); verticeIT!=stripIT->end(); ++verticeIT)
         {
-            phi = asin(verticeIT->z);
-            lambda = atan2(verticeIT->y, verticeIT->x);
+            if(do_rot)
+            {
+                double spinVec[3];
+
+                // multiply vector with euler matrix
+                spinVec[0] = verticeIT->x * euler[0][0] + verticeIT->y * euler[0][1] + verticeIT->z * euler[0][2];
+                spinVec[1] = verticeIT->x * euler[1][0] + verticeIT->y * euler[1][1] + verticeIT->z * euler[1][2];
+                spinVec[2] = verticeIT->x * euler[2][0] + verticeIT->y * euler[2][1] + verticeIT->z * euler[2][2];
+
+                phi = asin(spinVec[2]);
+                lambda = atan2(spinVec[1], spinVec[0]);
+            }
+            else
+            {
+                phi = asin(verticeIT->z);
+                lambda = atan2(verticeIT->y, verticeIT->x);
+            }
+
             toMollweide(phi, lambda, x, y);
             if( (faceNumber == 2 || faceNumber == 10) && x > 0) x *= -1;
             verticeIT->y = r*x;
@@ -432,7 +486,7 @@ void Face::toMollweideBackfaceSplit()
 
 
 /* TODO: put this function in another place ? */
-double Face::toMollweide(const double phi, const double lambda, double &x, double &y)
+double Face::toMollweide(double phi, double lambda, double &x, double &y)
 {
     const double lambda0 = 0;
         const double r2 = sqrt(2.);
@@ -480,4 +534,14 @@ double Face::toMollweide(const double phi, const double lambda, double &x, doubl
         y = r2 * sin(theta);
 
         return theta;
+}
+
+
+void Face::setMollweideRotation(int xRot, int yRot)
+{
+    this->xRot = xRot;
+    this->yRot = yRot;
+
+    //qDebug() << "Updating mollweide rotation";
+    //createBuffer(true);
 }

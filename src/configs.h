@@ -9,6 +9,7 @@
 #define DEBUG 0
 #define GRID_LINES 6
 
+#define FLIP false // flip mollweide projection
 
 
 // min and max nside for tesselation

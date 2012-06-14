@@ -127,7 +127,7 @@ signals:
 protected:
     virtual void init(void);
     virtual void draw(void);
-    //virtual void mousePressEvent(QMouseEvent* e);
+    virtual void mousePressEvent(QMouseEvent* e);
     virtual void mouseReleaseEvent(QMouseEvent *);
     virtual void mouseMoveEvent(QMouseEvent* e);
     virtual void wheelEvent(QWheelEvent* e);
@@ -187,6 +187,10 @@ private:
 
     void exportSelectedArea();
     void exportSelectedAreaAsMask();
+
+    int xRot, yRot;
+    QPoint firstPos;
+    void updateMollweideRotation();
 
     SelectionType selectionType;
 

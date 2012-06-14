@@ -33,6 +33,9 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     selectionType = SINGLE_POINT;
 
     unselectSelection = false;
+
+    xRot = 0;
+    yRot = 0;
 }
 
 MapViewer::~MapViewer()
@@ -178,11 +181,6 @@ void MapViewer::init()
                     // Nice texture coordinate interpolation
     glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
 
-
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
-    glCullFace(GL_BACK);
-
     setHandlerKeyboardModifiers(QGLViewer::FRAME,  Qt::NoModifier);
 
     /* initial X position of the camera */
@@ -195,6 +193,9 @@ void MapViewer::init()
     camera()->lookAt( Vec(0,0,0) );
     camera()->setUpVector(Vec(0,0,1));
     camera()->setSceneRadius(1.0);
+
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 
     /* change projection constraints */
     changeProjectionConstraints();
@@ -249,7 +250,11 @@ void MapViewer::init()
 void MapViewer::updateCameraPosition(float pos, bool signal, bool update)
 {
     cameraPosition = pos;
-    camera()->setPosition(Vec(cameraPosition,0,0));
+
+    if(mollweide && !FLIP)
+        camera()->setPosition(Vec(-cameraPosition,0,0));
+    else
+        camera()->setPosition(Vec(cameraPosition,0,0));
 
     if(signal)
         emit(signalZoomChanged(cameraPosition, this));
@@ -370,9 +375,37 @@ bool MapViewer::updateKeyPress(QKeyEvent *e)
         case Qt::Key_M:
             exportSelectedAreaAsMask();
             break;
+
+        case Qt::Key_U:
+            yRot++;
+            updateMollweideRotation();
+            break;
+
+        case Qt::Key_J:
+            yRot--;
+            updateMollweideRotation();
+            break;
+
+        case Qt::Key_H:
+            xRot++;
+            updateMollweideRotation();
+            break;
+
+        case Qt::Key_K:
+            xRot--;
+            updateMollweideRotation();
+            break;
     }
 
     return false;
+}
+
+
+void MapViewer::updateMollweideRotation()
+{
+    //qDebug() << "xRot: " << xRot << " , yRot: " << yRot;
+    tesselation->setMollweideRotation(xRot, yRot);
+    updateGL();
 }
 
 
@@ -392,6 +425,8 @@ void MapViewer::changeProjectionConstraints()
 
         /* set min camera X for mollweide */
         minCameraX = CAMERA_MOLL_MAX_X;
+
+        glCullFace(GL_FRONT);
     }
     else
     {
@@ -404,6 +439,8 @@ void MapViewer::changeProjectionConstraints()
 
         /* set min camera X for 3D */
         minCameraX = CAMERA_3D_MAX_X;
+
+        glCullFace(GL_BACK);
     }
 
     /* calcula max zoom out */
@@ -454,9 +491,36 @@ void MapViewer::keyPressEvent(QKeyEvent *e)
         emit(signalKeyPressed(e, this));
 }
 
+void MapViewer::mousePressEvent(QMouseEvent *e)
+{
+    QGLViewer::mousePressEvent(e);
+    firstPos = e->pos();
+}
 
 void MapViewer::mouseReleaseEvent(QMouseEvent *e)
 {
+    if(e->button()==Qt::LeftButton && mollweide)
+    {
+        int xMovement = e->x() - firstPos.x();
+        int yMovement = -(e->y() - firstPos.y());
+
+        camera()->computeModelViewMatrix();
+        camera()->computeProjectionMatrix();
+        Vec v1 = camera()->projectedCoordinatesOf(Vec(0, -2, 1));
+        Vec v2 = camera()->projectedCoordinatesOf(Vec(0, 2, -1));
+
+        int objWidth = v2.x - v1.x;
+        int objHeight = v2.y - v1.y;
+
+        qDebug() << "Movement:" << xMovement << "/" << objWidth << " , " << yMovement << "/" << objHeight;
+
+        // transform displacement into angles
+        xRot += xMovement*360 / objWidth;
+        yRot -= yMovement*180 / objHeight;
+
+        //updateMollweideRotation();
+    }
+
     // TODO: just a hack to disable spinning... may have problems when selecting a pixel for example
     //QGLViewer::mouseReleaseEvent(e);
     //emit(cameraChanged(e, MOUSERELEASE, this));
@@ -965,7 +1029,13 @@ void MapViewer::resetView()
 
     /* update camera position */
     updateCameraPosition(maxCameraX);
+
     camera()->lookAt( Vec(0,0,0) );
+
+    /* reset mollweide rotation */
+    xRot = 0;
+    yRot = 0;
+    updateMollweideRotation();
 
     sceneUpdated();
 }

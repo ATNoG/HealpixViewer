@@ -65,11 +65,15 @@ public:
     void unselectPixels(std::set<int> pixelIndexes);
     void clearROI();
 
+    void setMollweideRotation(int xRot, int yRot);
+
 private:
     int tesselationNside;
     int textureNside;
     int vectorsNside;
     //QMap<int, Face*> availableFaces;
+
+    int xRot, yRot;
 
     void createInitialTesselation();
     void createGrid();
@@ -78,6 +82,7 @@ private:
     bool mollview;
     bool displayPolarizationVectors;
     bool displayGrid;
+    bool needToUpdateRotation;
 
     ROI* roi;
     FaceCache* faceCache;

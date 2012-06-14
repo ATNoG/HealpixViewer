@@ -11,6 +11,7 @@ Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool
     /* by default dont show the polarization vectors neither grid */
     displayPolarizationVectors = false;
     displayGrid = false;
+    needToUpdateRotation = false;
 
     this->faceCache = faceCache;
     this->textureCache = textureCache;
@@ -19,6 +20,9 @@ Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool
     this->roi = NULL;
 
     this->manager = new ROIManager(maxNside);
+
+    xRot = 0;
+    yRot = 0;
 
     createInitialTesselation();
 }
@@ -144,6 +148,9 @@ void Tesselation::draw()
             }
         }
 
+        if(needToUpdateRotation)
+            face->setMollweideRotation(xRot, yRot);
+
         face->draw();
 
         if(DISPLAY_TEXTURE)
@@ -162,6 +169,8 @@ void Tesselation::draw()
         }
 
     }
+
+    needToUpdateRotation = false;
 
 
     /* display grid */
@@ -194,24 +203,25 @@ void Tesselation::changeMapField(HealpixMap::MapType field)
 
 void Tesselation::showGrid(bool show)
 {
-    if(!mollview)
-        displayGrid = show;
-    else
-        displayGrid = false;
-
-    // TODO: grid should be shown in mollweide ?
+    displayGrid = show;
 }
 
 void Tesselation::changeTo3D()
 {
     if(mollview)
+    {
         mollview = false;
+        grid->changeToMollweide(false);
+    }
 }
 
 void Tesselation::changeToMollweide()
 {
     if(!mollview)
+    {
         mollview = true;
+        grid->changeToMollweide(true);
+    }
 }
 
 void Tesselation::selectPixels(std::set<int> pixelIndexes, int nside)
@@ -228,4 +238,12 @@ void Tesselation::unselectPixels(std::set<int> pixelIndexes)
 void Tesselation::clearROI()
 {
     manager->clear();
+}
+
+void Tesselation::setMollweideRotation(int xRot, int yRot)
+{
+    this->xRot = xRot;
+    this->yRot = yRot;
+
+    needToUpdateRotation = true;
 }

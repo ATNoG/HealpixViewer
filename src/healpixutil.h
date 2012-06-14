@@ -417,4 +417,57 @@ inline double asinh(double value)
     return(returned);
 }
 
+
+inline double toMollweide(double phi, double lambda, double &x, double &y)
+{
+    const double lambda0 = 0;
+        const double r2 = sqrt(2.);
+        double theta;
+        x = phi;
+        y = lambda;
+/*
+                        Start by solving 2theta + sin(2theta) == pi sin(phi), for theta
+
+                                Upper limit.
+*/
+        if( fabs(x - M_PI/2) < 1e-6) {
+           // qDebug() << "Upper limit";
+                theta = M_PI/2;
+        }
+/*
+                                Lower limit
+*/
+        else if (fabs(x + M_PI/2) < 1e-6 ) {
+            //qDebug() << "Lower limit";
+                theta = -M_PI/2;
+        }
+        else {
+/*
+                                Iterative computation using Newton's method.
+*/
+                const int nmax = 20;		// max number of iterations for Newton's method
+                const double eps = 1e-6; 	// how well we solve for theta
+                int i;
+                double dtheta;
+                double f,df;
+                theta = x/2;									// The initial guess.
+                f = 2*theta + sin(2*theta) - M_PI*sin(phi); 	// Solve for this function.
+                for(i = 0; i < nmax; i++) {
+                        if( fabs(f) < eps)
+                                break;
+                        df = 2*(1+cos(2*theta));
+                        dtheta = -f/df;
+                        theta += dtheta;
+                        f = 2*theta + sin(2*theta) - M_PI*sin(x);
+                }
+        }
+/*
+                        Now that we have the theta, we can compute the cartesian coordinates.
+*/
+        x = 2. * r2 * (y - lambda0) * cos(theta) / M_PI;
+        y = r2 * sin(theta);
+
+        return theta;
+}
+
 #endif // HEALPIXUTIL_H
