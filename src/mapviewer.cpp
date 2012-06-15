@@ -252,9 +252,9 @@ void MapViewer::updateCameraPosition(float pos, bool signal, bool update)
     cameraPosition = pos;
 
     if(mollweide && !FLIP)
-        camera()->setPosition(Vec(-cameraPosition,0,0));
+        camera()->setPosition(Vec(-fabs(cameraPosition),0,0));
     else
-        camera()->setPosition(Vec(cameraPosition,0,0));
+        camera()->setPosition(Vec(fabs(cameraPosition),0,0));
 
     if(signal)
         emit(signalZoomChanged(cameraPosition, this));
