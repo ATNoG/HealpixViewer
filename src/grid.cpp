@@ -62,8 +62,8 @@ void Grid::draw3D(int points)
     float dtheta, dphi;
     float radius = 1.001;
 
-    int nmerid = (int)(181/dlong);
-    int nparal = (int)(181/dlat);
+    int nmerid = (int)(180/dlong);
+    int nparal = (int)(180/dlat);
 
     dtheta = 2.0*M_PI / (float)points;
     dphi = 2.0*M_PI / (float)points;
@@ -165,6 +165,8 @@ void Grid::drawMollweide(int points)
     float dtheta, dphi;
     double rad = 1/sqrt(2.);
 
+    float xPos = -0.0001;
+
     int nmerid = (int)(181/dlong);
     int nparal = (int)(181/dlat);
 
@@ -192,7 +194,7 @@ void Grid::drawMollweide(int points)
             {
                 theta = (float) j*dtheta - M_PI/2;
                 toMollweide(theta, phi, x, y);
-                glVertex3f(0.001, x*rad, y*rad);
+                glVertex3f(xPos, x*rad, y*rad);
             }
             glEnd();
         }
@@ -202,7 +204,7 @@ void Grid::drawMollweide(int points)
         {
             theta = (float) j*dtheta - M_PI/2;
             toMollweide(theta, phi, x, y);
-            glVertex3f(0.001, -x*rad, y*rad);
+            glVertex3f(xPos, -x*rad, y*rad);
         }
         glEnd();
     }
@@ -219,7 +221,7 @@ void Grid::drawMollweide(int points)
         {
             phi = (float) j*dphi - M_PI;
             toMollweide(theta, phi, x, y);
-            glVertex3f(0.001, x*rad, y*rad);
+            glVertex3f(xPos, x*rad, y*rad);
         }
         glEnd();
     }
@@ -236,7 +238,7 @@ void Grid::drawMollweide(int points)
                 toMollweide(theta, phi, x, y);
 
                 float degrees = (i*180 / nparal - 90);
-                viewer->renderText(0.001, x*rad, y*rad, QString("%1").arg(degrees).append(QString::fromUtf8("º")), QFont("Arial", labelSize));
+                viewer->renderText(xPos, x*rad, y*rad, QString("%1").arg(degrees).append(QString::fromUtf8("º")), QFont("Arial", labelSize));
             }
         }
 
@@ -253,7 +255,7 @@ void Grid::drawMollweide(int points)
 
             float degrees = 180 - (i*360/(nmerid*2));
 
-            viewer->renderText(0.001, x*rad, y*rad, QString("%1").arg(degrees).append(QString::fromUtf8("º")), QFont("Arial", labelSize));
+            viewer->renderText(xPos, x*rad, y*rad, QString("%1").arg(degrees).append(QString::fromUtf8("º")), QFont("Arial", labelSize));
         }
     }
 }

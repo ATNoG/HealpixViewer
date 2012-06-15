@@ -184,6 +184,7 @@ private:
     void changeSelectionType(SelectionType);
     int calculatePixelIndex(const QPoint &point);
     int transformSameNside(std::vector<int>& pixels, std::vector<int> nsides);
+    void updateGraticule();
 
     void exportSelectedArea();
     void exportSelectedAreaAsMask();

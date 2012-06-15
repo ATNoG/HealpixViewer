@@ -1062,6 +1062,22 @@ void MapViewer::sceneUpdated(bool update)
 }
 
 
+void MapViewer::updateGraticule()
+{
+    int totLevels = floor((maxCameraX-minCameraX) / CAMERA_ZOOM_INC);
+    float currentLevel = floor((cameraPosition-minCameraX) / CAMERA_ZOOM_INC) + 1;
+
+    int graticules[11] = {1,2,2,3,5,6,9,10,15,18,30};
+
+    float logMax = log10(totLevels+1);
+    float v = log10(currentLevel);
+    int aux = round(v/logMax * 10);
+
+    grid->setConfiguration(graticules[aux], graticules[aux]);
+    updateGL();
+}
+
+
 bool MapViewer::zoomIn()
 {
     float cx = cameraPosition-CAMERA_ZOOM_INC;
@@ -1070,6 +1086,8 @@ bool MapViewer::zoomIn()
     {
         /* update camera position */
         updateCameraPosition(cx, true);
+
+        updateGraticule();
 
         //sceneUpdated();
         return true;
@@ -1085,6 +1103,8 @@ bool MapViewer::zoomOut()
     {
         /* update camera position */
         updateCameraPosition(cx, true);
+
+        updateGraticule();
 
         //sceneUpdated();
         return true;
