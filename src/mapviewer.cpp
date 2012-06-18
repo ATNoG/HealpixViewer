@@ -29,6 +29,7 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     this->automaticPVectorsNside = AUTO_PVECTORS_NSIDE;
     this->pvectorsNsideFactor = PVECTORS_NSIDE_FACTOR;
     this->tesselationNside = TESSELATION_DEFAULT_NSIDE;
+    this->automaticGraticule = true;
 
     selectionType = SINGLE_POINT;
 
@@ -1087,7 +1088,8 @@ bool MapViewer::zoomIn()
         /* update camera position */
         updateCameraPosition(cx, true);
 
-        updateGraticule();
+        if(automaticGraticule)
+            updateGraticule();
 
         //sceneUpdated();
         return true;
@@ -1104,7 +1106,8 @@ bool MapViewer::zoomOut()
         /* update camera position */
         updateCameraPosition(cx, true);
 
-        updateGraticule();
+        if(automaticGraticule)
+            updateGraticule();
 
         //sceneUpdated();
         return true;
@@ -1572,8 +1575,16 @@ void MapViewer::applyOptions(mapOptions *options)
 
 void MapViewer::applyGridOptions(gridOptions* options)
 {
-    grid->setConfiguration(options->meridians, options->parallels);
-    grid->setLabeling(options->labeling, options->labelSize);
+    if(options->automatic)
+    {
+        automaticGraticule = true;
+    }
+    else
+    {
+        grid->setConfiguration(options->meridians, options->parallels);
+        grid->setLabeling(options->labeling, options->labelSize);
+        automaticGraticule = false;
+    }
     grid->setColor(options->color);
     updateGL();
 }

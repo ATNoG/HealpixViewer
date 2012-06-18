@@ -55,6 +55,7 @@ struct gridOptions
     QColor color;
     bool labeling;
     int labelSize;
+    bool automatic;
 };
 
 struct mapInfo
@@ -157,6 +158,7 @@ private:
     bool automaticTextureNside;
     bool automaticPVectorsNside;
     int pvectorsNsideFactor;
+    bool automaticGraticule;
 
     float maxCameraX;
     float minCameraX;

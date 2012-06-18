@@ -31,6 +31,7 @@ signals:
 private slots:
     void applyOptions();
     void colorUpdate();
+    void automaticChanged(int status);
     
 private:
     Ui::GridOptions *ui;
@@ -40,6 +41,7 @@ private:
     void disableControllers();
 
     QColor currentColor;
+    bool automatic;
 };
 
 #endif // GRIDOPTIONS_H

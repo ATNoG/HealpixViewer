@@ -14,6 +14,8 @@ GridOptions::GridOptions(QWidget *parent) :
     connect(ui->applyButton, SIGNAL(released()), this, SLOT(applyOptions()));
     /* connect color button */
     connect(ui->colorButton, SIGNAL(released()), this, SLOT(colorUpdate()));
+    /* connect automatic checkbox */
+    connect(ui->automaticCheckbox, SIGNAL(stateChanged(int)), this, SLOT(automaticChanged(int)));
 
     /* load default values */
     ui->meridiansSelector->setValue(GRID_MERIDIANS);
@@ -25,6 +27,8 @@ GridOptions::GridOptions(QWidget *parent) :
     QStyle* style = new QWindowsStyle;
     ui->colorButton->setStyle(style);
     ui->colorButton->setPalette(QPalette(currentColor));
+
+    automatic = true;
 
     /* disable controllers because no viewport is selected */
     disableControllers();
@@ -38,6 +42,7 @@ GridOptions::~GridOptions()
 void GridOptions::applyOptions()
 {
     gridOptions *options = new gridOptions;
+    options->automatic = automatic;
     options->parallels = ui->parallelsSelector->value();
     options->meridians = ui->meridiansSelector->value();
     options->color = currentColor;
@@ -69,12 +74,21 @@ void GridOptions::updateSelectedMaps(QList<int> selectedViewports)
 
 void GridOptions::enableControllers()
 {
-    ui->meridiansSelector->setEnabled(true);
-    ui->parallelsSelector->setEnabled(true);
+    if(automatic)
+    {
+        ui->meridiansSelector->setEnabled(false);
+        ui->parallelsSelector->setEnabled(false);
+    }
+    else
+    {
+        ui->meridiansSelector->setEnabled(true);
+        ui->parallelsSelector->setEnabled(true);
+    }
     ui->colorButton->setEnabled(true);
     ui->labellingCheckbox->setEnabled(true);
     ui->labelSizeSelector->setEnabled(true);
     ui->applyButton->setEnabled(true);
+    ui->automaticCheckbox->setEnabled(true);
 }
 
 void GridOptions::disableControllers()
@@ -85,4 +99,21 @@ void GridOptions::disableControllers()
     ui->labellingCheckbox->setEnabled(false);
     ui->labelSizeSelector->setEnabled(false);
     ui->applyButton->setEnabled(false);
+    ui->automaticCheckbox->setEnabled(false);
+}
+
+void GridOptions::automaticChanged(int status)
+{
+    if(status == Qt::Checked)
+    {
+        ui->meridiansSelector->setEnabled(false);
+        ui->parallelsSelector->setEnabled(false);
+        automatic = true;
+    }
+    else
+    {
+        ui->meridiansSelector->setEnabled(true);
+        ui->parallelsSelector->setEnabled(true);
+        automatic = false;
+    }
 }
