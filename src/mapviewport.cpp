@@ -544,6 +544,11 @@ void MapViewport::applyGridOptions(gridOptions *options)
     mapviewer->applyGridOptions(options);
 }
 
+void MapViewport::applyCoordSys(HealpixMap::Coordsys coordIn, HealpixMap::Coordsys coordOut)
+{
+    mapviewer->applyCoordSys(coordIn, coordOut);
+}
+
 
 void MapViewport::updateOptionTextureNside(int nside)
 {

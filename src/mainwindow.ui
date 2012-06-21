@@ -76,7 +76,7 @@
            </size>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="histogramTab">
            <property name="sizePolicy">
@@ -111,6 +111,54 @@
             </property>
            </widget>
           </widget>
+          <widget class="QWidget" name="coordSystemTab">
+           <attribute name="title">
+            <string>CoordSys</string>
+           </attribute>
+           <widget class="CoordinateSystem" name="coordSystemOptions" native="true">
+            <property name="geometry">
+             <rect>
+              <x>9</x>
+              <y>9</y>
+              <width>280</width>
+              <height>500</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </widget>
+          <widget class="QWidget" name="gridTab">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <attribute name="title">
+            <string>Grid</string>
+           </attribute>
+           <widget class="GridOptions" name="gridOptions" native="true">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>10</y>
+              <width>280</width>
+              <height>500</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </widget>
           <widget class="QWidget" name="optionstab">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -141,33 +189,6 @@
               <width>280</width>
               <height>0</height>
              </size>
-            </property>
-           </widget>
-          </widget>
-          <widget class="QWidget" name="gridTab">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <attribute name="title">
-            <string>Grid</string>
-           </attribute>
-           <widget class="GridOptions" name="gridOptions" native="true">
-            <property name="geometry">
-             <rect>
-              <x>10</x>
-              <y>10</y>
-              <width>280</width>
-              <height>500</height>
-             </rect>
-            </property>
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
             </property>
            </widget>
           </widget>
@@ -610,6 +631,12 @@
    <class>GridOptions</class>
    <extends>QWidget</extends>
    <header>gridoptions.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CoordinateSystem</class>
+   <extends>QWidget</extends>
+   <header>coordinatesystem.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

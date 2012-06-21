@@ -1,4 +1,4 @@
-#include "mapviewer.h"
+ #include "mapviewer.h"
 #include "mapviewport.h"
 #include <math.h>
 
@@ -122,6 +122,8 @@ bool MapViewer::loadMap(QString fitsfile, HealpixMap::MapType mapType)
 
             healpixMap->changeCurrentMap(mapType);
 
+            qDebug() << "Coordsys is " << healpixMap->coordsysToString(healpixMap->getCoordSystem());
+
             /* calculate max nside */
             maxNside = min(healpixMap->getMaxNside(), MAX_NSIDE);
 
@@ -210,6 +212,10 @@ void MapViewer::init()
     currentManipulatedFrame = new ManipulatedFrame();
     currentManipulatedFrame->setConstraint(constraint);
     setManipulatedFrame(currentManipulatedFrame);
+
+    coordSysFrame = new Frame();
+    coordSysFrame->setReferenceFrame(manipulatedFrame());
+    tesselation->setCoordSysFrame(coordSysFrame);
 
     /* update initial state */
     currentNside = MIN_NSIDE;
@@ -556,7 +562,7 @@ int MapViewer::calculatePixelIndex(const QPoint &point)
             t = (t1 < t2) ? t1 : t2;
             v = o + t*d;
 
-            Vec r = manipulatedFrame()->coordinatesOf(v);
+            Vec r = coordSysFrame->coordinatesOf(v);
 
             double lambda, phi;
             phi    = acos(r.z);
@@ -571,7 +577,7 @@ int MapViewer::calculatePixelIndex(const QPoint &point)
     {
         bool found;
         Vec k = camera()->pointUnderPixel(point, found);
-        Vec r = manipulatedFrame()->coordinatesOf(k);
+        Vec r = coordSysFrame->coordinatesOf(k);
 
         double v1, u1, s1, a1, z, phi, sz;
         v1 = r.z;
@@ -1586,6 +1592,72 @@ void MapViewer::applyGridOptions(gridOptions* options)
         automaticGraticule = false;
     }
     grid->setColor(options->color);
+    updateGL();
+}
+
+
+void MapViewer::applyCoordSys(HealpixMap::Coordsys coordIn, HealpixMap::Coordsys coordOut)
+{
+    CoordinateSystemMatrices* coordsys = CoordinateSystemMatrices::instance();
+    Quaternion rotQuaternion, rotQuaternionOrigin;
+
+    if(coordIn!=coordOut)
+    {
+        switch(coordIn)
+        {
+            case HealpixMap::CELESTIAL:
+
+                switch(coordOut)
+                {
+                    case HealpixMap::GALACTIC:
+                        rotQuaternion.setFromRotationMatrix(coordsys->q2g);
+                        //rotQuaternionOrigin.setFromRotationMatrix(coordsys->g2q);
+                        break;
+                    case HealpixMap::ECLIPTIC:
+                        rotQuaternion.setFromRotationMatrix(coordsys->q2e);
+                        //rotQuaternionOrigin.setFromRotationMatrix(coordsys->e2q);
+                        break;
+                }
+                break;
+
+            case HealpixMap::GALACTIC:
+
+                switch(coordOut)
+                {
+                    case HealpixMap::CELESTIAL:
+                        rotQuaternion.setFromRotationMatrix(coordsys->g2q);
+                        //rotQuaternionOrigin.setFromRotationMatrix(coordsys->q2g);
+                        break;
+                    case HealpixMap::ECLIPTIC:
+                        rotQuaternion.setFromRotationMatrix(coordsys->g2e);
+                        //rotQuaternionOrigin.setFromRotationMatrix(coordsys->e2g);
+                        break;
+                }
+                break;
+
+            case HealpixMap::ECLIPTIC:
+
+                switch(coordOut)
+                {
+                    case HealpixMap::CELESTIAL:
+                        rotQuaternion.setFromRotationMatrix(coordsys->e2q);
+                        //rotQuaternionOrigin.setFromRotationMatrix(coordsys->q2e);
+                        break;
+                    case HealpixMap::GALACTIC:
+                        rotQuaternion.setFromRotationMatrix(coordsys->e2g);
+                        //rotQuaternionOrigin.setFromRotationMatrix(coordsys->g2e);
+                        break;
+                }
+                break;
+
+        }
+    }
+    else
+        rotQuaternion.setFromRotationMatrix(coordsys->norot);
+
+    coordSysFrame->setRotation(rotQuaternion);
+    //manipulatedFrame()->setRotation(rotQuaternionDst);
+
     updateGL();
 }
 

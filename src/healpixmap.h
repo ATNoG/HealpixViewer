@@ -65,12 +65,14 @@ public:
 
     void changeCurrentMap(MapType type);
     MapType getCurrentMapField();
+    Coordsys getCoordSystem();
 
     void getMinMax(float &min, float &max);
     void getMagMinMax(double &min, double &max);
 
     static unsigned int NSide2Res  (unsigned int ns);
     static QString mapTypeToString(MapType type);
+    static QString coordsysToString(Coordsys coord);
 
     void angle2pix(double theta, double phi, int nside, long &pix);
 
@@ -149,6 +151,19 @@ inline HealpixMap::MapType getMapField(int i)
             return HealpixMap::U;
         case HealpixMap::NObs:
             return HealpixMap::NObs;
+    }
+}
+
+inline HealpixMap::Coordsys getCoordSys(int i)
+{
+    switch(i)
+    {
+        case HealpixMap::GALACTIC:
+            return HealpixMap::GALACTIC;
+        case HealpixMap::ECLIPTIC:
+            return HealpixMap::ECLIPTIC;
+        case HealpixMap::CELESTIAL:
+            return HealpixMap::CELESTIAL;
     }
 }
 

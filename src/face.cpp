@@ -341,8 +341,8 @@ void Face::toMollweide(double rad)
         double m2[3][3] = {{c2,0.,s2},{0.,1.,0.},{-s2,0.,c2}};
         double m3[3][3] = {{1.,0.,0.},{0.,c3,-s3},{0.,s3,c3}};
 
-        multiplyMatrices(m2, m1, aux, 3, 3, 3);
-        multiplyMatrices(m3, aux, euler, 3, 3, 3);
+        multiplyMatrices<double>(m2, m1, aux, 3, 3, 3);
+        multiplyMatrices<double>(m3, aux, euler, 3, 3, 3);
     }
 
     QVector<Strip>::iterator stripIT;

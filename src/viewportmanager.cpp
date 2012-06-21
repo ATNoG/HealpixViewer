@@ -536,3 +536,14 @@ void ViewportManager::applyGridOptions(gridOptions *options)
         viewports[viewportId]->applyGridOptions(options);
     }
 }
+
+/* apply coordsys options */
+void ViewportManager::applyCoordSys(HealpixMap::Coordsys coordIn, HealpixMap::Coordsys coordOut)
+{
+    QList<int> selectedViewports = getSelectedViewports();
+
+    foreach(int viewportId, selectedViewports)
+    {
+        viewports[viewportId]->applyCoordSys(coordIn, coordOut);
+    }
+}

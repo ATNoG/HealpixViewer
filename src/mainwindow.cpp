@@ -18,6 +18,7 @@ MainWindow::MainWindow(QWidget *parent) :
     HistogramWidget *histogramControl = ui->histogramControl;
     MapOptions *mapOptions = ui->mapOptions;
     GridOptions *gridOptions = ui->gridOptions;
+    CoordinateSystem *coordsysOptions = ui->coordSystemOptions;
 
     /* add workspace to splitter */
     ui->splitter->insertWidget(0, workspace);
@@ -70,6 +71,10 @@ MainWindow::MainWindow(QWidget *parent) :
     /* connect viewportManager to gridOptions */
     connect(viewportManager, SIGNAL(viewportsSelectionUpdated(QList<int>)), gridOptions, SLOT(updateSelectedMaps(QList<int>)));
     connect(gridOptions, SIGNAL(gridOptionsChanged(gridOptions*)), viewportManager, SLOT(applyGridOptions(gridOptions*)));
+
+    /* connect viewportManager to coordSystemOptions */
+    connect(viewportManager, SIGNAL(viewportsSelectionUpdated(QList<int>)), coordsysOptions, SLOT(updateSelectedMaps(QList<int>)));
+    connect(coordsysOptions, SIGNAL(coordSysChanged(HealpixMap::Coordsys,HealpixMap::Coordsys)), viewportManager, SLOT(applyCoordSys(HealpixMap::Coordsys,HealpixMap::Coordsys)));
 
     /* connect viewportManager to workspace */
     connect(viewportManager, SIGNAL(viewportShowOn(int,MapViewport*)), workspace, SLOT(addViewport(int,MapViewport*)));

@@ -42,6 +42,7 @@ public:
 
     void applyOptions(mapOptions *options);
     void applyGridOptions(gridOptions *options);
+    void applyCoordSys(HealpixMap::Coordsys coordIn, HealpixMap::Coordsys coordOut);
     void syncPixelSelection(std::set<int> pixels, int nside, bool add);
 
     bool isSelectionSource();

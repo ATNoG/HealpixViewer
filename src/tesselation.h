@@ -67,6 +67,8 @@ public:
 
     void setMollweideRotation(int xRot, int yRot);
 
+    void setCoordSysFrame(Frame* frame);
+
 private:
     int tesselationNside;
     int textureNside;
@@ -97,6 +99,7 @@ private:
     Grid *grid;
 
     HealpixMap* healpixmap;
+    Frame* coordSysFrame;
     //HealpixMap::MapType mapType;
 };
 

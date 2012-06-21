@@ -1,4 +1,5 @@
 #include "tesselation.h"
+#include "coordinatesystem.h"
 
 Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache, Grid* _grid, int maxNside)
 {
@@ -18,6 +19,7 @@ Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool
     this->overlayCache = overlayCache;
     //this->mapType = mapType;
     this->roi = NULL;
+    this->coordSysFrame = NULL;
 
     this->manager = new ROIManager(maxNside);
 
@@ -110,6 +112,11 @@ void Tesselation::setMap(HealpixMap* map)
     healpixmap = map;
 }
 
+void Tesselation::setCoordSysFrame(Frame* frame)
+{
+    this->coordSysFrame = frame;
+}
+
 /* Draw opengl primitives */
 void Tesselation::draw()
 {
@@ -119,26 +126,22 @@ void Tesselation::draw()
     PolarizationVectors* polVectors;
     ROI* roi;
 
+
+    glPushMatrix();
+
+    if(coordSysFrame!=NULL)
+        glMultMatrixd(coordSysFrame->matrix());
+
     /* get faces */
     for(int i=0; i<totalFaces; i++)
     {
         face = faceCache->getFace(facesv[i], tesselationNside, mollview);
-
         bool hasROI = manager->hasROI(facesv[i]);
 
-        /* display texture */
+        // display texture
         if(DISPLAY_TEXTURE)
         {
-            /*
-            if(hasROI)
-            {
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            }
-            */
-
             texture = textureCache->getFace(facesv[i], textureNside);
-
             texture->draw();
 
             if(hasROI)
@@ -161,24 +164,25 @@ void Tesselation::draw()
                 roi->unbind();
         }
 
-        /* display polarization vectors */
+        // display polarization vectors
         if(displayPolarizationVectors)
         {
             polVectors = (PolarizationVectors*)overlayCache->getFace(facesv[i], vectorsNside, mollview, MapOverlay::POLARIZATION_VECTORS);
             polVectors->draw();
         }
-
     }
-
-    needToUpdateRotation = false;
-
 
     /* display grid */
     if(displayGrid)
-    {
-        glColor3f(1.0, 1.0, 1.0);
         grid->draw();
-    }
+
+    glPopMatrix();
+
+    needToUpdateRotation = false;
+
+    /* display grid */
+    if(displayGrid)
+        grid->draw();
 }
 
 /* enable polarization vectors */

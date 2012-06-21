@@ -18,6 +18,7 @@
 #include "maploader.h"
 #include "configs.h"
 #include "fieldmap.h"
+#include "coordinatesystem.h"
 
 #include <fitsio2.h>
 #include <healpix_base.h>
@@ -101,6 +102,7 @@ public:
     void changeMapField(HealpixMap::MapType field);
     void applyOptions(mapOptions *options);
     void applyGridOptions(gridOptions* options);
+    void applyCoordSys(HealpixMap::Coordsys coordIn, HealpixMap::Coordsys coordOut);
 
     /* sync */
     void updateCameraPosition(float pos, bool signal=false, bool update=true);
@@ -214,6 +216,8 @@ private:
     QString filename;
 
     Grid* grid;
+
+    Frame* coordSysFrame;
 };
 
 #endif // MAPVIEWER_H

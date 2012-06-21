@@ -8,6 +8,7 @@
 #include "vertice.h"
 #include "facevertices.h"
 #include "configs.h"
+#include "matrix.h"
 
 using namespace std;
 
@@ -40,22 +41,6 @@ private:
     void toMollweide(double rad);
     double toMollweide(const double phi, const double lambda, double &x, double &y);
     void toMollweideBackfaceSplit();
-
-    inline void multiplyMatrices(double a[3][3], double b[3][3], double c[3][3], int m, int n, int p)
-    {
-        int i,j,k;
-        double sum=0;
-        for(i=0; i<m; i++)
-        {
-            for(j=0; j<p; j++)
-            {
-                for (k=0;k<n;k++)
-                    sum=sum+(a[i][k]*b[k][j]);
-                c[i][j]=sum;
-                sum=0;
-            }
-        }
-    }
 
     GLfloat* vertexs;
     GLfloat* textureCoords;

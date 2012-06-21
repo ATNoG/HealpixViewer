@@ -38,6 +38,8 @@ public slots:
     void applyMapOptions(mapOptions* options);
     /* apply grid options */
     void applyGridOptions(gridOptions* options);
+    /* apply coordsys options */
+    void applyCoordSys(HealpixMap::Coordsys coordIn, HealpixMap::Coordsys coordOut);
 
 private slots:
     /* connected to map field combobox */

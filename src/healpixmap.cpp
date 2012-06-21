@@ -518,7 +518,7 @@ HealpixMap::Coordsys HealpixMap::parseCoordsys(char* value)
     else if(!strcmp(value, "G"))
         return GALACTIC;
     else
-        return CELESTIAL;
+        return GALACTIC;
         //throw HealpixMapException("Invalid coordsys in FITS file");
 }
 
@@ -1085,7 +1085,7 @@ QString HealpixMap::mapTypeToString(MapType type)
     return mapTypeName;
 }
 
-/*
+
 QString HealpixMap::coordsysToString(Coordsys coordsys)
 {
     QString coordsysName;
@@ -1103,7 +1103,6 @@ QString HealpixMap::coordsysToString(Coordsys coordsys)
     }
     return coordsysName;
 }
-*/
 
 
 int HealpixMap::getMaxNside()
@@ -1127,6 +1126,11 @@ void HealpixMap::changeCurrentMap(MapType type)
 HealpixMap::MapType HealpixMap::getCurrentMapField()
 {
     return currentMapType;
+}
+
+HealpixMap::Coordsys HealpixMap::getCoordSystem()
+{
+    return coordsys;
 }
 
 
