@@ -30,6 +30,8 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     this->pvectorsNsideFactor = PVECTORS_NSIDE_FACTOR;
     this->tesselationNside = TESSELATION_DEFAULT_NSIDE;
     this->automaticGraticule = true;
+    this->overlayAlpha = 0.5;
+    this->colorMap = ColorMapManager::instance()->getDefaultColorMap();
 
     selectionType = SINGLE_POINT;
 
@@ -67,6 +69,7 @@ void MapViewer::draw()
 
         /* draw map */
         tesselation->draw();
+        //drawColorBar();
 
         if(displayInfo)
         {
@@ -90,6 +93,8 @@ void MapViewer::draw()
 bool MapViewer::loadMap(QString fitsfile, HealpixMap::MapType mapType)
 {
     currentVectorsNside = currentNside = MIN_NSIDE;
+
+    HealpixMap* healpixMapOverlay;
 
     if(!initialized)
     {
@@ -129,7 +134,7 @@ bool MapViewer::loadMap(QString fitsfile, HealpixMap::MapType mapType)
 
             /* get face cache */
             faceCache = FaceCache::instance(MIN_NSIDE, MAX_NSIDE);          // TODO: correct ? MAX_NSIDE is used because facecache is shared
-            textureCache = new TextureCache(healpixMap, MIN_NSIDE, maxNside);
+            textureCache = new TextureCache(healpixMap, MIN_NSIDE, maxNside, false);
             overlayCache = new OverlayCache(healpixMap, MIN_NSIDE, maxNside);
 
             QObject::connect(faceCache, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
@@ -140,7 +145,21 @@ bool MapViewer::loadMap(QString fitsfile, HealpixMap::MapType mapType)
             grid = new Grid(this, GRID_MERIDIANS, GRID_PARALLELS);
 
             /* create the sphere tesselation */
-            tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache, grid, maxNside);
+
+            /* OVERLAY */
+            if(false)
+            {
+                healpixMapOverlay = new HealpixMap(fitsfile, MIN_NSIDE);
+                healpixMapOverlay->changeCurrentMap(HealpixMap::NObs);
+                textureCacheOverlay = new TextureCache(healpixMapOverlay, MIN_NSIDE, maxNside, true);
+                QObject::connect(textureCacheOverlay, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
+                tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache, grid, maxNside, textureCacheOverlay);
+            }
+            else
+            {
+                tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache, grid, maxNside, NULL);
+            }
+
             tesselation->setMap(healpixMap);
 
             /* preload next faces */
@@ -251,6 +270,29 @@ void MapViewer::init()
 
     /* update scene */
     sceneUpdated(false);
+
+
+
+
+    /* create data */
+    QColor color;
+    uint texk = 0;
+    unsigned char* cmtexture = new unsigned char[255*3];
+    for(int i=0; i<255; i++)
+    {
+        texk = i*3;
+        cmtexture[texk] = 0;
+        cmtexture[texk+1] = 0;
+        cmtexture[texk+2] = 255;
+    }
+
+    /* create texture */
+    glEnable(GL_TEXTURE_1D);
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_1D, textureId);
+    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage1D(GL_TEXTURE_1D, 0, 3, 255, 0, GL_RGB, GL_UNSIGNED_BYTE, cmtexture);
 }
 
 
@@ -401,6 +443,22 @@ bool MapViewer::updateKeyPress(QKeyEvent *e)
         case Qt::Key_K:
             xRot--;
             updateMollweideRotation();
+            break;
+
+        case Qt::Key_1:
+            overlayAlpha -= 0.05;
+            if(overlayAlpha<0)
+                overlayAlpha = 0;
+            tesselation->updateAlpha(overlayAlpha);
+            updateGL();
+            break;
+
+        case Qt::Key_2:
+            overlayAlpha += 0.05;
+            if(overlayAlpha>1)
+                overlayAlpha = 1;
+            tesselation->updateAlpha(overlayAlpha);
+            updateGL();
             break;
     }
 
@@ -1334,10 +1392,34 @@ void MapViewer::showPolarizationVectors(bool show)
 
 void MapViewer::updateThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor, ScaleType scale, float factor, float offset)
 {
+    this->colorMap = colorMap;
     tesselation->updateTextureThreshold(colorMap, min, max, sentinelColor, scale, factor, offset);
 
     /* force redraw */
     updateGL();
+}
+
+
+void MapViewer::drawColorBar()
+{
+    glEnable (GL_TEXTURE_1D);
+    glBindTexture(GL_TEXTURE_1D, textureId);
+
+    /* draw rectangle */
+    glBegin(GL_QUADS);
+        glTexCoord1f(1.);
+        glVertex3f(0., -0.4, -0.1);
+        glTexCoord1f(0.6);
+        glVertex3f(0., 0.4, -0.1);
+        glTexCoord1f(0.3);
+        glVertex3f(0., 0.4, 0.1);
+        glTexCoord1f(0.);
+        glVertex3f(0., -0.4, 0.1);
+    glEnd();
+
+    /* unbind texture */
+    //glDisable(GL_TEXTURE_1D);
+    glBindTexture(GL_TEXTURE_1D, NULL);
 }
 
 

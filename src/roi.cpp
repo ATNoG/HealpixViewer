@@ -192,7 +192,7 @@ void ROI::draw()
 
     glActiveTexture(GL_TEXTURE1);
     glEnable(GL_TEXTURE_2D);
-    //glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glBindTexture(GL_TEXTURE_2D, textureId);
 
     pixelSetChanged = false;
@@ -201,6 +201,6 @@ void ROI::draw()
 
 void ROI::unbind()
 {
-    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, NULL);
+    glActiveTexture(GL_TEXTURE0);
 }
