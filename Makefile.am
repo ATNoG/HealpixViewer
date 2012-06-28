@@ -7,7 +7,8 @@ BUILT_SOURCES = \
 	src/ui_mainwindow.h \
 	src/ui_mapoptions.h \
 	src/ui_viewportmanager.h \
-	src/ui_gridoptions.h
+	src/ui_gridoptions.h \
+	src/ui_coordinatesystem.h
 
 healpixviewer_SOURCES = \
 		src/icons.cpp \
@@ -18,6 +19,7 @@ healpixviewer_SOURCES = \
 		src/moc_maploader.cpp \
 		src/moc_mapoptions.cpp \
 		src/moc_gridoptions.cpp \
+		src/moc_coordinatesystem.cpp \
 		src/moc_mapviewer.cpp \
 		src/moc_mapviewport.cpp \
 		src/moc_overlaycache.cpp \
@@ -40,6 +42,7 @@ healpixviewer_SOURCES = \
 		src/maploader.cpp \
 		src/mapoptions.cpp \
 		src/gridoptions.cpp \
+		src/coordinatesystem.cpp \
 		src/mapoverlay.cpp \
 		src/mapviewer.cpp \
 		src/mapviewport.cpp \
