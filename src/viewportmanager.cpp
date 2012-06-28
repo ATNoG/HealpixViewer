@@ -42,7 +42,9 @@ ViewportManager::~ViewportManager()
     // TODO: Invalid read of size 4
     for(int i=0; i<viewports.size(); i++)
     {
-        qDebug() << "Viewport " << viewports[i];
+        #if DEBUG > 0
+            qDebug() << "Viewport " << viewports[i];
+        #endif
         delete viewports[i];
     }
     /*

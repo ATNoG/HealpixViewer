@@ -59,7 +59,9 @@ void Tesselation::updateTesselationNside(int newNside)
     if(tesselationNside!=newNside)
     {
         this->tesselationNside = newNside;
-        qDebug() << "tess nside updated to " << newNside;
+        #if DEBUG > 0
+            qDebug() << "tess nside updated to " << newNside;
+        #endif
     }
 }
 
@@ -249,7 +251,9 @@ void Tesselation::updateTextureThreshold(ColorMap* colorMap, float min, float ma
 
 void Tesselation::changeMapField(HealpixMap::MapType field)
 {
-    qDebug() << "Updating Map Field to " << HealpixMap::mapTypeToString(field);
+    #if DEBUG > 0
+        qDebug() << "Updating Map Field to " << HealpixMap::mapTypeToString(field);
+    #endif
     textureCache->changeMapField(field);
     //textureCacheOverlay->changeMapField(field);
 }

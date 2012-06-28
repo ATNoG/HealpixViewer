@@ -27,7 +27,9 @@ FieldMap::~FieldMap()
 
 void FieldMap::convertToNest()
 {
-    qDebug("Converting to nest");
+    #if DEBUG > 0
+        qDebug("Converting to nest");
+    #endif
 
     long totalPixels = currentNside*currentNside*12;
     float* nestedMap;
@@ -67,7 +69,9 @@ float* FieldMap::downgradeMap(int newNside)
     /* dont downgrade */
     if(newNside>=currentNside)
     {
-        qDebug("Not downgraded!!!");
+        #if DEBUG > 0
+            qDebug("Not downgraded!!!");
+        #endif
         // TODO: shouldnt return an exception ?
         return map;
     }

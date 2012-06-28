@@ -577,7 +577,7 @@ void MapViewer::mouseReleaseEvent(QMouseEvent *e)
         int objWidth = v2.x - v1.x;
         int objHeight = v2.y - v1.y;
 
-        qDebug() << "Movement:" << xMovement << "/" << objWidth << " , " << yMovement << "/" << objHeight;
+        //qDebug() << "Movement:" << xMovement << "/" << objWidth << " , " << yMovement << "/" << objHeight;
 
         // transform displacement into angles
         xRot += xMovement*360 / objWidth;
@@ -815,7 +815,7 @@ void MapViewer::removePixelsFromSelection(std::set<int> pixels)
 
 void MapViewer::exportSelectedArea()
 {
-    qDebug() << "Total pixels: " << selectedPixels.size();
+    //qDebug() << "Total pixels: " << selectedPixels.size();
 
     QString outfile = QFileDialog::getSaveFileName(this, "Export as", "", "Fits Files (*.fits)");
 
@@ -866,7 +866,7 @@ void MapViewer::exportSelectedArea()
 
 void MapViewer::exportSelectedAreaAsMask()
 {
-    qDebug() << "Total pixels: " << selectedPixels.size();
+    //qDebug() << "Total pixels: " << selectedPixels.size();
 
     QString outfile = QFileDialog::getSaveFileName(this, "Export mask as", "", "Fits Files (*.fits)");
 

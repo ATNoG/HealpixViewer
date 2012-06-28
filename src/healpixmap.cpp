@@ -96,9 +96,9 @@ HealpixMap::HealpixMap(QString _path, int minNside)
 
 HealpixMap::~HealpixMap()
 {
-    //#if DEBUG > 0
+    #if DEBUG > 0
         qDebug() << "Calling HealpixMap destructor";
-    //#endif
+    #endif
 }
 
 void HealpixMap::processFile(QString path, bool generateMaps)

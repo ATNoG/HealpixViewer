@@ -234,7 +234,9 @@ void MapViewport::changeTo3D()
 {
     //if(mollview)
     //{
-        qDebug() << "Changing " << title << " to 3D";
+        #if DEBUG > 0
+            qDebug() << "Changing " << title << " to 3D";
+        #endif
         mapviewer->changeTo3D();
         mollview = false;
         actionMollweide->setVisible(true);
