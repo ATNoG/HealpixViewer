@@ -348,9 +348,9 @@ done
 
 if ! test $HEALPIX_DIR = xxx ; then
   LIBS="$LIBS -L$HEALPIX_DIR/lib -L$HEALPIX_DIR/src/cxx/$HEALPIX_TARGET/lib"
-  INCLUDES="$INCLUDES -I$HEALPIX_DIR/include -I$HEALPIX_DIR/src/cxx/$HEALPIX_TARGET/include"
-  CXXFLAGS="$CXXFLAGS -I$HEALPIX_DIR/include -I$HEALPIX_DIR/src/cxx/$HEALPIX_TARGET/include"
-  CPPFLAGS="$CPPFLAGS -I$HEALPIX_DIR/include -I$HEALPIX_DIR/src/cxx/$HEALPIX_TARGET/include"
+  INCLUDES="$INCLUDES -I$HEALPIX_DIR/include -I$HEALPIX_DIR/src/cxx/$HEALPIX_TARGET/include -I$HEALPIX_DIR/src/cxx/cxxsupport -I$HEALPIX_DIR/src/cxx/Healpix_cxx"
+  CXXFLAGS="$CXXFLAGS -I$HEALPIX_DIR/include -I$HEALPIX_DIR/src/cxx/$HEALPIX_TARGET/include -I$HEALPIX_DIR/src/cxx/cxxsupport -I$HEALPIX_DIR/src/cxx/Healpix_cxx"
+  CPPFLAGS="$CPPFLAGS -I$HEALPIX_DIR/include -I$HEALPIX_DIR/src/cxx/$HEALPIX_TARGET/include -I$HEALPIX_DIR/src/cxx/cxxsupport -I$HEALPIX_DIR/src/cxx/Healpix_cxx"
 fi
 
 
