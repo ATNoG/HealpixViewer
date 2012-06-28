@@ -7,12 +7,13 @@ Texture::Texture(int faceNumber, int nside)
     this->colorMap = ColorMapManager::instance()->getDefaultColorMap();
     this->sentinelColor = QColor(DEFAULT_SENTINEL_COLOR);
     this->texture = NULL;
+    this->isOverlay = false;
 
     created = false;
 }
 
 
-Texture::Texture(int faceNumber, int nside, ColorMap* colorMap, QColor sentinelColor, ScaleType scale, float factor, float offset)
+Texture::Texture(int faceNumber, int nside, ColorMap* colorMap, QColor sentinelColor, ScaleType scale, float factor, float offset, bool isOverlay)
 {
     this->faceNumber = faceNumber;
     this->nside = nside;
@@ -22,6 +23,7 @@ Texture::Texture(int faceNumber, int nside, ColorMap* colorMap, QColor sentinelC
     this->factor = factor;
     this->offset = offset;
     this->texture = NULL;
+    this->isOverlay = isOverlay;
 
     created = false;
 }
@@ -46,7 +48,6 @@ void Texture::buildTexture(float* data, float minv, float maxv)
     float v = 0.0;
     long texk = 0;
     QColor color;
-    texk = 0;
 
     texture = new unsigned char[nside*nside*3];
     int npixels = nside*nside;
@@ -134,13 +135,18 @@ void Texture::buildTexture(float* data, float minv, float maxv)
 
 void Texture::create()
 {
-    glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
     glGenTextures(1, &textureId);
     glBindTexture(GL_TEXTURE_2D, textureId);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexImage2D(GL_TEXTURE_2D, 0, 3, nside, nside, 0, GL_RGB, GL_UNSIGNED_BYTE, texture);
+
+    if(isOverlay)
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_MODULATE);
+    else
+        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_REPLACE);
+
     glBindTexture(GL_TEXTURE_2D, NULL);
 
     created = true;
@@ -162,7 +168,6 @@ void Texture::draw()
     if(!created)
         create();
 
-    glActiveTexture(GL_TEXTURE0);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, textureId);
 }

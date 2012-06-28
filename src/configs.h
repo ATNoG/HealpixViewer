@@ -9,6 +9,8 @@
 #define DEBUG 0
 #define GRID_LINES 6
 
+#define NUMBER_COLORBAR_SAMPLES 256
+
 #define FLIP false // flip mollweide projection
 
 

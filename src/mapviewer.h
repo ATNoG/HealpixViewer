@@ -193,6 +193,9 @@ private:
     void exportSelectedArea();
     void exportSelectedAreaAsMask();
 
+    //void exportSnapshot();
+    void drawColorBar();
+
     int xRot, yRot;
     QPoint firstPos;
     void updateMollweideRotation();
@@ -209,6 +212,7 @@ private:
     FaceCache* faceCache;
     TextureCache* textureCache;
     OverlayCache* overlayCache;
+    TextureCache* textureCacheOverlay;
 
     PolarizationVectors* polVectors;
 
@@ -218,6 +222,11 @@ private:
     Grid* grid;
 
     Frame* coordSysFrame;
+
+    float overlayAlpha;
+    ColorMap *colorMap;
+
+    GLuint textureId;
 };
 
 #endif // MAPVIEWER_H

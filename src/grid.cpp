@@ -115,7 +115,7 @@ void Grid::draw3D(int points)
     if(labeling)
     {
         /* draw parallels coordinates */
-        float labelRadius = radius+0.02;
+        float labelRadius = radius+0.01;
 
         for(int i=1; i<nparal; i++)
         {

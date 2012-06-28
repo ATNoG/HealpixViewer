@@ -30,7 +30,7 @@ struct faceInfo
 };
 
 public:
-    Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache, Grid* grid, int maxNside);
+    Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache, Grid* grid, int maxNside, TextureCache* textureCacheOverlay);
     ~Tesselation();
     void draw();
     void drawAllFaces();
@@ -61,6 +61,8 @@ public:
     void changeTo3D();
     void changeToMollweide();
 
+    void updateAlpha(float alpha);
+
     void selectPixels(std::set<int> pixelIndexes, int nside);
     void unselectPixels(std::set<int> pixelIndexes);
     void clearROI();
@@ -73,6 +75,9 @@ private:
     int tesselationNside;
     int textureNside;
     int vectorsNside;
+
+    bool secondMap;
+
     //QMap<int, Face*> availableFaces;
 
     int xRot, yRot;
@@ -89,10 +94,12 @@ private:
     ROI* roi;
     FaceCache* faceCache;
     TextureCache* textureCache;
+    TextureCache* textureCacheOverlay;
     OverlayCache* overlayCache;
     QVector<int> facesv;
     QVector<Face*> visibleFaces;
     ROIManager* manager;
+    float overlayAlpha;
 
     std::set<int> selectedPixels;
 

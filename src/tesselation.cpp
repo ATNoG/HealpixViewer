@@ -1,7 +1,7 @@
 #include "tesselation.h"
 #include "coordinatesystem.h"
 
-Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache, Grid* _grid, int maxNside)
+Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool _mollview, FaceCache* faceCache, TextureCache* textureCache, OverlayCache* overlayCache, Grid* _grid, int maxNside, TextureCache* textureCacheOverlay)
 {
     textureNside = _textureNside;
     vectorsNside = _pVecNside;
@@ -16,15 +16,20 @@ Tesselation::Tesselation(int _textureNside, int _tessNside, int _pVecNside, bool
 
     this->faceCache = faceCache;
     this->textureCache = textureCache;
+    this->textureCacheOverlay = textureCacheOverlay;
     this->overlayCache = overlayCache;
     //this->mapType = mapType;
     this->roi = NULL;
     this->coordSysFrame = NULL;
 
+    this->overlayAlpha = 0.5;
+
     this->manager = new ROIManager(maxNside);
 
     xRot = 0;
     yRot = 0;
+
+    secondMap = textureCacheOverlay!=NULL;
 
     createInitialTesselation();
 }
@@ -87,7 +92,11 @@ void Tesselation::updateVisibleFaces(QVector<int> faces)
     /* tell cache which faces are visible */
     faceCache->updateStatus(faces, tesselationNside, mollview);
     if(DISPLAY_TEXTURE)
+    {
         textureCache->updateStatus(faces, textureNside);
+        if(secondMap)
+            textureCacheOverlay->updateStatus(faces, textureNside);
+    }
     if(displayPolarizationVectors)
         overlayCache->updateStatus(faces, vectorsNside, mollview, MapOverlay::POLARIZATION_VECTORS);
 }
@@ -100,7 +109,11 @@ void Tesselation::preloadFaces(QVector<int> faces, int nside)
     {
         faceCache->preloadFace(faces[i], tesselationNside, mollview);
         if(DISPLAY_TEXTURE)
+        {
             textureCache->preloadFace(faces[i], textureNside);
+            if(secondMap)
+                textureCacheOverlay->preloadFace(faces[i], textureNside);
+        }
         if(displayPolarizationVectors)
             overlayCache->preloadFace(faces[i], vectorsNside, mollview, MapOverlay::POLARIZATION_VECTORS);
     }
@@ -122,10 +135,9 @@ void Tesselation::draw()
 {
     int totalFaces = facesv.size();
     Face* face;
-    Texture* texture;
+    Texture* texture, *texture1;
     PolarizationVectors* polVectors;
     ROI* roi;
-
 
     glPushMatrix();
 
@@ -138,6 +150,8 @@ void Tesselation::draw()
         face = faceCache->getFace(facesv[i], tesselationNside, mollview);
         bool hasROI = manager->hasROI(facesv[i]);
 
+        //glDisable(GL_DEPTH_TEST);
+
         // display texture
         if(DISPLAY_TEXTURE)
         {
@@ -149,20 +163,46 @@ void Tesselation::draw()
                 roi = manager->getFaceROI(facesv[i]);
                 roi->draw();
             }
+
+            face->draw();
+
+            if(hasROI)
+                roi->unbind();
+
+            texture->unbind();
+
+            if(secondMap)
+            {
+                glEnable(GL_DEPTH_TEST);
+
+                glEnable (GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+                glColor4f(1., 1., 1., overlayAlpha);
+
+                texture1 = textureCacheOverlay->getFace(facesv[i], textureNside);
+                texture1->draw();
+
+                if(hasROI)
+                {
+                    roi = manager->getFaceROI(facesv[i]);
+                    roi->draw();
+                }
+
+                face->draw();
+
+                if(hasROI)
+                    roi->unbind();
+
+                texture1->unbind();
+
+                glDisable (GL_BLEND);
+            }
         }
 
         if(needToUpdateRotation)
             face->setMollweideRotation(xRot, yRot);
 
-        face->draw();
-
-        if(DISPLAY_TEXTURE)
-        {
-            texture->unbind();
-
-            if(hasROI)
-                roi->unbind();
-        }
 
         // display polarization vectors
         if(displayPolarizationVectors)
@@ -172,17 +212,23 @@ void Tesselation::draw()
         }
     }
 
-    /* display grid */
+    // display grid
     if(displayGrid)
+    {
+        grid->setColor(QColor("white"));
         grid->draw();
+    }
 
     glPopMatrix();
 
     needToUpdateRotation = false;
 
-    /* display grid */
+    // display grid
     if(displayGrid)
+    {
+        grid->setColor(QColor("red"));
         grid->draw();
+    }
 }
 
 /* enable polarization vectors */
@@ -196,6 +242,8 @@ void Tesselation::showPolarizationVectors(bool show)
 void Tesselation::updateTextureThreshold(ColorMap* colorMap, float min, float max, QColor sentinelColor, ScaleType scale, float factor, float offset)
 {
     textureCache->updateTextureThreshold(colorMap, min, max, sentinelColor, scale, factor, offset);
+    if(secondMap)
+        textureCacheOverlay->updateTextureThreshold(colorMap, min, max, sentinelColor, scale, factor, offset);
 }
 
 
@@ -203,6 +251,7 @@ void Tesselation::changeMapField(HealpixMap::MapType field)
 {
     qDebug() << "Updating Map Field to " << HealpixMap::mapTypeToString(field);
     textureCache->changeMapField(field);
+    //textureCacheOverlay->changeMapField(field);
 }
 
 void Tesselation::showGrid(bool show)
@@ -250,4 +299,9 @@ void Tesselation::setMollweideRotation(int xRot, int yRot)
     this->yRot = yRot;
 
     needToUpdateRotation = true;
+}
+
+void Tesselation::updateAlpha(float alpha)
+{
+    this->overlayAlpha = alpha;
 }

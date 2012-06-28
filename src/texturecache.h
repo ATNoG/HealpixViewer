@@ -26,7 +26,7 @@ class TextureCache : public QObject
     Q_OBJECT
 
 public:
-    TextureCache(HealpixMap* map, int minNside, int maxNside, int maxTiles = TEXTURECACHE_MAX_TILES);
+    TextureCache(HealpixMap* map, int minNside, int maxNside, bool overlay, int maxTiles = TEXTURECACHE_MAX_TILES);
     ~TextureCache();
 
     /* inform cache about the faces that are visible and the nside used, so cache can preview the next faces to preload */
@@ -94,6 +94,7 @@ private:
     QColor sentinelColor;
     ScaleType scale;
     float factor, offset;
+    bool overlay;
 };
 
 #endif // TEXTURECACHE_H

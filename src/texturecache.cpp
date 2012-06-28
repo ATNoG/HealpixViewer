@@ -1,6 +1,6 @@
 #include "texturecache.h"
 
-TextureCache::TextureCache(HealpixMap* map, int minNside, int maxNside, int maxTiles)
+TextureCache::TextureCache(HealpixMap* map, int minNside, int maxNside, bool overlay, int maxTiles)
 {
     this->Min_Nside = minNside;
     this->Max_Nside = maxNside;
@@ -11,6 +11,7 @@ TextureCache::TextureCache(HealpixMap* map, int minNside, int maxNside, int maxT
     this->scale = LINEAR;
     this->factor = 1.0;
     this->offset = 0.0;
+    this->overlay = overlay;
 
     marginTilesSpace = CACHE_MARGIN;
 
@@ -130,7 +131,7 @@ Texture* TextureCache::loadFace(int faceNumber, int nside)
 {
     //REMOVE qDebug()<< "TextureCache: loading face " << faceNumber << "(" << nside << ")";
 
-    Texture* texture = new Texture(faceNumber, nside, colorMap, sentinelColor, scale, factor, offset);
+    Texture* texture = new Texture(faceNumber, nside, colorMap, sentinelColor, scale, factor, offset, overlay);
 
 #if DEBUG > 0
     if(texture==NULL)

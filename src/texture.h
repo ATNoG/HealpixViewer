@@ -15,7 +15,7 @@ class Texture
 {
 public:
     Texture(int faceNumber, int nside);
-    Texture(int faceNumber, int nside, ColorMap* colorMap, QColor sentinelColor, ScaleType scale, float factor, float offset);
+    Texture(int faceNumber, int nside, ColorMap* colorMap, QColor sentinelColor, ScaleType scale, float factor, float offset, bool isOverlay);
     ~Texture();
 
     void draw();
@@ -34,6 +34,7 @@ private:
     float factor, offset;
 
     bool created;
+    bool isOverlay;
 
     void create();
 };
