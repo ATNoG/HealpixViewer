@@ -235,6 +235,7 @@ void MapViewer::init()
     coordSysFrame = new Frame();
     coordSysFrame->setReferenceFrame(manipulatedFrame());
     tesselation->setCoordSysFrame(coordSysFrame);
+    originalRotation = coordSysFrame->rotation();
 
     /* update initial state */
     currentNside = MIN_NSIDE;
@@ -526,6 +527,9 @@ void MapViewer::changeToMollview()
 
         /* update tesselation */
         tesselation->changeToMollweide();
+
+        /* reset rotation */
+        coordSysFrame->setRotation(originalRotation);
 
         sceneUpdated();
     }
@@ -1680,67 +1684,70 @@ void MapViewer::applyGridOptions(gridOptions* options)
 
 void MapViewer::applyCoordSys(HealpixMap::Coordsys coordIn, HealpixMap::Coordsys coordOut)
 {
-    CoordinateSystemMatrices* coordsys = CoordinateSystemMatrices::instance();
-    Quaternion rotQuaternion, rotQuaternionOrigin;
-
-    if(coordIn!=coordOut)
+    if(!mollweide)
     {
-        switch(coordIn)
+        CoordinateSystemMatrices* coordsys = CoordinateSystemMatrices::instance();
+        Quaternion rotQuaternion, rotQuaternionOrigin;
+
+        if(coordIn!=coordOut)
         {
-            case HealpixMap::CELESTIAL:
+            switch(coordIn)
+            {
+                case HealpixMap::CELESTIAL:
 
-                switch(coordOut)
-                {
-                    case HealpixMap::GALACTIC:
-                        rotQuaternion.setFromRotationMatrix(coordsys->q2g);
-                        //rotQuaternionOrigin.setFromRotationMatrix(coordsys->g2q);
-                        break;
-                    case HealpixMap::ECLIPTIC:
-                        rotQuaternion.setFromRotationMatrix(coordsys->q2e);
-                        //rotQuaternionOrigin.setFromRotationMatrix(coordsys->e2q);
-                        break;
-                }
-                break;
+                    switch(coordOut)
+                    {
+                        case HealpixMap::GALACTIC:
+                            rotQuaternion.setFromRotationMatrix(coordsys->q2g);
+                            //rotQuaternionOrigin.setFromRotationMatrix(coordsys->g2q);
+                            break;
+                        case HealpixMap::ECLIPTIC:
+                            rotQuaternion.setFromRotationMatrix(coordsys->q2e);
+                            //rotQuaternionOrigin.setFromRotationMatrix(coordsys->e2q);
+                            break;
+                    }
+                    break;
 
-            case HealpixMap::GALACTIC:
+                case HealpixMap::GALACTIC:
 
-                switch(coordOut)
-                {
-                    case HealpixMap::CELESTIAL:
-                        rotQuaternion.setFromRotationMatrix(coordsys->g2q);
-                        //rotQuaternionOrigin.setFromRotationMatrix(coordsys->q2g);
-                        break;
-                    case HealpixMap::ECLIPTIC:
-                        rotQuaternion.setFromRotationMatrix(coordsys->g2e);
-                        //rotQuaternionOrigin.setFromRotationMatrix(coordsys->e2g);
-                        break;
-                }
-                break;
+                    switch(coordOut)
+                    {
+                        case HealpixMap::CELESTIAL:
+                            rotQuaternion.setFromRotationMatrix(coordsys->g2q);
+                            //rotQuaternionOrigin.setFromRotationMatrix(coordsys->q2g);
+                            break;
+                        case HealpixMap::ECLIPTIC:
+                            rotQuaternion.setFromRotationMatrix(coordsys->g2e);
+                            //rotQuaternionOrigin.setFromRotationMatrix(coordsys->e2g);
+                            break;
+                    }
+                    break;
 
-            case HealpixMap::ECLIPTIC:
+                case HealpixMap::ECLIPTIC:
 
-                switch(coordOut)
-                {
-                    case HealpixMap::CELESTIAL:
-                        rotQuaternion.setFromRotationMatrix(coordsys->e2q);
-                        //rotQuaternionOrigin.setFromRotationMatrix(coordsys->q2e);
-                        break;
-                    case HealpixMap::GALACTIC:
-                        rotQuaternion.setFromRotationMatrix(coordsys->e2g);
-                        //rotQuaternionOrigin.setFromRotationMatrix(coordsys->g2e);
-                        break;
-                }
-                break;
+                    switch(coordOut)
+                    {
+                        case HealpixMap::CELESTIAL:
+                            rotQuaternion.setFromRotationMatrix(coordsys->e2q);
+                            //rotQuaternionOrigin.setFromRotationMatrix(coordsys->q2e);
+                            break;
+                        case HealpixMap::GALACTIC:
+                            rotQuaternion.setFromRotationMatrix(coordsys->e2g);
+                            //rotQuaternionOrigin.setFromRotationMatrix(coordsys->g2e);
+                            break;
+                    }
+                    break;
 
+            }
         }
+        else
+            rotQuaternion.setFromRotationMatrix(coordsys->norot);
+
+        coordSysFrame->setRotation(rotQuaternion);
+        //manipulatedFrame()->setRotation(rotQuaternionDst);
+
+        updateGL();
     }
-    else
-        rotQuaternion.setFromRotationMatrix(coordsys->norot);
-
-    coordSysFrame->setRotation(rotQuaternion);
-    //manipulatedFrame()->setRotation(rotQuaternionDst);
-
-    updateGL();
 }
 
 

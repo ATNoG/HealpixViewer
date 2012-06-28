@@ -222,6 +222,7 @@ private:
     Grid* grid;
 
     Frame* coordSysFrame;
+    Quaternion originalRotation;
 
     float overlayAlpha;
     ColorMap *colorMap;
