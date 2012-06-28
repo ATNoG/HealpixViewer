@@ -360,7 +360,7 @@ fi
 AC_CHECK_LIB([chealpix], [read_healpix_map],[AC_DEFINE(HAVE_HEALPIX)],[AC_MSG_ERROR("Could not link against Healpix")])
 
 if test $SYSTEM = "Darwin"; then
-	LIBS="$LIBS $HEALPIX_DIR/lib/libchealpix.a"
+	LIBS="$LIBS $HEALPIX_DIR/lib/libchealpix.a -lhealpix_cxx -lcxxsupport -fopenmp"
 else
 	LIBS="$LIBS -lchealpix -lhealpix_cxx -lcxxsupport -fopenmp"
 fi
