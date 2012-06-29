@@ -496,7 +496,7 @@ void OverlayCache::setVectorsSpacing(int spacing)
 /* return the number of tiles (tiles of nside64) necessary for display the face with nside */
 int OverlayCache::calculateFaceTiles(int nside)
 {
-    return pow(nside/Min_Nside, 2);
+    return pow((double) nside/Min_Nside, 2);
 }
 
 int OverlayCache::getCacheIndex(MapOverlay::OverlayType type, int nside, bool mollweide)
