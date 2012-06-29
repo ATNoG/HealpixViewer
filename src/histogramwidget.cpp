@@ -277,7 +277,7 @@ void HistogramWidget::setThresholds(float _min, float _max)
     max = _max;
 
     /* calculate step and decimals places */
-    float step = (_max-_min)/100;
+    float step = (_max-_min)/100.0;
     float aux;
     int decimals;
 
@@ -291,7 +291,7 @@ void HistogramWidget::setThresholds(float _min, float _max)
             aux = aux*10;
             decimals++;
         }
-        step = 1 / pow(10, decimals);
+        step = 1 / pow(10.0, decimals);
         decimals++;
     }
     else
@@ -305,7 +305,7 @@ void HistogramWidget::setThresholds(float _min, float _max)
             a++;
         }
         a--;
-        step = floor(aux) * pow(10, a);
+        step = floor(aux) * pow(10.0, a);
     }
 
     //qDebug() << "Threshold set to " << _min << "," << _max;
