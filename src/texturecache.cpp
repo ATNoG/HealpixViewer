@@ -402,7 +402,7 @@ Texture* TextureCache::getBestFaceFromCache(int faceNumber, int nside)
 /* return the number of tiles (tiles of nside64) necessary for display the face with nside */
 int TextureCache::calculateFaceTiles(int nside)
 {
-    return pow(nside/Min_Nside, 2);
+    return pow((double) nside/Min_Nside, 2);
 }
 
 

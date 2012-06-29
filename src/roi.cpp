@@ -17,7 +17,7 @@ void ROIManager::addPoints(std::set<int> pixelIndexes, int nside)
     if(nside < maxNside)
     {
         std::set<int> allPixelIndexes;
-        int factor = pow(maxNside/nside, 2);
+        int factor = pow((double) maxNside/nside, 2);
 
         set<int>::iterator it;
         for(it=pixelIndexes.begin(); it!=pixelIndexes.end(); it++)
