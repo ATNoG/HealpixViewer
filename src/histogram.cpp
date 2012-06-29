@@ -1,5 +1,5 @@
 #include "histogram.h"
-
+#include <float.h>
 Histogram::Histogram(hv::unique_array<float> values, int totalValues)
 {
     //qDebug() << "construction histogram";
@@ -99,7 +99,7 @@ void Histogram::computeValues(bool calculateExtremes)
     /* calculate min log */
     if(scale==LOGARITHMIC)
     {
-        minLog = 999999999999;
+        minLog = FLT_MAX;
         for(int i=0; i<totalValues; i++)
         {
             if(!approx<double>(values[i],Healpix_undef))
@@ -247,7 +247,7 @@ void Histogram::calculateMinMax()
 {
     /* calculate min and max values */
     float min, max;
-    min = 99999999999;
+    min = FLT_MAX;
     max = Healpix_undef;
 
     for(long i=0; i<totalValues; i++)
