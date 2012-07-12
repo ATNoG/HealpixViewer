@@ -26,19 +26,23 @@ AC_CHECK_FUNCS([floor mkdir pow sqrt])
 
 
 SYSTEM=`uname`
-ARCH=`uname -p`
-X64="x86_64"
+ARCH=`getconf LONG_BIT`
+X64="64"
 
 GCC_VERSION=$(gcc -v 2>&1|grep version |cut -d ' ' -f 3)
 
 if test $SYSTEM = "Darwin"; then
-	CPPFLAGS="$CPPFLAGS -mmacosx-version-min=10.5 -arch i386"
-	CXXFLAGS="$XXFLAGS -mmacosx-version-min=10.5 -arch i386"
-	CFLAGS="$CFLAGS -mmacosx-version-min=10.5 -arch i386"
+	CPPFLAGS="$CPPFLAGS -mmacosx-version-min=10.5"
+	CXXFLAGS="$XXFLAGS -mmacosx-version-min=10.5"
+	CFLAGS="$CFLAGS -mmacosx-version-min=10.5"
 	if test $ARCH = $X64; then
 		CPPFLAGS="$CPPFLAGS -arch x86_64"
 		CXXFLAGS="$CXXFLAGS -arch x86_64"
 		CFLAGS="$CFLAGS -arch x86_64"
+	else
+		CPPFLAGS="$CPPFLAGS -arch i386"
+		CXXFLAGS="$CXXFLAGS -arch i386"
+		CFLAGS="$CFLAGS -arch i386"
 	fi
 	AC_MSG_NOTICE("Compiling for MAC OSX 10.5 and up with Universial binary")
 fi
@@ -258,7 +262,7 @@ QT_LFLAGS=`grep LFLAGS.*= $tmp/Makefile | awk '{sub(/^LFLAGS +=/, ""); print}'`
 if test -z "$QT_LFLAGS"; then
 	AC_MSG_ERROR(Unable to find Qt link flags)
 fi
-AC_MSG_NOTICE($QT_LFLAGS)
+AC_MSG_NOTICE("QTFLAGS: $QT_LFLAGS:)
 
 
 LIBS="$LIBS $QT_LIBS"
@@ -270,7 +274,7 @@ fi
 INCLUDES="$INCLUDES $QT_INCPATH"
 CXXFLAGS="$CXXFLAGS $QT_INCPATH"
 CPPFLAGS="$CPPFLAGS $QT_INCPATH"
-LDFLAGS="$LDFLAGS $QT_LFLAGS -lstdc++"
+LDFLAGS="$LDFLAGS -lstdc++"
 
 
 # Remove temp directory
@@ -357,7 +361,7 @@ fi
 if ! test $SYSTEM = "Darwin"; then
 AC_CHECK_HEADERS([chealpix.h],[AC_DEFINE(HAVE_CHEALPIX_H)],[AC_MSG_ERROR("Could not find chealpix.h from the Healpix package")])
 fi
-AC_CHECK_LIB([chealpix], [read_healpix_map],[AC_DEFINE(HAVE_HEALPIX)],[AC_MSG_ERROR("Could not link against Healpix")])
+#AC_CHECK_LIB([chealpix], [read_healpix_map],[AC_DEFINE(HAVE_HEALPIX)],[AC_MSG_ERROR("Could not link against Healpix")])
 
 if test $SYSTEM = "Darwin"; then
 	LIBS="$LIBS $HEALPIX_DIR/lib/libchealpix.a -lhealpix_cxx -lcxxsupport -fopenmp"
