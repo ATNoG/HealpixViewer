@@ -99,9 +99,10 @@ for x in $QTPATHS; do
     fi
     break
 done
-if test $QTDIR = xxx ; then
-   AC_MSG_ERROR(Could not locate QT 4.7)
-fi
+# TODO: check for framework (Mac OS)
+#if test $QTDIR = xxx ; then
+#   AC_MSG_ERROR(Could not locate QT 4.7)
+#fi
 
 QTBINDIR=xxx
 AC_ARG_WITH([qtbin-dir],
