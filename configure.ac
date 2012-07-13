@@ -337,6 +337,15 @@ LIBS="$LIBS -lcfitsio"
 #------------------------------------
 
 # Check Healpix
+
+if ! test [[ $HEALPIX_TARGET ]]; then
+        if test $SYSTEM = "Darwin"; then
+                HEALPIX_TARGET="osx"
+        else
+                HEALPIX_TARGET="generic_gcc"
+        fi
+fi
+
 HEALPIX_DIR=xxx
 AC_ARG_WITH([healpix-dir],
              AC_HELP_STRING([--with-healpix-dir=/path/to/Healpix],
