@@ -122,7 +122,7 @@ bool MapViewer::loadMap(QString fitsfile, HealpixMap::MapType mapType)
         if(mapCreated)
         {
             #if DEBUG > 0
-                qDebug() << "Opening map with type: " << HealpixMap::mapTypeToString(mapType);
+                qDebug() << "Opening map with type: " << mapType;
             #endif
 
             healpixMap->changeCurrentMap(mapType);
@@ -149,11 +149,13 @@ bool MapViewer::loadMap(QString fitsfile, HealpixMap::MapType mapType)
             /* OVERLAY */
             if(false)
             {
+                /*
                 healpixMapOverlay = new HealpixMap(fitsfile, MIN_NSIDE);
                 healpixMapOverlay->changeCurrentMap(HealpixMap::NObs);
                 textureCacheOverlay = new TextureCache(healpixMapOverlay, MIN_NSIDE, maxNside, true);
                 QObject::connect(textureCacheOverlay, SIGNAL(newFaceAvailable(bool)), this, SLOT(checkForUpdates(bool)) );
                 tesselation = new Tesselation(currentNside, tesselationNside, currentVectorsNside, mollweide, faceCache, textureCache, overlayCache, grid, maxNside, textureCacheOverlay);
+                */
             }
             else
             {

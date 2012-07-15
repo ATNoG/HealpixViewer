@@ -6,22 +6,10 @@
 
 const double boost = 0.001;
 
-
-/* keywords used to specify the columns */
-char  ICOLNAME1[]  = "TEMPERATURE";
-char  ICOLNAME2[]  = "Intensity";
-char  ICOLNAME3[]  = "SIGNAL";
-char  QCOLNAME1[]  = "Q_POLARISATION";
-char  QCOLNAME2[] = "QPOLARISATION";
-char  QCOLNAME3[] = "Q_POLARIZATION";
-char  QCOLNAME4[] = "QPOLARIZATION";
-char  QCOLNAME5[] = "QStokesParameter";
-char  UCOLNAME1[]  = "U_POLARISATION";
-char  UCOLNAME2[] = "UPOLARISATION";
-char  UCOLNAME3[] = "U_POLARIZATION";
-char  UCOLNAME4[] = "UPOLARIZATION";
-char  UCOLNAME5[] = "UStokesParameter";
-char  NCOLNAME[]  = "N_OBS";
+QSet<QString> TemperatureNames;
+QSet<QString> UPolarizationNames;
+QSet<QString> QPolarizationNames;
+QSet<QString> NObsNames;
 
 char  DEFTABLE[]  = "Sky Maps";
 char  DEFTUNIT[]  = "unknown";
@@ -31,6 +19,14 @@ char  DEFFORM[]   = "1024E";
 
 HealpixMap::HealpixMap(QString _path, int minNside)
 {
+    /* keywords used to specify the columns */
+    TemperatureNames << "TEMPERATURE" << "Intensity" << "SIGNAL" << "I_STOKES";
+    QPolarizationNames << "Q_POLARISATION" << "QPOLARISATION" << "Q_POLARIZATION" << "QPOLARIZATION" << "QStokesParameter" << "Q_STOKES";
+    UPolarizationNames << "U_POLARISATION" << "UPOLARISATION" << "U_POLARIZATION" << "UPOLARIZATION" << "UStokesParameter" << "U_STOKES";
+    NObsNames << "N_OBS";
+
+    UFieldExist = QFieldExist = NObsFieldExist = false;
+
     //throw HealpixMapException("teste");
     path = _path;
     this->minNSide = minNside;
@@ -88,9 +84,10 @@ HealpixMap::HealpixMap(QString _path, int minNside)
 
     loadingDialog->setValue(loadingDialog->maximum());
 
+    loadingDialog = NULL;
     delete loadingDialog;
 
-    changeCurrentMap(I);
+    //changeCurrentMap(I);
 }
 
 
@@ -184,6 +181,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
             }
             */
 
+            /*
             if (fits_get_colnum(fptr, CASEINSEN, ICOLNAME1, &t, &status) == 0) icol = t;
             status = 0;
             if ((icol == 0) && (fits_get_colnum(fptr, CASEINSEN, ICOLNAME2, &t, &status) == 0)) icol = t;
@@ -194,23 +192,14 @@ void HealpixMap::processFile(QString path, bool generateMaps)
             {
                 correctHDU = true;
             }
-        }
-    }
+            */
 
-    if(!correctHDU)
-    {
-        /* something wrong happened... invalid file ? */
-        #if DEBUG > 0
-            qDebug("Correct extension not found");
-        #endif
-        fits_close_file(fptr, &status);
-        abort();
-        throw HealpixMapException("Error processing FITS file: field not found");
+            correctHDU = true;
+        }
     }
 
     /* read the extension header */
     readFITSExtensionHeader(fptr);
-
 
     /* update progress */
     loadingDialog->setLabelText("Loading Map (reading available maps)");
@@ -219,52 +208,9 @@ void HealpixMap::processFile(QString path, bool generateMaps)
 
     // TODO: optimization: information about available maps can be saved on cache
 
-    /* temperature map is always available */
-    availableMaps.append(I);
-
 
     /* get fields positions */
-
-    /* verify existing maps. Both Q and U must be supplied for polarization */
-    if (fits_get_colnum(fptr, CASEINSEN, NCOLNAME, &t, &status) == 0)
-    {
-        ncol = t;
-        availableMaps.append(NObs);
-    }
-
-    // TODO: need to set status to 0 everytime ?
-
-    /* Look for Q field */
-    status = 0;
-    if (fits_get_colnum(fptr, CASEINSEN, QCOLNAME1, &t, &status) == 0) qcol = t;
-    /* try the different names for Q column */
-    status = 0;
-    if ((qcol == 0) && (fits_get_colnum(fptr, CASEINSEN, QCOLNAME2, &t, &status) == 0)) qcol = t;
-    status = 0;
-    if ((qcol == 0) && (fits_get_colnum(fptr, CASEINSEN, QCOLNAME3, &t, &status) == 0)) qcol = t;
-    status = 0;
-    if ((qcol == 0) && (fits_get_colnum(fptr, CASEINSEN, QCOLNAME4, &t, &status) == 0)) qcol = t;
-    status = 0;
-    if ((qcol == 0) && (fits_get_colnum(fptr, CASEINSEN, QCOLNAME5, &t, &status) == 0)) qcol = t;
-    /* add Q to available maps */
-    if(qcol!=0)
-        availableMaps.append(Q);
-
-    /* Look for U field */
-    status = 0;
-    if (fits_get_colnum(fptr, CASEINSEN, UCOLNAME1, &t, &status) == 0) ucol = t;
-    /* try the different names for U column */
-    status = 0;
-    if ((ucol == 0) && (fits_get_colnum(fptr, CASEINSEN, UCOLNAME2, &t, &status) == 0)) ucol = t;
-    status = 0;
-    if ((ucol == 0) && (fits_get_colnum(fptr, CASEINSEN, UCOLNAME3, &t, &status) == 0)) ucol = t;
-    status = 0;
-    if ((ucol == 0) && (fits_get_colnum(fptr, CASEINSEN, UCOLNAME4, &t, &status) == 0)) ucol = t;
-    status = 0;
-    if ((ucol == 0) && (fits_get_colnum(fptr, CASEINSEN, UCOLNAME5, &t, &status) == 0)) ucol = t;
-    /* add U to available maps */
-    if(ucol!=0)
-        availableMaps.append(U);
+    checkFields();
 
 
     /* need to create the maps ? */
@@ -275,19 +221,10 @@ void HealpixMap::processFile(QString path, bool generateMaps)
 
         foreach(MapType maptype, availableMaps)
         {
-            int col;
-            QString prefix;
-
-            switch(maptype)
-            {
-                case I: col=icol; prefix="I"; break;
-                case Q: col=qcol; prefix="Q"; break;
-                case U: col=ucol; prefix="U"; break;
-                case NObs: col=ncol; prefix="NObs"; break;
-            }
+            int col = 0;
 
             /* update progress */
-            loadingDialog->setLabelText("Loading Map (processing " + prefix + ")");
+            loadingDialog->setLabelText("Loading Map (processing " + maptype + " field)");
             loadingDialog->setValue(i);
             i++;
 
@@ -307,6 +244,12 @@ void HealpixMap::processFile(QString path, bool generateMaps)
             }
 
             status = 0;
+            if (fits_get_colnum(fptr, CASEINSEN, maptype.toLocal8Bit().data(), &t, &status) == 0) col = t;
+
+
+            qDebug() << "Field " << maptype << " present in col " << col;
+
+            status = 0;
             if (fits_read_col(fptr, TFLOAT, col, 1, 1, npixels, &nul, values, &t, &status) != 0)
             {
                 #if DEBUG > 0
@@ -323,7 +266,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
             try
             {
                  fieldMap = new FieldMap(values, maxNside, isOrderNested());
-                 fieldMap->generateDowngrades(cachePath, prefix, minNSide);
+                 fieldMap->generateDowngrades(cachePath, (QString)maptype, minNSide);
             }
             catch(FieldMapException &e)
             {
@@ -345,11 +288,13 @@ void HealpixMap::processFile(QString path, bool generateMaps)
             /* create polarization map for each nside */
             for(int nside=maxNside; nside>=minNSide; nside=nside/2)
             {
-                //qDebug() << "Generating polarization for " << nside;
+                qDebug() << "Generating polarization for " << nside;
 
                 /* read Q and U */
-                float *_Q = readMapCache(nside, Q);
-                float *_U = readMapCache(nside, U);
+                float *_Q = readMapCache(nside, QField);
+                float *_U = readMapCache(nside, UField);
+
+                qDebug() << "Map cache readed";
 
                 /* calculate total pixels */
                 long totalPixels = nside2npix(nside);
@@ -483,11 +428,26 @@ void HealpixMap::readFITSExtensionHeader(fitsfile *fptr)
         abort();
         throw HealpixMapException("Cant't get the Nside from FITS file");
     }
-
     /* save nside and npixels value */
     QString nside_qs(value);
     this->maxNside = nside_qs.toInt();
     this->npixels = nside2npix(this->maxNside);
+
+    /* Read Fields */
+    status = 0;
+    fits_read_keyword(fptr, "TFIELDS", value, comment, &status);
+    QString tfiels_aux(value);
+    int totalFields = tfiels_aux.toInt();
+
+    for(int i=1; i<=totalFields; i++)
+    {
+        status = 0;
+        QString fieldName = QString("TTYPE%1").arg(i);
+        fits_read_keyword(fptr, fieldName.toLocal8Bit().data(), value, comment, &status);
+        QString aux(value);
+
+        availableMaps.append(aux.remove("'").trimmed());
+    }
 
     qDebug() << "Nside is " << maxNside << " with " << npixels << " pixels";
 }
@@ -505,6 +465,49 @@ HealpixMap::Ordering HealpixMap::parseOrdering(char *value)
     {
         abort();
         throw HealpixMapException("Invalid Healpix ordering");
+    }
+}
+
+
+void HealpixMap::checkFields()
+{
+    // TODO: we need to have both ?
+    QSetIterator<QString> qIt(QPolarizationNames);
+    QSetIterator<QString> uIt(UPolarizationNames);
+    QSetIterator<QString> nIt(NObsNames);
+    QString aux;
+
+    while(qIt.hasNext())
+    {
+        aux = qIt.next();
+        if(availableMaps.contains(aux))
+        {
+            QFieldExist = true;
+            QField = aux;
+            break;
+        }
+    }
+
+    while(uIt.hasNext())
+    {
+        aux = uIt.next();
+        if(availableMaps.contains(aux))
+        {
+            UFieldExist = true;
+            UField = aux;
+            break;
+        }
+    }
+
+    while(nIt.hasNext())
+    {
+        aux = nIt.next();
+        if(availableMaps.contains(aux))
+        {
+            NObsFieldExist = true;
+            NObsField = aux;
+            break;
+        }
     }
 }
 
@@ -548,20 +551,14 @@ bool HealpixMap::isCoordsysGalactic()
     return coordsys==GALACTIC;
 }
 
-bool HealpixMap::hasTemperature()
+bool HealpixMap::hasNObs()
 {
-    return availableMaps.contains(I);
+    return NObsFieldExist;
 }
 
 bool HealpixMap::hasPolarization()
 {
-    // TODO: we need to have both ?
-    return availableMaps.contains(Q) && availableMaps.contains(U);
-}
-
-bool HealpixMap::hasNObs()
-{
-    return availableMaps.contains(NObs);
+    return (QFieldExist && UFieldExist);
 }
 
 
@@ -594,7 +591,7 @@ void HealpixMap::writeFITS(char* filename, char* tabname, float* temperature, in
     //if (strlen(tabname) <= 0) tabname = NULL;
     //if (tabname == NULL) tabname = DEFTABLE;
     ncol = 0;
-    ttype[ncol] = ICOLNAME1; tform[ncol] = DEFFORM; tunit[ncol++] = DEFTUNIT;
+    ttype[ncol] = "TEMPERATURE"; tform[ncol] = DEFFORM; tunit[ncol++] = DEFTUNIT;
 
 
     /* Try to open and prepare the FITS file for writing. */
@@ -692,19 +689,6 @@ float* HealpixMap::getFaceValues(int faceNumber, int nside)
 {
     int pixelsPerFace = nside2npix(nside)/12;
 
-    /*
-     * Flipped!
-    if(faceNumber==5) faceNumber=7;
-    else if(faceNumber==7) faceNumber=5;
-    else if(faceNumber==2) faceNumber=1;
-    else if(faceNumber==1) faceNumber=2;
-    else if(faceNumber==0) faceNumber=3;
-    else if(faceNumber==3) faceNumber=0;
-    else if(faceNumber==8) faceNumber=11;
-    else if(faceNumber==11) faceNumber=8;
-    else if(faceNumber==10) faceNumber=9;
-    else if(faceNumber==9) faceNumber=10;
-    */
     float *values = readMapCache(nside, currentMapType, faceNumber*pixelsPerFace, pixelsPerFace);
     return values;
 }
@@ -717,12 +701,12 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, double minM
 
     long startPixel = faceNumber*pixelsPerFace;
 
-    float *polAngles = readMapCache(nside, P, startPixel, pixelsPerFace);
-    float *polMagnitudes = readMapCache(nside, P, (12+faceNumber)*pixelsPerFace, pixelsPerFace);
+    float *polAngles = readMapCache(nside, "P", startPixel, pixelsPerFace);
+    float *polMagnitudes = readMapCache(nside, "P", (12+faceNumber)*pixelsPerFace, pixelsPerFace);
 
     float *nobs = NULL;
     if(hasNObs())
-        nobs = readMapCache(nside, NObs, startPixel, pixelsPerFace);
+        nobs = readMapCache(nside, NObsField, startPixel, pixelsPerFace);
 
     long npixels = pixelsPerFace;
 
@@ -898,29 +882,16 @@ Vec HealpixMap::spinVector(const Vec &v0, const Vec &vin, double psi)
 
 float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, int length)
 {
-    QString mapTypeStr;
-
-    switch(mapType)
-    {
-        case I: mapTypeStr="I"; break;
-        case Q: mapTypeStr="Q"; break;
-        case U: mapTypeStr="U"; break;
-        case P: mapTypeStr="P"; break;
-        case NObs: mapTypeStr="NObs"; break;
-    }
-
     /* get filename */
     QString nsideStr;
     nsideStr.setNum(nside);
-    QString path = cachePath + "/" + mapTypeStr + "_" + nsideStr;
+    QString path = cachePath + "/" + mapType + "_" + nsideStr;
 
     /* if length is 0 read all content */
     if(length==0)
         length = nside2npix(nside);
 
     hv::unique_array<float> values(new float[length]);
-
-    //qDebug() << "Reading file " << path;
 
     /* read content */
     QFile f(path);
@@ -1061,31 +1032,6 @@ bool HealpixMap::checkMapCache()
 }
 
 
-QString HealpixMap::mapTypeToString(MapType type)
-{
-    QString mapTypeName;
-    switch(type)
-    {
-        case I:
-            mapTypeName = "Temperature";
-            break;
-        case Q:
-            mapTypeName = "Q Polarization";
-            break;
-        case U:
-            mapTypeName = "U Polarization";
-            break;
-        case P:
-            mapTypeName = "Polarization";
-            break;
-        case NObs:
-            mapTypeName = "NObs";
-            break;
-    }
-    return mapTypeName;
-}
-
-
 QString HealpixMap::coordsysToString(Coordsys coordsys)
 {
     QString coordsysName;
@@ -1174,7 +1120,8 @@ void HealpixMap::abort()
     if(createCache && !cacheCreated)
         removeCache();
 
-    delete loadingDialog;
+    if(loadingDialog!=NULL)
+        delete loadingDialog;
 }
 
 void HealpixMap::angle2pix(double theta, double phi, int nside, long &pix)

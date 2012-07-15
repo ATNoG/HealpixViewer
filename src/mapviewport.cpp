@@ -420,7 +420,7 @@ void MapViewport::fillMapField()
 
     for(int i=0; i<availableFields.size(); i++)
     {
-        QAction* action = new QAction(HealpixMap::mapTypeToString(availableFields[i]), fieldMenu);
+        QAction* action = new QAction(availableFields[i], fieldMenu);
         action->setCheckable(true);
 
         /* group viewport actions in a group, to have exclusive checked option */

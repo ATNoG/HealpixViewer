@@ -205,7 +205,7 @@ void ViewportManager::closeViewports()
 void ViewportManager::mapFieldChanged(int currentIdx)
 {
     QVariant aux = ui->mapFieldSelector->itemData(currentIdx);
-    HealpixMap::MapType field = getMapField(aux.toInt());
+    HealpixMap::MapType field = aux.toString();
 
     if(currentSelectedViewport>=0)
     {
@@ -330,7 +330,7 @@ void ViewportManager::openInViewports(QString fitsfile, QSet<HealpixMap::MapType
             else
             {
                 /* show warning dialog */
-                QMessageBox::warning (this, "HealpixViewer", "Error opening map " + fitsfile + "(" + HealpixMap::mapTypeToString(mapType) + ")");
+                QMessageBox::warning (this, "HealpixViewer", "Error opening map " + fitsfile + "(" + mapType + ")");
             }
         }
     }
@@ -396,7 +396,7 @@ void ViewportManager::updateFieldSelector(int viewportId)
     for(int i=0; i<availableFiels.size(); i++)
     {
         /* add item to combobox */
-        ui->mapFieldSelector->insertItem(i, HealpixMap::mapTypeToString(availableFiels[i]), availableFiels[i]);
+        ui->mapFieldSelector->insertItem(i, availableFiels[i], availableFiels[i]);
         if(availableFiels[i]==info->currentField)
             selectedIndex = i;
     }

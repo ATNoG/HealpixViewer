@@ -40,17 +40,16 @@ public:
 
     enum Ordering {NESTED, RING};
     enum Coordsys {CELESTIAL, ECLIPTIC, GALACTIC};
-    enum MapType  {I, Q, U, P, NObs};
+
+    typedef QString MapType;
 
     bool isOrderRing();
     bool isOrderNested();
     bool isCoordsysCelestial();
     bool isCoordsysEcliptic();
     bool isCoordsysGalactic();
-
-    bool hasTemperature();
-    bool hasPolarization();
     bool hasNObs();
+    bool hasPolarization();
 
     bool generateDowngrades();
 
@@ -71,7 +70,6 @@ public:
     void getMagMinMax(double &min, double &max);
 
     static unsigned int NSide2Res  (unsigned int ns);
-    static QString mapTypeToString(MapType type);
     static QString coordsysToString(Coordsys coord);
 
     void angle2pix(double theta, double phi, int nside, long &pix);
@@ -93,6 +91,9 @@ private:
     bool createCache;
     bool cacheCreated;
 
+    bool QFieldExist, UFieldExist, NObsFieldExist;
+    MapType QField, UField, NObsField;
+
     QList<MapType> availableMaps;
     MapType currentMapType;
 
@@ -103,6 +104,7 @@ private:
     Ordering parseOrdering(char *value);
     Coordsys parseCoordsys(char* value);
 
+    void checkFields();
     void processFile(QString path, bool generateMaps);
     void readFITSPrimaryHeader(fitsfile *fptr);
     void readFITSExtensionHeader(fitsfile *fptr);
@@ -136,22 +138,6 @@ private:
 inline unsigned int HealpixMap::NSide2Res (unsigned int ns)
 {
     return (unsigned int) (0.4 + (log(double(ns)) / log(2.0)));
-}
-
-
-inline HealpixMap::MapType getMapField(int i)
-{
-    switch(i)
-    {
-        case HealpixMap::I:
-            return HealpixMap::I;
-        case HealpixMap::Q:
-            return HealpixMap::Q;
-        case HealpixMap::U:
-            return HealpixMap::U;
-        case HealpixMap::NObs:
-            return HealpixMap::NObs;
-    }
 }
 
 inline HealpixMap::Coordsys getCoordSys(int i)

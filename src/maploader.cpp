@@ -21,7 +21,7 @@ MapLoader::MapLoader(QWidget *parent, QString filename, QList<HealpixMap::MapTyp
 
     for(int i=0; i<availableMaps.size(); i++)
     {
-        QCheckBox *checkBox = new QCheckBox(HealpixMap::mapTypeToString(availableMaps[i]));
+        QCheckBox *checkBox = new QCheckBox(availableMaps[i]);
         checkboxs.append(checkBox);
         vbox->addWidget(checkBox);
     }

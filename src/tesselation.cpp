@@ -252,7 +252,7 @@ void Tesselation::updateTextureThreshold(ColorMap* colorMap, float min, float ma
 void Tesselation::changeMapField(HealpixMap::MapType field)
 {
     #if DEBUG > 0
-        qDebug() << "Updating Map Field to " << HealpixMap::mapTypeToString(field);
+        qDebug() << "Updating Map Field to " << field;
     #endif
     textureCache->changeMapField(field);
     //textureCacheOverlay->changeMapField(field);
