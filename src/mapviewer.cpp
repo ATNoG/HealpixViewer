@@ -1145,7 +1145,9 @@ void MapViewer::updateGraticule()
     int aux = round(v/logMax * 10);
 
     grid->setConfiguration(graticules[aux], graticules[aux]);
-    updateGL();
+
+    // TODO: need to update gl to draw the graticule!
+    //updateGL();
 }
 
 
@@ -1190,13 +1192,14 @@ void MapViewer::checkForUpdates(bool cleanCache)
 {
     //QGLContext* newContext = new QGLContext(format(),this);
 
-
-    //qDebug("check for updates");
     updateGL();
 
     // TODO: try to clean cache from thread...
     if(cleanCache)
-        faceCache->cleanCache();
+    {
+        textureCache->cleanCache();
+        //faceCache->cleanCache();
+    }
     /*
     Face* f = NULL;
 

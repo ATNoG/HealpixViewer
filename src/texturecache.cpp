@@ -78,6 +78,8 @@ Texture* TextureCache::getFace(int faceNumber, int nside)
     /* check if available in cache */
     if(!checkFaceAvailable(faceNumber, nside))
     {
+        //qDebug() << "Face " << faceNumber << "(" << nside << ")not available in cache!";
+
         /* initial nside, so wait for texture to load */
         if(nside==Min_Nside)
         //if(true)
@@ -140,12 +142,12 @@ Texture* TextureCache::loadFace(int faceNumber, int nside)
 
     texture->buildTexture(healpixMap->getFaceValues(faceNumber, nside), minTex, maxTex);
 
+    #if DEBUG > 0
+        qDebug() << "Texture " << faceNumber << "(" << nside << ") - Loaded";
+    #endif
+
     /* store the face into the cache */
     bool clean = storeFace(faceNumber, nside, texture);
-
-#if DEBUG > 0
-    qDebug() << "Texture " << faceNumber << "(" << nside << ") - Loaded";
-#endif
 
     /* remove the request */
     int faceId = (faceNumber+1)*10000 + nside;
@@ -162,6 +164,7 @@ Texture* TextureCache::loadFace(int faceNumber, int nside)
 
 bool TextureCache::cleanCache(int minSpace)
 {
+    qDebug() << "Cleaning cache!";
     // TODO: discard the not used faces to get space for new faces - better algorithm
 
 #if DEBUG > 0
@@ -286,7 +289,7 @@ bool TextureCache::storeFace(int faceNumber, int nside, Texture* face)
     */
 
     // TODO: descomentar
-    //qDebug() << "face stored " << faceNumber << " (" << nside << ")";
+    //qDebug() << "trying to store face " << faceNumber << " (" << nside << ")";
 
 
     QMutexLocker locker(&cacheAccess);
@@ -325,6 +328,7 @@ bool TextureCache::storeFace(int faceNumber, int nside, Texture* face)
         qDebug("no space left on texture cache");
         //return false;
     }
+
 
     if(availableTiles<marginTilesSpace)
         return true;
