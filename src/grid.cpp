@@ -149,9 +149,9 @@ void Grid::draw3D(int points)
             float degrees;
 
             if(i<=nmerid)
-                degrees = (i*180 / nmerid);
+                degrees = - (i*180 / nmerid);
             else
-                degrees = - (nmerid*2-i) * 180 / nmerid;
+                degrees = (nmerid*2-i) * 180 / nmerid;
             viewer->renderText(x*labelRadius, y*labelRadius, costheta*labelRadius, QString("%1").arg(degrees).append(QString::fromUtf8("º")), QFont("Arial", labelSize));
         }
     }
@@ -253,7 +253,7 @@ void Grid::drawMollweide(int points)
 
             toMollweide(theta, phi, x, y);
 
-            float degrees = 180 - (i*360/(nmerid*2));
+            float degrees = (i*360/(nmerid*2)) - 180;
 
             viewer->renderText(xPos, x*rad, y*rad, QString("%1").arg(degrees).append(QString::fromUtf8("º")), QFont("Arial", labelSize));
         }
