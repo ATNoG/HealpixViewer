@@ -1,4 +1,4 @@
-HealpixViewer is a software for visualization of Healpix maps stored in FITS files. This software is written in C++ and uses OpenGL for map visualization, and Qt library for the GUI, allowing cross-platform portability.
+Healpix Viewer is a software for visualization of Healpix maps stored in FITS files. This software is written in C++ and uses OpenGL for map visualization, and Qt library for the GUI, allowing cross-platform portability.
 
 
 == Features ==
@@ -14,7 +14,7 @@ HealpixViewer is a software for visualization of Healpix maps stored in FITS fil
 
 == Requirements ==
 
-To run HealpixViewer the following packages are necessary: 
+To run HealpixViewer the following packages are necessary:
  - libQGlViewer - http://www.libqglviewer.com/
  - Healpix - http://healpix.jpl.nasa.gov/index.shtml
  - CFITSIO - http://heasarc.gsfc.nasa.gov/fitsio/
