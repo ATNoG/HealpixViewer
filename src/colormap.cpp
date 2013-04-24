@@ -1,3 +1,4 @@
+#include <QCoreApplication>
 #include <iostream>
 #include "colormap.h"
 #include "exceptions.h"
@@ -22,7 +23,6 @@ QString ColorMap::getName()
 
 void ColorMap::readTable(QString file)
 {
-    
     QFile f(file);
     //FILE *f;
 
@@ -64,9 +64,8 @@ QColor ColorMap::operator[](float v) const
 
 /***** ColorMap Manager *****/
 
-ColorMapManager::ColorMapManager(QString appPath)
+ColorMapManager::ColorMapManager()
 {
-    this->appPath = appPath;
     this->basepath = "colormaps/";
     readColorMaps();
 }
@@ -90,10 +89,14 @@ void ColorMapManager::readColorMaps()
     QDir colorMapsDir(this->basepath);
     if(!colorMapsDir.exists())
     {
-        #ifdef __APPLE__
-        this->basepath = appPath + "../Resources/colormaps/";
+        this->basepath = QCoreApplication::applicationDirPath();
+
+        #if defined(__APPLE__)
+        this->basepath += "/../Resources/colormaps/";
+        #elif defined(_WIN32)
+        this->basepath += "/colormaps/";
         #else
-        this->basepath = appPath + "../share/healpixviewer/colormaps/";
+        this->basepath += "/../share/healpixviewer/colormaps/";
         #endif
 
         colorMapsDir = QDir(this->basepath);
@@ -102,7 +105,7 @@ void ColorMapManager::readColorMaps()
             throw ColormapsNotFoundException("Colormaps directory not found!");
         }
     }
-    
+
     QStringList mapFiles = colorMapsDir.entryList(QDir::Files);
 
     if(mapFiles.size() > 0)

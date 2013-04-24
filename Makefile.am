@@ -64,6 +64,7 @@ app:
 	cp healpixviewer HealpixViewer.app/Contents/MacOS/
 	cp Info.plist HealpixViewer.app/Contents
 	cp healpixviewer.icns HealpixViewer.app/Contents/Resources
+	cp -R colormaps HealpixViewer.app/Contents/Resources/colormaps
 	macdeployqt HealpixViewer.app
 
 src/icons.cpp :

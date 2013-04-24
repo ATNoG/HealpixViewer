@@ -191,7 +191,7 @@ void HistogramWidget::updateHistogram()
         if(usingSameColorMap)
             currentColorMap = colorMapToUse;
         else
-            currentColorMap = ColorMapManager::instance(qApp->applicationDirPath())->getDefaultColorMap();
+            currentColorMap = ColorMapManager::instance()->getDefaultColorMap();
 
         updateColorMap(currentColorMap);
 
@@ -255,7 +255,7 @@ void HistogramWidget::unloadMapInfo(int viewportId)
 ColorMap* HistogramWidget::getSelectedColorMap()
 {
     int colorMapId = ui->colorMapSelector->itemData(ui->colorMapSelector->currentIndex()).toInt();
-    return ColorMapManager::instance(qApp->applicationDirPath())->getColorMap(colorMapId);
+    return ColorMapManager::instance()->getColorMap(colorMapId);
 }
 
 /* redrwa histogram using new threshold */
@@ -343,7 +343,7 @@ void HistogramWidget::fillColorMaps()
 {
     ui->colorMapSelector->blockSignals(true);
 
-    ColorMapManager *cmapManager = ColorMapManager::instance(qApp->applicationDirPath());
+    ColorMapManager *cmapManager = ColorMapManager::instance();
     QList<ColorMap*> colorMaps = cmapManager->getColorMaps();
     ColorMap *cm;
 

@@ -31,7 +31,7 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     this->tesselationNside = TESSELATION_DEFAULT_NSIDE;
     this->automaticGraticule = true;
     this->overlayAlpha = 0.5;
-    this->colorMap = ColorMapManager::instance(qApp->applicationDirPath())->getDefaultColorMap();
+    this->colorMap = ColorMapManager::instance()->getDefaultColorMap();
 
     selectionType = SINGLE_POINT;
 
