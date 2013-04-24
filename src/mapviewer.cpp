@@ -31,7 +31,7 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
     this->tesselationNside = TESSELATION_DEFAULT_NSIDE;
     this->automaticGraticule = true;
     this->overlayAlpha = 0.5;
-    this->colorMap = ColorMapManager::instance()->getDefaultColorMap();
+    this->colorMap = ColorMapManager::instance(qApp->applicationDirPath())->getDefaultColorMap();
 
     selectionType = SINGLE_POINT;
 
@@ -1097,6 +1097,8 @@ void MapViewer::resetView()
     delete currentManipulatedFrame;
     currentManipulatedFrame = newManipulatedFrame;
     currentManipulatedFrame->setConstraint(constraint);
+    setManipulatedFrame(currentManipulatedFrame);
+    coordSysFrame->setReferenceFrame(manipulatedFrame());
 
     /* update camera position */
     updateCameraPosition(maxCameraX);

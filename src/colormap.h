@@ -38,13 +38,13 @@ class ColorMapManager
 {
 
 public:
-    ColorMapManager();
+    ColorMapManager(QString appPath="");
     ~ColorMapManager();
 
-    static ColorMapManager *instance()
+    static ColorMapManager *instance(QString appPath = "")
     {
         if(!s_instance)
-            s_instance = new ColorMapManager();
+            s_instance = new ColorMapManager(appPath);
         return s_instance;
     }
 
@@ -55,6 +55,8 @@ public:
 private:
     static ColorMapManager *s_instance;
     QMap<int, ColorMap*> colorMaps;
+    QString basepath;
+    QString appPath;
 
     void readColorMaps();
 };

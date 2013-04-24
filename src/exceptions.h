@@ -37,4 +37,21 @@ class FieldMapException: public exception
     std::string _msg;
 };
 
+
+class ColormapsNotFoundException: public exception
+{
+  public:
+    ColormapsNotFoundException(const std::string msg) : _msg(msg) {}
+
+    ~ColormapsNotFoundException() throw() {}
+
+    virtual const char* what() const throw()
+    {
+        return _msg.c_str();
+    }
+
+  private:
+    std::string _msg;
+};
+
 #endif // EXCEPTIONS_H

@@ -142,8 +142,6 @@ void WorkSpace::syncKeyPress(QKeyEvent *e, MapViewer *viewer)
 
 void WorkSpace::syncPixelSelection(std::set<int> pixels, int nside, bool add)
 {
-    qDebug() << "Pixels selection changed on workspace!";
-
     MapViewport* viewport;
     foreach(viewport, viewports.values())
     {

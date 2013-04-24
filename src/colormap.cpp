@@ -1,8 +1,8 @@
 #include <iostream>
 #include "colormap.h"
+#include "exceptions.h"
 
 ColorMapManager* ColorMapManager::s_instance = 0;
-
 
 ColorMap::ColorMap(int id, QString file)
 {
@@ -22,7 +22,8 @@ QString ColorMap::getName()
 
 void ColorMap::readTable(QString file)
 {
-    QFile f("colormaps/"+file);
+    
+    QFile f(file);
     //FILE *f;
 
     char name[40];
@@ -63,8 +64,10 @@ QColor ColorMap::operator[](float v) const
 
 /***** ColorMap Manager *****/
 
-ColorMapManager::ColorMapManager()
+ColorMapManager::ColorMapManager(QString appPath)
 {
+    this->appPath = appPath;
+    this->basepath = "colormaps/";
     readColorMaps();
 }
 
@@ -84,14 +87,36 @@ void ColorMapManager::readColorMaps()
     ColorMap *cm;
 
     /* read colormaps directory */
-    QDir colorMapsDir("colormaps");
+    QDir colorMapsDir(this->basepath);
+    if(!colorMapsDir.exists())
+    {
+        #ifdef __APPLE__
+        this->basepath = appPath + "../Resources/colormaps/";
+        #else
+        this->basepath = appPath + "../share/healpixviewer/colormaps/";
+        #endif
+
+        colorMapsDir = QDir(this->basepath);
+        if(!colorMapsDir.exists())
+        {
+            throw ColormapsNotFoundException("Colormaps directory not found!");
+        }
+    }
+    
     QStringList mapFiles = colorMapsDir.entryList(QDir::Files);
 
-    for(int i=0; i<mapFiles.size(); i++)
+    if(mapFiles.size() > 0)
     {
-        qDebug() << "Reading colormap " << mapFiles[i];
-        cm = new ColorMap(i, mapFiles[i]);
-        colorMaps.insert(i, cm);
+        for(int i=0; i<mapFiles.size(); i++)
+        {
+            qDebug() << "Reading colormap " << mapFiles[i];
+            cm = new ColorMap(i, this->basepath+mapFiles[i]);
+            colorMaps.insert(i, cm);
+        }
+    }
+    else
+    {
+        throw ColormapsNotFoundException("No colormaps found!");
     }
 }
 
