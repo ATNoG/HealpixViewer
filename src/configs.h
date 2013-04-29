@@ -3,7 +3,6 @@
 
 #define COLOR_PER_NSIDE false
 #define DISPLAY_TEXTURE true
-#define CACHE_DIR "cache"
 // number of histogram bins
 #define NUMBER_BINS 2094
 #define DEBUG 0

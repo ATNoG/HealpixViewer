@@ -16,6 +16,14 @@ char  DEFTUNIT[]  = "unknown";
 char  DEFNUNIT[]  = "counts";
 char  DEFFORM[]   = "1024E";
 
+static QString get_cache_path()
+{
+    #ifdef __APPLE__
+    return QDir::homePath() + "/Library/Caches/org.ua.healpixviewer";
+    #else
+    return QDir::tempPath() + "/healpixviewer/cache";
+    #endif
+}
 
 HealpixMap::HealpixMap(QString _path, int minNside)
 {
@@ -43,24 +51,20 @@ HealpixMap::HealpixMap(QString _path, int minNside)
     loadingDialog->setWindowModality(Qt::WindowModal);
     loadingDialog->setValue(1);
 
+    cachePath = get_cache_path() + "/" + filename;
+
     /* check if cache folder exists */
-    QDir cachedDir(QString(CACHE_DIR));
+    QDir cachedDir(cachePath);
 
-    if(!cachedDir.exists())
-    {
-        QDir::current().mkdir(CACHE_DIR);
-    }
-
+    if (!cachedDir.exists())
+        QDir::root().mkpath(cachePath);
 
     /* Map already processed ? Check cache */
-    if(!checkMapCache())
+    if(!cachedDir.exists("info"))
     {
         qDebug() << "Map doesnt exists on cache";
 
         createCache = true;
-
-        /* creating folder on cache */
-        cachedDir.mkdir(filename);
 
         /* map not exists on cache: read FITS info and create individual maps */
         processFile(_path, true);
@@ -718,7 +722,7 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, double minM
             if(nobs[i]==0)
                 npixels--;
         }
-    }    
+    }
 
     int spacingDivisor;
 
@@ -914,12 +918,10 @@ float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, i
     return values.release();
 }
 
-
-
 void HealpixMap::writeMapInfo()
 {
     // save file with map info
-    QFile infoFile(cacheInfo);
+    QFile infoFile(cachePath + "/info");
 
     if(infoFile.open(QIODevice::WriteOnly | QIODevice::Text))
     {
@@ -969,7 +971,7 @@ void HealpixMap::writeMapInfo()
 void HealpixMap::readMapInfo()
 {
     /* open file */
-    QFile infoFile(cacheInfo);
+    QFile infoFile(cachePath + "/info");
 
     if(infoFile.open(QIODevice::ReadOnly | QIODevice::Text))
     {
@@ -1017,20 +1019,6 @@ void HealpixMap::readMapInfo()
         throw HealpixMapException("Error reading map information from cache");
     }
 }
-
-
-bool HealpixMap::checkMapCache()
-{
-    cachePath = QString(CACHE_DIR) + "/" + filename;
-    cacheInfo = cachePath + "/info";
-
-    QDir cachedDir(cachePath);
-
-    //qDebug() << "Checking cached map on " << cachedDirStr;
-
-    return cachedDir.exists();
-}
-
 
 QString HealpixMap::coordsysToString(Coordsys coordsys)
 {
@@ -1100,7 +1088,6 @@ void HealpixMap::removeCache()
 
     /* remove cache folder */
     QDir cachedDir(cachePath);
-    QDir cacheDir(QString(CACHE_DIR));
 
     //First delete any files in the current directory
     QFileInfoList files = cachedDir.entryInfoList(QDir::NoDotAndDotDot | QDir::Files);
@@ -1110,7 +1097,7 @@ void HealpixMap::removeCache()
     }
 
     //Finally, remove empty parent directory
-    cacheDir.rmdir(filename);
+    QDir::root().rmdir(cachePath);
 }
 
 

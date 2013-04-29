@@ -82,7 +82,6 @@ private:
     QString path;
     QString filename;
     QString cachePath;
-    QString cacheInfo;
     long maxNside;
     long npixels;
     Ordering ordering;
@@ -117,7 +116,6 @@ private:
 
     void writeMapInfo();
     void readMapInfo();
-    bool checkMapCache();
     void removeCache();
     void abort();
 
