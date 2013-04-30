@@ -33,7 +33,7 @@ GCC_VERSION=$(gcc -v 2>&1|grep version |cut -d ' ' -f 3)
 
 if test $SYSTEM = "Darwin"; then
 	CPPFLAGS="$CPPFLAGS -mmacosx-version-min=10.5"
-	CXXFLAGS="$XXFLAGS -mmacosx-version-min=10.5"
+	CXXFLAGS="$CXXFLAGS -mmacosx-version-min=10.5"
 	CFLAGS="$CFLAGS -mmacosx-version-min=10.5"
 	if test $ARCH = $X64; then
 		CPPFLAGS="$CPPFLAGS -arch x86_64"
