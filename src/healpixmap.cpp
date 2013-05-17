@@ -1051,11 +1051,10 @@ void HealpixMap::changeCurrentMap(MapType type)
     currentMapType = type;
 
     /* regenerate min and max values */
-    hv::unique_array<float> values(getFullMap(minNSide));
-    hv::unique_ptr<Histogram> histo(new Histogram(values.move(), nside2npix(minNSide)));
+    hv::unique_ptr<Histogram> histo(new Histogram(hv::unique_ptr<float[0]>(getFullMap(minNSide)),
+                                                  nside2npix(minNSide)));
     histo->getMinMax(min, max);
 }
-
 
 HealpixMap::MapType HealpixMap::getCurrentMapField()
 {

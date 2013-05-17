@@ -1,6 +1,6 @@
 #include "histogram.h"
 #include <float.h>
-Histogram::Histogram(hv::unique_array<float> values, int totalValues)
+Histogram::Histogram(hv::unique_ptr<float[0]> values, int totalValues)
 {
     //qDebug() << "construction histogram";
     this->numberBins = NUMBER_BINS;
@@ -25,7 +25,7 @@ Histogram::Histogram(hv::unique_array<float> values, int totalValues)
         }
     }
 
-    setupHistogram(values.move(), totalValues, true);
+    setupHistogram(hv::move(values), totalValues, true);
 
     /* configure thresholds to min and max values */
     configureThresholds(minValue, maxValue);
@@ -64,7 +64,7 @@ void Histogram::computeValues(bool calculateExtremes)
     }
 
     /* create new array for hold information */
-    hv::unique_array<float> values(new float[totalValues]);
+    hv::unique_ptr<float[0]> values(new float[totalValues]);
 
     /* fill values array */
     long filledValues = 0;
@@ -111,7 +111,7 @@ void Histogram::computeValues(bool calculateExtremes)
     }
 
     /* setup histogram with new values */
-    setupHistogram(values.move(), totalValues, calculateExtremes);
+    setupHistogram(hv::move(values), totalValues, calculateExtremes);
 }
 
 
@@ -270,9 +270,9 @@ void Histogram::calculateMinMax()
 }
 
 
-void Histogram::setupHistogram(hv::unique_array<float> values, int totalValues, bool calculateExtremes)
+void Histogram::setupHistogram(hv::unique_ptr<float[0]> values, int totalValues, bool calculateExtremes)
 {
-    this->values = values.move();
+    this->values = hv::move(values);
     this->totalValues = totalValues;
 
     if(calculateExtremes)

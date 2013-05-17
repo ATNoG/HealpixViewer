@@ -13,10 +13,11 @@
 class Histogram
 {
     Histogram();
+    Histogram(Histogram const&);
     Histogram& operator=(Histogram const&);
 
 public:
-    Histogram(hv::unique_array<float> values, int totalValues);
+    Histogram(hv::unique_ptr<float[0]> values, int totalValues);
     Histogram(QList<float*> values, QList<int> totalValues);
     ~Histogram();
 
@@ -41,18 +42,18 @@ private:
     QList<float*> valuesList;
     QList<int> nValues;
 
-    hv::unique_array<int> histogram;
+    hv::unique_ptr<int[0]> histogram;
 
     int numberBins;
     int maxbin;
 
-    hv::unique_array<float> values;
+    hv::unique_ptr<float[0]> values;
     int totalValues;
 
     bool composite;
 
     /* setup histogram with new values */
-    void setupHistogram(hv::unique_array<float> values, int totalValues, bool calculateExtremes=false);
+    void setupHistogram(hv::unique_ptr<float[0]> values, int totalValues, bool calculateExtremes=false);
 
     void calculateMinMax();
 

@@ -8,7 +8,8 @@
 #ifndef HV_UNIQUE_PTR_HPP
 #define HV_UNIQUE_PTR_HPP
 
-#include "base.hpp"
+#include "utility.hpp"
+#include <utility>
 
 namespace hv { //==============================================================
 
@@ -17,27 +18,29 @@ class unique_ptr {
     unique_ptr(unique_ptr&);
     unique_ptr& operator=(unique_ptr&);
 
-    void operator==(unique_ptr const&) const;
-    void operator!=(unique_ptr const&) const;
-
     HV_UNDEFINED_BOOL;
 
 public:
-    explicit unique_ptr(T* ptr = 0)
+    typedef T* pointer;
+
+public:
+    explicit unique_ptr(pointer ptr = 0)
        : _ptr(ptr)
     { }
 
-    unique_ptr(rv_<unique_ptr>& rhs)
-       : _ptr(rhs._ptr)
+    unique_ptr(rv_<unique_ptr> rhs)
+       : _ptr(rhs->release())
+    { }
+
+    unique_ptr& operator=(rv_<unique_ptr> rhs)
     {
-        rhs._ptr = 0;
+        reset(rhs->release());
+        return *this;
     }
 
-    unique_ptr& operator=(rv_<unique_ptr>& rhs)
+    operator rv_<unique_ptr>()
     {
-        reset(rhs._ptr);
-        rhs._ptr = 0;
-        return *this;
+        return rv_<unique_ptr>(*this);
     }
 
     ~unique_ptr()
@@ -46,60 +49,117 @@ public:
             delete _ptr;
     }
 
-    void reset(T* p = 0)
+    void reset(pointer p = 0)
     {
         if (_ptr)
             delete _ptr;
         _ptr = p;
     }
 
-    T* release()
+    pointer release()
     {
         T* tmp = _ptr;
         _ptr = 0;
         return tmp;
     }
 
-    T& operator*() const
+    typename add_reference<T>::type operator*() const
     {
         return *_ptr;
     }
 
-    T* operator->() const
+    pointer operator->() const
     {
         return _ptr;
     }
 
-    T* get() const
+    pointer get() const
     {
         return _ptr;
     }
 
     void swap(unique_ptr& rhs)
     {
-        T* tmp = rhs._ptr;
-        rhs._ptr = _ptr;
-        _ptr = tmp;
+        std::swap(_ptr, rhs._ptr);
     }
 
-    bool operator!()
-    {
-        return !_ptr;
-    }
-
-    operator undefined_bool_t()
+    operator undefined_bool() const
     {
         return _ptr ? HV_UNDEFINED_BOOL_TRUE : HV_UNDEFINED_BOOL_FALSE;
     }
 
-    operator rv_<unique_ptr>&()
+private:
+    T* _ptr;
+};
+
+template<class T>
+class unique_ptr<T[0]> {
+    unique_ptr(unique_ptr&);
+    unique_ptr& operator=(unique_ptr&);
+
+    HV_UNDEFINED_BOOL;
+
+public:
+    typedef T* pointer;
+
+public:
+    explicit unique_ptr(pointer ptr = 0)
+       : _ptr(ptr)
+    { }
+
+    unique_ptr(rv_<unique_ptr> rhs)
+       : _ptr(rhs->release())
+    { }
+
+    unique_ptr& operator=(rv_<unique_ptr> rhs)
     {
-        return move();
+        reset(rhs->release());
+        return *this;
     }
 
-    rv_<unique_ptr>& move()
+    operator rv_<unique_ptr>()
     {
-        return static_cast<rv_<unique_ptr>&>(*this);
+        return rv_<unique_ptr>(*this);
+    }
+
+    ~unique_ptr()
+    {
+        if (_ptr)
+            delete[] _ptr;
+    }
+
+    void reset(pointer p = 0)
+    {
+        if (_ptr)
+            delete[] _ptr;
+        _ptr = p;
+    }
+
+    pointer release()
+    {
+        T* tmp = _ptr;
+        _ptr = 0;
+        return tmp;
+    }
+
+    typename add_reference<T>::type operator[](size_t idx) const
+    {
+        return _ptr[idx];
+    }
+
+    pointer get() const
+    {
+        return _ptr;
+    }
+
+    void swap(unique_ptr& rhs)
+    {
+        std::swap(_ptr, rhs._ptr);
+    }
+
+    operator undefined_bool() const
+    {
+        return _ptr ? HV_UNDEFINED_BOOL_TRUE : HV_UNDEFINED_BOOL_FALSE;
     }
 
 private:
@@ -113,99 +173,41 @@ inline void swap(unique_ptr<T>& lhs, unique_ptr<T>& rhs)
 }
 
 template<class T>
-class unique_array {
-    unique_array(unique_array&);
-    unique_array& operator=(unique_array&);
-
-    void operator==(unique_array const&) const;
-    void operator!=(unique_array const&) const;
-
-    HV_UNDEFINED_BOOL;
-
-public:
-    explicit unique_array(T ptr[] = 0)
-       : _ptr(ptr)
-    { }
-
-    unique_array(rv_<unique_array>& rhs)
-       : _ptr(rhs._ptr)
-    {
-        rhs._ptr = 0;
-    }
-
-    unique_array& operator=(rv_<unique_array>& rhs)
-    {
-        reset(rhs._ptr);
-        rhs._ptr = 0;
-        return *this;
-    }
-
-    ~unique_array()
-    {
-        if (_ptr)
-            delete[] _ptr;
-    }
-
-    void reset(T p[] = 0)
-    {
-        if (_ptr)
-            delete[] _ptr;
-        _ptr = p;
-    }
-
-    T* release()
-    {
-        T* tmp = _ptr;
-        _ptr = 0;
-        return tmp;
-    }
-
-    T& operator[](std::ptrdiff_t idx) const
-    {
-        return _ptr[idx];
-    }
-
-    T* get() const
-    {
-        return _ptr;
-    }
-
-    void swap(unique_array& rhs)
-    {
-        T* tmp = rhs._ptr;
-        rhs._ptr = _ptr;
-        _ptr = tmp;
-    }
-
-    bool operator!()
-    {
-        return !_ptr;
-    }
-
-    operator undefined_bool_t()
-    {
-        return _ptr ? HV_UNDEFINED_BOOL_TRUE : HV_UNDEFINED_BOOL_FALSE;
-    }
-
-    operator rv_<unique_array>&()
-    {
-        return move();
-    }
-
-    rv_<unique_array>& move()
-    {
-        return static_cast<rv_<unique_array>&>(*this);
-    }
-
-private:
-    T* _ptr;
-};
+inline bool operator==(unique_ptr<T> const& lhs, unique_ptr<T> const& rhs)
+{
+    return lhs.get() == rhs.get();
+}
 
 template<class T>
-inline void swap(unique_array<T>& lhs, unique_array<T>& rhs)
+inline bool operator!=(unique_ptr<T> const& lhs, unique_ptr<T> const& rhs)
 {
-    lhs.swap(rhs);
+    return lhs.get() != rhs.get();
 }
+
+template<class T>
+inline bool operator<(unique_ptr<T> const& lhs, unique_ptr<T> const& rhs)
+{
+    return lhs.get() < rhs.get();
+}
+
+template<class T>
+inline bool operator<=(unique_ptr<T> const& lhs, unique_ptr<T> const& rhs)
+{
+    return lhs.get() <= rhs.get();
+}
+
+template<class T>
+inline bool operator>(unique_ptr<T> const& lhs, unique_ptr<T> const& rhs)
+{
+    return lhs.get() > rhs.get();
+}
+
+template<class T>
+inline bool operator>=(unique_ptr<T> const& lhs, unique_ptr<T> const& rhs)
+{
+    return lhs.get() >= rhs.get();
+}
+
 
 } // namespace hv =============================================================
 
