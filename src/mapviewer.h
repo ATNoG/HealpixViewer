@@ -61,7 +61,7 @@ struct gridOptions
 
 struct mapInfo
 {
-    float* values;
+    hv::unique_ptr<float[0]> values;
     int nvalues;
     QList<HealpixMap::MapType> availableFields;
     HealpixMap::MapType currentField;

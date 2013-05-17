@@ -41,7 +41,6 @@ MapViewport::~MapViewport()
         delete fieldsActionGroup;
     if(info!=NULL)
     {
-        delete[] info->values;
         delete info;
     }
     delete fieldMenu;

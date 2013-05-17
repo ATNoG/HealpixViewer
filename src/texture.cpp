@@ -43,7 +43,7 @@ Texture::~Texture()
 }
 
 
-void Texture::buildTexture(float* data, float minv, float maxv)
+void Texture::buildTexture(hv::unique_ptr<float[0]> data, float minv, float maxv)
 {
     float v = 0.0;
     long texk = 0;
@@ -128,8 +128,6 @@ void Texture::buildTexture(float* data, float minv, float maxv)
         texture[texk++] = color.green();
         texture[texk++] = color.blue();
     }
-
-    delete[] data;
 }
 
 

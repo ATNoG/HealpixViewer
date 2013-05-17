@@ -141,7 +141,7 @@ void HistogramWidget::updateHistogram()
         {
             mapInfo *info = mapsInformation[selectedViewports[i]];
 
-            values.append(info->values);
+            values.append(info->values.get());
             totalValues.append(info->nvalues);
         }
 

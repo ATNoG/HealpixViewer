@@ -208,6 +208,7 @@ void ViewportManager::mapFieldChanged(int currentIdx)
     HealpixMap::MapType field = aux.toString();
 
     if(currentSelectedViewport>=0)
+
     {
         updateMapField(currentSelectedViewport, field);
     }
@@ -219,7 +220,6 @@ void ViewportManager::updateMapInfo(int viewportId, mapInfo *info)
 {
     if(viewports.contains(viewportId))
     {
-        delete[] mapsInformation[viewportId]->values;
         delete mapsInformation[viewportId];
 
         mapsInformation[viewportId] = info;

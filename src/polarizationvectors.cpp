@@ -14,7 +14,6 @@ PolarizationVectors::PolarizationVectors(int faceNumber, int nside, bool mollwei
 
     bufferCreated = false;
     vectorsBuffer = NULL;
-    vectors = NULL;
 }
 
 PolarizationVectors::~ PolarizationVectors()
@@ -29,8 +28,6 @@ PolarizationVectors::~ PolarizationVectors()
         vectorsBuffer->destroy();
         delete vectorsBuffer;
     }
-    if(vectors!=NULL)
-        delete[] vectors;
 }
 
 void PolarizationVectors::draw()
@@ -97,13 +94,10 @@ void PolarizationVectors::createBuffer()
         /* allocate values on buffer */
         vectorsBuffer->bind();
         vectorsBuffer->setUsagePattern(QGLBuffer::StaticDraw);
-        vectorsBuffer->allocate(vectors, 3*2*totalVectors*sizeof(GLfloat));
+        vectorsBuffer->allocate(vectors.get(), 3*2*totalVectors*sizeof(GLfloat));
         vectorsBuffer->release();
 
         bufferCreated = true;
-
-        delete[] vectors;
-        vectors = NULL;
     }
     else
     {

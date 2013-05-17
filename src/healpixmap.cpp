@@ -1,6 +1,7 @@
 #include "healpixmap.h"
 
 #include <QDebug>
+#include <QMutexLocker>
 #include "fieldmap.h"
 #include "exceptions.h"
 
@@ -47,7 +48,7 @@ HealpixMap::HealpixMap(QString _path, int minNside)
     filename = pathInfo.fileName();
 
     /* creating progress dialog */
-    loadingDialog = new QProgressDialog("Loading Map (reading fits info)", "Cancel", 0, 6);
+    loadingDialog.reset(new QProgressDialog("Loading Map (reading fits info)", "Cancel", 0, 6));
     loadingDialog->setWindowModality(Qt::WindowModal);
     loadingDialog->setValue(1);
 
@@ -87,9 +88,7 @@ HealpixMap::HealpixMap(QString _path, int minNside)
 #endif
 
     loadingDialog->setValue(loadingDialog->maximum());
-
-    loadingDialog = NULL;
-    delete loadingDialog;
+    loadingDialog.reset();
 
     //changeCurrentMap(I);
 }
@@ -234,17 +233,17 @@ void HealpixMap::processFile(QString path, bool generateMaps)
 
             /* create map fields */
             float nul = -999.;
-            float *values;
+            hv::unique_ptr<float[0]> values;
 
             try
             {
-                values = new float[npixels];
+                values.reset(new float[npixels]);
             }
-            catch(const std::bad_alloc &)
+            catch(...)
             {
                 fits_close_file(fptr, &status);
                 abort();
-                throw HealpixMapException("Not enough memory");
+                throw;
             }
 
             status = 0;
@@ -254,7 +253,7 @@ void HealpixMap::processFile(QString path, bool generateMaps)
             qDebug() << "Field " << maptype << " present in col " << col;
 
             status = 0;
-            if (fits_read_col(fptr, TFLOAT, col, 1, 1, npixels, &nul, values, &t, &status) != 0)
+            if (fits_read_col(fptr, TFLOAT, col, 1, 1, npixels, &nul, values.get(), &t, &status) != 0)
             {
                 #if DEBUG > 0
                     qDebug("error reading values from file");
@@ -266,24 +265,19 @@ void HealpixMap::processFile(QString path, bool generateMaps)
             }
 
             /* create field map */
-            FieldMap *fieldMap = NULL;
+            hv::unique_ptr<FieldMap> fieldMap;
             try
             {
-                 fieldMap = new FieldMap(values, maxNside, isOrderNested());
+                 fieldMap.reset(new FieldMap(values.release(), maxNside, isOrderNested()));
                  fieldMap->generateDowngrades(cachePath, (QString)maptype, minNSide);
             }
-            catch(FieldMapException &e)
+            catch(...)
             {
                 status = 0;
                 fits_close_file(fptr, &status);
                 abort();
-                // TODO: delete values. if deleted here a seg. fault will occur
-                //delete[] values;
-                throw HealpixMapException(e.what());
+                throw;
             }
-
-            // TODO: define minNside in some place...
-            delete fieldMap;
         }
 
         /* generate polarization map ? */
@@ -295,8 +289,8 @@ void HealpixMap::processFile(QString path, bool generateMaps)
                 qDebug() << "Generating polarization for " << nside;
 
                 /* read Q and U */
-                float *_Q = readMapCache(nside, QField);
-                float *_U = readMapCache(nside, UField);
+                hv::unique_ptr<float[0]> _Q(readMapCache(nside, QField));
+                hv::unique_ptr<float[0]> _U(readMapCache(nside, UField));
 
                 qDebug() << "Map cache readed";
 
@@ -304,8 +298,8 @@ void HealpixMap::processFile(QString path, bool generateMaps)
                 long totalPixels = nside2npix(nside);
 
                 /* allocate space for polarization angles and magnitude */
-                float *polarizationAng = new float[totalPixels];
-                float *polarizationMag = new float[totalPixels];
+                hv::unique_ptr<float[0]> polarizationAng(new float[totalPixels]);
+                hv::unique_ptr<float[0]> polarizationMag(new float[totalPixels]);
 
                 /* calculate polarization angles and magnitude */
                 float maxPolMagnitude = 0.0;
@@ -349,8 +343,8 @@ void HealpixMap::processFile(QString path, bool generateMaps)
                 QFile file(filepath);
                 if(file.open(QIODevice::WriteOnly))
                 {
-                    file.write((const char*)polarizationAng, totalPixels*sizeof(float));
-                    file.write((const char*)polarizationMag, totalPixels*sizeof(float));
+                    file.write((const char*)polarizationAng.get(), totalPixels*sizeof(float));
+                    file.write((const char*)polarizationMag.get(), totalPixels*sizeof(float));
                     file.close();
                 }
                 else
@@ -358,9 +352,6 @@ void HealpixMap::processFile(QString path, bool generateMaps)
                     abort();
                     throw HealpixMapException("Error writing into cache");
                 }
-
-                delete polarizationAng;
-                delete polarizationMag;
             }
 
             qDebug() << "Cache written with success";
@@ -589,7 +580,7 @@ void HealpixMap::writeFITS(char* filename, char* tabname, float* temperature, in
     int          status = 0;
     int          ncol, col;
     //unsigned int i;
-    float       *tmp = NULL;
+//    float       *tmp = NULL;
 
     /* Initialize */
     //if (strlen(tabname) <= 0) tabname = NULL;
@@ -640,7 +631,7 @@ void HealpixMap::writeFITS(char* filename, char* tabname, float* temperature, in
 
     /* Done! */
     fits_close_file(fptr, &status);
-    if (tmp != NULL) delete [] tmp;
+//    if (tmp != NULL) delete [] tmp;
 }
 
 
@@ -683,32 +674,31 @@ void HealpixMap::writeFITSExtensionHeader(fitsfile *fptr, int newnside)
 
 
 
-float* HealpixMap::getFullMap(int nside)
+hv::unique_ptr<float[0]> HealpixMap::getFullMap(int nside)
 {
     return readMapCache(nside, currentMapType, 0, nside2npix(nside));
 }
 
 
-float* HealpixMap::getFaceValues(int faceNumber, int nside)
+hv::unique_ptr<float[0]> HealpixMap::getFaceValues(int faceNumber, int nside)
 {
     int pixelsPerFace = nside2npix(nside)/12;
 
-    float *values = readMapCache(nside, currentMapType, faceNumber*pixelsPerFace, pixelsPerFace);
-    return values;
+    return readMapCache(nside, currentMapType, faceNumber*pixelsPerFace, pixelsPerFace);
 }
 
 
-float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, double minMag, double maxMag, double magnification, int spacing, long &totalVectors)
+hv::unique_ptr<float[0]> HealpixMap::getPolarizationVectors(int faceNumber, int nside, double minMag, double maxMag, double magnification, int spacing, long &totalVectors)
 {
     //qDebug() << "Getting polarization vectors with magnification: " << magnification;
     int pixelsPerFace = nside2npix(nside)/12;
 
     long startPixel = faceNumber*pixelsPerFace;
 
-    float *polAngles = readMapCache(nside, "P", startPixel, pixelsPerFace);
-    float *polMagnitudes = readMapCache(nside, "P", (12+faceNumber)*pixelsPerFace, pixelsPerFace);
+    hv::unique_ptr<float[0]> polAngles(readMapCache(nside, "P", startPixel, pixelsPerFace));
+    hv::unique_ptr<float[0]> polMagnitudes(readMapCache(nside, "P", (12+faceNumber)*pixelsPerFace, pixelsPerFace));
 
-    float *nobs = NULL;
+    hv::unique_ptr<float[0]> nobs;
     if(hasNObs())
         nobs = readMapCache(nside, NObsField, startPixel, pixelsPerFace);
 
@@ -734,18 +724,7 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, double minM
     totalVectors = npixels/spacingDivisor;
 
     /* allocate space (each vector will have 2 endpoints, of 3 coordinates each */
-    float* polVectors;
-    try
-    {
-        polVectors = new float[totalVectors*3*2];
-    }
-    catch(const std::bad_alloc &)
-    {
-        delete[] nobs;
-        delete[] polAngles;
-        delete[] polMagnitudes;
-        throw HealpixMapException("Not enough memory");
-    }
+    hv::unique_ptr<float[0]> polVectors(new float[totalVectors*3*2]);
 
     // TODO: what is this pixsize ?
     double pixsize = (sqrt(M_PI/3.) / nside) / 2.;
@@ -795,40 +774,21 @@ float* HealpixMap::getPolarizationVectors(int faceNumber, int nside, double minM
 
             pix2ang_nest(nside, pixNest, &theta, &phi);
 
-            float* vector;
-            try
-            {
-                vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, minMag, maxMag, magnification);
+            hv::unique_ptr<float[0]> vector(calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, minMag, maxMag, magnification));
                 //float* vector = calculatePolarizationVector(theta, phi, polAngles[i], polMagnitudes[i], pixsize, (double)(meanPolMagnitudes[nside]-devPolMagnitudes[nside]), (double)(meanPolMagnitudes[nside]+devPolMagnitudes[nside]), magnification);
-            }
-            catch(const std::bad_alloc &)
-            {
-                delete[] nobs;
-                delete[] polAngles;
-                delete[] polMagnitudes;
-                delete[] polVectors;
-                throw HealpixMapException("Not enough memory");
-            }
 
             for(int j=0; j<6; j++)
             {
                 polVectors[pointer] = vector[j];
                 pointer++;
             }
-            delete[] vector;
         }
     }
 
-    if(nobs!=NULL)
-        delete[] nobs;
-    delete[] polAngles;
-    delete[] polMagnitudes;
-
-    return polVectors;
+    return hv::move(polVectors);
 }
 
-
-float* HealpixMap::calculatePolarizationVector(double theta, double phi, double angle, double mag, double pixsize, double minMag, double maxMag, double magnification)
+hv::unique_ptr<float[0]> HealpixMap::calculatePolarizationVector(double theta, double phi, double angle, double mag, double pixsize, double minMag, double maxMag, double magnification)
 {
     //if()
     //{
@@ -850,16 +810,15 @@ float* HealpixMap::calculatePolarizationVector(double theta, double phi, double 
     Vec v1 = (1+boost)*v0 + size*spinVector(v0,vin,angle);
     Vec v2 = (1+boost)*v0 + size*spinVector(v0,vin,angle+M_PI);
 
-    float* coords = new float[6];
+    hv::unique_ptr<float[0]> coords(new float[6]);
     coords[0] = v1.x;
     coords[1] = v1.y;
     coords[2] = v1.z;
     coords[3] = v2.x;
     coords[4] = v2.y;
     coords[5] = v2.z;
-    return coords;
+    return hv::move(coords);
 }
-
 
 Vec HealpixMap::spinVector(const Vec &v0, const Vec &vin, double psi)
 {
@@ -884,7 +843,7 @@ Vec HealpixMap::spinVector(const Vec &v0, const Vec &vin, double psi)
 }
 
 
-float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, int length)
+hv::unique_ptr<float[0]> HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, int length)
 {
     /* get filename */
     QString nsideStr;
@@ -895,12 +854,12 @@ float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, i
     if(length==0)
         length = nside2npix(nside);
 
-    hv::unique_array<float> values(new float[length]);
+    hv::unique_ptr<float[0]> values(new float[length]);
 
     /* read content */
     QFile f(path);
+    QMutexLocker ml(&cacheAccess);
 
-    cacheAccess.lock();
     if(f.open(QIODevice::ReadOnly))
     {
         f.seek(firstPosition*sizeof(float));
@@ -908,14 +867,11 @@ float* HealpixMap::readMapCache(int nside, MapType mapType, int firstPosition, i
     }
     else
     {
-        cacheAccess.unlock();
         abort();
         throw HealpixMapException("Error reading cache");
     }
-    f.close();
-    cacheAccess.unlock();
 
-    return values.release();
+    return hv::move(values);
 }
 
 void HealpixMap::writeMapInfo()
@@ -1106,8 +1062,8 @@ void HealpixMap::abort()
     if(createCache && !cacheCreated)
         removeCache();
 
-    if(loadingDialog!=NULL)
-        delete loadingDialog;
+    if (loadingDialog)
+        loadingDialog.reset();
 }
 
 void HealpixMap::angle2pix(double theta, double phi, int nside, long &pix)
@@ -1135,7 +1091,7 @@ std::set<int> HealpixMap::query_disc(int pixel1, int pixel2, int nside)
     double radius;
     std::vector<int> listPix;
 
-    Healpix_Base* hp = new Healpix_Base(nside, NEST , SET_NSIDE);
+    hv::unique_ptr<Healpix_Base> hp(new Healpix_Base(nside, NEST , SET_NSIDE));
 
     vec3 v1 = hp->pix2vec(pixel1);
     vec3 v2 = hp->pix2vec(pixel2);
@@ -1146,8 +1102,6 @@ std::set<int> HealpixMap::query_disc(int pixel1, int pixel2, int nside)
     std::set<int> result;
     result.insert(listPix.begin(), listPix.end());
 
-    delete hp;
-
     return result;
 }
 
@@ -1155,7 +1109,7 @@ std::set<int> HealpixMap::query_triangle(int pixel1, int pixel2, int pixel3, int
 {
     std::set<int> result;
 
-    Healpix_Base* hp = new Healpix_Base(nside, NEST , SET_NSIDE);
+    hv::unique_ptr<Healpix_Base> hp(new Healpix_Base(nside, NEST , SET_NSIDE));
 
     long npix, iz, irmin, irmax, n12, n123a, n123b, ndom = 0;
     bool test1, test2, test3;
@@ -1523,7 +1477,7 @@ std::set<int> HealpixMap::query_polygon(std::vector<int> points, int nside)
 
     int nv = points.size();
 
-    Healpix_Base* hp = new Healpix_Base(nside, NEST , SET_NSIDE);
+    hv::unique_ptr<Healpix_Base> hp(new Healpix_Base(nside, NEST , SET_NSIDE));
 
     for(int i=0; i<nv; i++)
     {

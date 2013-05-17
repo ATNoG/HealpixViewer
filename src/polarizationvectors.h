@@ -31,7 +31,7 @@ private:
     int vectorsSpacing;
 
     long totalVectors;
-    float* vectors;
+    hv::unique_ptr<float[0]> vectors;
     QGLBuffer* vectorsBuffer;
 
     QList<int> numberVertices;

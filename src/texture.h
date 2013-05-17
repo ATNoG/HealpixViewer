@@ -8,6 +8,7 @@
 #include <healpix_map.h>
 #include "configs.h"
 #include "types.h"
+#include "unique_ptr.hpp"
 
 using namespace std;
 
@@ -19,7 +20,7 @@ public:
     ~Texture();
 
     void draw();
-    void buildTexture(float* data, float min, float max);
+    void buildTexture(hv::unique_ptr<float[0]> data, float min, float max);
     void unbind();
 
 private:

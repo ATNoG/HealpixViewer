@@ -56,9 +56,9 @@ public:
     QList<MapType> getAvailableMaps();
     long getNumberPixels();
 
-    float* getFaceValues(int faceNumber, int nside);
-    float* getPolarizationVectors(int faceNumber, int nside, double minMag, double maxMag, double magnification, int spacing, long &totalVectors);
-    float* getFullMap(int nside);
+    hv::unique_ptr<float[0]> getFaceValues(int faceNumber, int nside);
+    hv::unique_ptr<float[0]> getPolarizationVectors(int faceNumber, int nside, double minMag, double maxMag, double magnification, int spacing, long &totalVectors);
+    hv::unique_ptr<float[0]> getFullMap(int nside);
 
     int getMaxNside();
 
@@ -111,7 +111,7 @@ private:
     void writeFITSPrimaryHeader(fitsfile *fptr);
     void writeFITSExtensionHeader(fitsfile *fptr, int newnside);
 
-    float* calculatePolarizationVector(double theta, double phi, double angle, double mag, double pixsize, double minMag, double maxMag, double magnification);
+    hv::unique_ptr<float[0]> calculatePolarizationVector(double theta, double phi, double angle, double mag, double pixsize, double minMag, double maxMag, double magnification);
     Vec spinVector(const Vec &v0, const Vec &vin, double psi);
 
     void writeMapInfo();
@@ -121,7 +121,7 @@ private:
 
     QMutex cacheAccess;
 
-    float* readMapCache(int nside, MapType mapType, int firstPosition=0, int length=0);
+    hv::unique_ptr<float[0]> readMapCache(int nside, MapType mapType, int firstPosition=0, int length=0);
 
     float min, max;
 
@@ -129,7 +129,7 @@ private:
 
     QString getMapType(MapType type);
 
-    QProgressDialog* loadingDialog;
+    hv::unique_ptr<QProgressDialog> loadingDialog;
 };
 
 
