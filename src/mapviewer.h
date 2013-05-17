@@ -169,7 +169,7 @@ private:
 
     CameraConstraint *constraint;
 
-    Camera* predictCamera;
+    hv::unique_ptr<Camera> predictCamera;
     ManipulatedFrame* currentManipulatedFrame;
 
     bool faceIsInside(float ax, float ay, float bx, float by, float width, float height);

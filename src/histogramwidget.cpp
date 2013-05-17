@@ -7,8 +7,6 @@ HistogramWidget::HistogramWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    histogram = NULL;
-
     /* udpate default sentinel pixel color */
     currentSentinelColor = QColor(DEFAULT_SENTINEL_COLOR);
     QStyle* style = new QWindowsStyle;
@@ -38,9 +36,6 @@ HistogramWidget::~HistogramWidget()
     #endif
 
     delete ui;
-
-    if(histogram!=NULL)
-        delete histogram;
 }
 
 
@@ -106,7 +101,7 @@ void HistogramWidget::updateMap()
     if(currentScale==LOGARITHMIC)
     {
         float logmin;
-        logmin = min<=0 ? histogram->getMinLog() : log10(min);
+        logmin = min<=0 ? ui->histogram->getMinLog() : log10(min);
         emit(histogramUpdated(currentColorMap, logmin, max, currentSentinelColor, currentScale, factor, offset));
     }
     else
@@ -148,8 +143,7 @@ void HistogramWidget::updateHistogram()
         //if(histogram!=NULL)
             //delete histogram;
 
-        histogram = new Histogram(values, totalValues);
-        ui->histogram->setHistogram(histogram);
+        ui->histogram->setHistogram(values, totalValues);
 
         /* if more then 1 viewports, select min and max
            if only 1 viewport, select min and max if saved previously, else min max */

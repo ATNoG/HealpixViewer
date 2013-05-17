@@ -31,7 +31,7 @@ Histogram::Histogram(hv::unique_ptr<float[0]> values, int totalValues)
     configureThresholds(minValue, maxValue);
 }
 
-Histogram::Histogram(QList<float*> valuesList, QList<int> nValues)
+Histogram::Histogram(QList<float*> const& values, QList<int> const& totalValues)
 {
     //qDebug() << "construction mixed histogram";
     this->numberBins = NUMBER_BINS;
@@ -88,7 +88,7 @@ void Histogram::computeValues(bool calculateExtremes)
                     else if(aux > maxThresholdOriginal)
                         aux = maxThresholdOriginal;
 
-                    values[filledValues] = log10(std::max(aux, (float)1.e-6*84));
+                    values[filledValues] = log10(std::max(aux, 1.e-6f*84));
                     break;
             }
 

@@ -12,7 +12,6 @@ MapViewer::MapViewer(QWidget *parent, const QGLWidget* shareWidget) :
 {
     skymap = NULL;
     initialized = false;
-    predictCamera = NULL;
 
     maxNside = MAX_NSIDE;
 
@@ -225,9 +224,9 @@ void MapViewer::init()
     changeProjectionConstraints();
 
     /* more constraints */
-    WorldConstraint* constraintWorld = new WorldConstraint();
-    constraintWorld->setRotationConstraintType(AxisPlaneConstraint::FORBIDDEN);
-    constraintWorld->setTranslationConstraintType(AxisPlaneConstraint::FORBIDDEN);
+//    WorldConstraint* constraintWorld = new WorldConstraint();
+//    constraintWorld->setRotationConstraintType(AxisPlaneConstraint::FORBIDDEN);
+//    constraintWorld->setTranslationConstraintType(AxisPlaneConstraint::FORBIDDEN);
 
     /* create manipulated frame */
     currentManipulatedFrame = new ManipulatedFrame();
@@ -280,7 +279,7 @@ void MapViewer::init()
     /* create data */
     QColor color;
     uint texk = 0;
-    unsigned char* cmtexture = new unsigned char[255*3];
+    unsigned char cmtexture[255*3];
     for(int i=0; i<255; i++)
     {
         texk = i*3;
@@ -1316,9 +1315,7 @@ void MapViewer::preloadFaces()
             {
                 bool hidden = false;
 
-                if(predictCamera!=NULL)
-                    delete predictCamera;
-                predictCamera = new Camera(*camera());
+                predictCamera.reset(new Camera(*camera()));
                 predictCamera->setPosition(Vec(camPosition, 0.0, 0.0));
                 predictCamera->setScreenWidthAndHeight(width(), height());
                 predictCamera->computeProjectionMatrix();
@@ -1600,7 +1597,7 @@ void MapViewer::updateVectorsNside(int nside, bool signal)
 /* calculate the max camera distance need to show all the object inside scene */
 void MapViewer::computeMaxCameraDistance()
 {
-    Camera* auxCamera = new Camera(*camera());
+    hv::unique_ptr<Camera> auxCamera(new Camera(*camera()));
 
     if(!mollweide)
         auxCamera->fitSphere(Vec(0,0,0), 1.05);

@@ -18,7 +18,9 @@ public:
     explicit HistogramViewer(QWidget *parent = 0);
     ~HistogramViewer();
 
-    void setHistogram(Histogram *histogram);
+    void setHistogram(QList<float*> const& values, QList<int> const& totalValues);
+
+    float getMinLog() const { return histogram->getMinLog(); }
 
     /* cleanup histogram */
     void cleanupHistogram();
@@ -32,14 +34,13 @@ public:
     /* udpdate scale used in histogram */
     void updateScale(ScaleType scale);
 
-
 signals:
 
 private:
     int _width, _height;
 
     ColorMap *ct;
-    Histogram *histogram;
+    hv::unique_ptr<Histogram> histogram;
     ScaleType scale;
 
     void paintEvent(QPaintEvent *event);

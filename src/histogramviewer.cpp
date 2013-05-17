@@ -3,22 +3,19 @@
 HistogramViewer::HistogramViewer(QWidget *parent) :
     QWidget(parent)
 {
-    this->histogram = NULL;
     ct = ColorMapManager::instance()->getDefaultColorMap();
 }
 
 
 HistogramViewer::~HistogramViewer()
 {
-    delete ct;
 }
 
 
-void HistogramViewer::setHistogram(Histogram *histogram)
+void HistogramViewer::setHistogram(QList<float*> const& values, QList<int> const& totalValues)
 {
-    this->histogram = histogram;
+    this->histogram.reset(new Histogram(values, totalValues));
 }
-
 
 void HistogramViewer::paintEvent(QPaintEvent*)
 {
@@ -66,8 +63,7 @@ void HistogramViewer::cleanupHistogram()
     //qDebug() << "cleaning up histogram";
     if(histogram!=NULL)
     {
-        delete histogram;
-        histogram = NULL;
+        histogram.reset();
         update();
     }
 }

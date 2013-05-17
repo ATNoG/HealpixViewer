@@ -18,7 +18,7 @@ class Histogram
 
 public:
     Histogram(hv::unique_ptr<float[0]> values, int totalValues);
-    Histogram(QList<float*> values, QList<int> totalValues);
+    Histogram(QList<float*> const& values, QList<int> const& totalValues);
     ~Histogram();
 
     /* rebuild histogram using new min and max thresholds */

@@ -52,7 +52,6 @@ signals:
 
 private:
     Ui::HistogramWidget *ui;
-    Histogram *histogram;
     ColorMap *currentColorMap;
     ScaleType currentScale;
 
