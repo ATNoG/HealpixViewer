@@ -4,54 +4,44 @@
 #include <exception>
 #include <QString>
 
-class HealpixMapException: public exception
-{
-  public:
-    HealpixMapException(const std::string msg) : _msg(msg) {}
+class HealpixException : public std::exception {
+public:
+    HealpixException(std::string const& msg)
+      : _msg(msg)
+    { }
 
-    ~HealpixMapException() throw() {}
+    virtual ~HealpixException() throw()
+    { }
 
     virtual const char* what() const throw()
     {
         return _msg.c_str();
     }
 
-  private:
+private:
     std::string _msg;
 };
 
+class HealpixMapException : public HealpixException {
+public:
+    HealpixMapException(std::string const& msg)
+      : HealpixException(msg)
+    { }
+};
 
-class FieldMapException: public exception
-{
-  public:
-    FieldMapException(const std::string msg) : _msg(msg) {}
-
-    ~FieldMapException() throw() {}
-
-    virtual const char* what() const throw()
-    {
-        return _msg.c_str();
-    }
-
-  private:
-    std::string _msg;
+class FieldMapException : public HealpixException {
+public:
+    FieldMapException(std::string const& msg)
+      : HealpixException(msg)
+    { }
 };
 
 
-class ColormapsNotFoundException: public exception
-{
-  public:
-    ColormapsNotFoundException(const std::string msg) : _msg(msg) {}
-
-    ~ColormapsNotFoundException() throw() {}
-
-    virtual const char* what() const throw()
-    {
-        return _msg.c_str();
-    }
-
-  private:
-    std::string _msg;
+class ColormapsNotFoundException : public HealpixException {
+public:
+    ColormapsNotFoundException(std::string const& msg)
+      : HealpixException(msg)
+    { }
 };
 
 #endif // EXCEPTIONS_H
