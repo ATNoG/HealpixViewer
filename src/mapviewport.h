@@ -57,6 +57,10 @@ signals:
     void selectionChanged(int viewportId, bool selected);
     void textureNsideUpdated(int nside, int viewportId);
     void vectorsNsideUpdated(int nside, int viewportId);
+    void gridDisplayChanged(bool show);
+    void signalChange3D();
+    void signalChangeMollweide();
+    void pvectorsDisplayChanged(bool show);
 
 public slots:
     void updateSelection(bool selected);

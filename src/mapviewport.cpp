@@ -107,18 +107,23 @@ void MapViewport::configureUI()
     actionPvectors->setEnabled(false);
 
     /* connect actions to buttons */
-    connect(actionGrid, SIGNAL(triggered(bool)), this, SLOT(showGrid(bool)));
-    connect(actionPvectors, SIGNAL(triggered(bool)), this, SLOT(showPolarizationVectors(bool)));
+    connect(actionGrid, SIGNAL(triggered(bool)), this, SIGNAL(gridDisplayChanged(bool)));
+    connect(actionPvectors, SIGNAL(triggered(bool)), this, SIGNAL(pvectorsDisplayChanged(bool)));
     connect(actionReset, SIGNAL(triggered()), this, SLOT(resetViewport()));
     connect(actionMaximize, SIGNAL(triggered()), this, SLOT(maximize()));
     connect(actionRestore, SIGNAL(triggered()), this, SLOT(restore()));
     connect(actionClose, SIGNAL(triggered()), this, SLOT(close()));
     connect(actionSync, SIGNAL(triggered(bool)), this, SLOT(enableSynchronization(bool)));
-    connect(action3D, SIGNAL(triggered()), this, SLOT(changeTo3D()));
-    connect(actionMollweide, SIGNAL(triggered()), this, SLOT(changeToMollview()));
+    connect(action3D, SIGNAL(triggered()), this, SIGNAL(signalChange3D()));
+    connect(actionMollweide, SIGNAL(triggered()), this, SIGNAL(signalChangeMollweide()));
 
     connect(mapviewer, SIGNAL(textureNsideUpdated(int)), this, SLOT(updateOptionTextureNside(int)));
     connect(mapviewer, SIGNAL(vectorsNsideUpdated(int)), this, SLOT(updateOptionVectorsNside(int)));
+
+    connect(this, SIGNAL(gridDisplayChanged(bool)), this, SLOT(showGrid(bool)));
+    connect(this, SIGNAL(pvectorsDisplayChanged(bool)), this, SLOT(showPolarizationVectors(bool)));
+    connect(this, SIGNAL(signalChange3D()), this, SLOT(changeTo3D()));
+    connect(this, SIGNAL(signalChangeMollweide()), this, SLOT(changeToMollview()));
 
     /* create field selector menu */
     fieldMenu = new QMenu;
@@ -495,6 +500,11 @@ void MapViewport::enableSynchronization(bool on)
         connect(workspace, SIGNAL(signalSyncPosition(Vec,MapViewer*)), this, SLOT(updatePosition(Vec,MapViewer*)));
         connect(workspace, SIGNAL(signalSyncRotation(Quaternion,MapViewer*)), this, SLOT(updateRotation(Quaternion,MapViewer*)));
         connect(workspace, SIGNAL(signalSyncKeyPress(QKeyEvent*,MapViewer*)), this, SLOT(updateKeyPress(QKeyEvent*,MapViewer*)));
+
+        connect(this, SIGNAL(gridDisplayChanged(bool)), workspace, SLOT(showGrid(bool)));
+        connect(this, SIGNAL(pvectorsDisplayChanged(bool)), workspace, SLOT(showPolarizationVectors(bool)));
+        connect(this, SIGNAL(signalChange3D()), workspace, SLOT(changeTo3D()));
+        connect(this, SIGNAL(signalChangeMollweide()), workspace, SLOT(changeToMollview()));
     }
     else
     {
@@ -509,6 +519,11 @@ void MapViewport::enableSynchronization(bool on)
         disconnect(workspace, SIGNAL(signalSyncPosition(Vec,MapViewer*)), this, SLOT(updatePosition(Vec,MapViewer*)));
         disconnect(workspace, SIGNAL(signalSyncRotation(Quaternion,MapViewer*)), this, SLOT(updateRotation(Quaternion,MapViewer*)));
         disconnect(workspace, SIGNAL(signalSyncKeyPress(QKeyEvent*,MapViewer*)), this, SLOT(updateKeyPress(QKeyEvent*,MapViewer*)));
+
+        disconnect(this, SIGNAL(gridDisplayChanged(bool)), workspace, SLOT(showGrid(bool)));
+        disconnect(this, SIGNAL(pvectorsDisplayChanged(bool)), workspace, SLOT(showPolarizationVectors(bool)));
+        disconnect(this, SIGNAL(signalChange3D()), workspace, SLOT(changeTo3D()));
+        disconnect(this, SIGNAL(signalChangeMollweide()), workspace, SLOT(changeToMollview()));
     }
 }
 
