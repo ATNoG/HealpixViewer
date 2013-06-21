@@ -492,8 +492,6 @@ void MapViewer::changeProjectionConstraints()
 
         /* set min camera X for mollweide */
         minCameraX = CAMERA_MOLL_MAX_X;
-
-        glCullFace(GL_FRONT);
     }
     else
     {
@@ -506,8 +504,6 @@ void MapViewer::changeProjectionConstraints()
 
         /* set min camera X for 3D */
         minCameraX = CAMERA_3D_MAX_X;
-
-        glCullFace(GL_BACK);
     }
 
     /* calcula max zoom out */
@@ -525,6 +521,8 @@ void MapViewer::changeToMollview()
         changeProjectionConstraints();
 
         resetView();
+
+        glCullFace(GL_FRONT);
 
         /* update tesselation */
         tesselation->changeToMollweide();
@@ -546,6 +544,8 @@ void MapViewer::changeTo3D()
         changeProjectionConstraints();
 
         resetView();
+
+        glCullFace(GL_BACK);
 
         /* update tesselation */
         tesselation->changeTo3D();
